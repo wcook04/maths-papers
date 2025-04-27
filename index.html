@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB"> <!-- Set to British English -->
-<head>
+<html lang="en-GB"> <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="Independent mathematical research by William Cook. Seeking scrutiny and rigorous review. Focus is on learning how to develop structural decompositions, generalise information measures, and invariance principles across mathematical domains to refine my own understanding of stability, optimality, and complexity. Includes links to papers and summaries. This entire process leverages an AI Agent based workflow that allows quick iterations both numerical and theoretical to allow turning intuition into formalised experiments and proofs." />
@@ -18,29 +17,36 @@
       padding: 0 20px;
       max-width: 800px;
       line-height: 1.6;
-      color: #333; /* CORRECT CSS: color */
-      background-color: #fdfdfd; /* CORRECT CSS: background-color */
+      color: #333;
+      background-color: #fdfdfd;
     }
 
     /* --- Typography --- */
     h1 {
-      text-align: center; /* CORRECT CSS: center */
+      text-align: center;
       margin-bottom: 25px;
-      color: #2c3e50; /* CORRECT CSS: color */
+      color: #2c3e50;
       border-bottom: 2px solid #ecf0f1;
       padding-bottom: 15px;
       font-weight: 600;
     }
 
+    .intro-paragraph { /* Style for the paragraph under H1 */
+        text-align: center;
+        margin-top: -15px;
+        margin-bottom: 30px;
+        color: #555; /* Slightly muted color */
+    }
+
     h2 {
       margin-top: 0;
       margin-bottom: 8px;
-      color: #34495e; /* CORRECT CSS: color */
+      color: #34495e;
       font-size: 1.4em;
       font-weight: 600;
     }
     h2 a {
-       color: inherit; /* CORRECT CSS: color */
+       color: inherit; /* Make link color match heading color */
        text-decoration: none;
     }
 
@@ -50,18 +56,19 @@
     }
 
     p strong { /* Style for category labels */
-        color: #555; /* CORRECT CSS: color */
+        color: #555;
         font-weight: 600;
     }
 
     /* --- Links --- */
     a {
-      color: #2980b9; /* CORRECT CSS: color */
+      color: #2980b9;
       text-decoration: none;
+      transition: color 0.2s ease; /* Smooth color transition */
     }
     a:hover, a:focus {
       text-decoration: underline;
-      color: #1c587f; /* CORRECT CSS: color */
+      color: #1c587f;
     }
 
     /* --- Paper Article Styling --- */
@@ -69,65 +76,106 @@
       padding: 25px;
       border: 1px solid #ecf0f1;
       border-radius: 5px;
-      background-color: #fff; /* CORRECT CSS: background-color */
+      background-color: #fff;
       transition: box-shadow 0.2s ease-in-out;
     }
     .paper:not(:last-of-type) {
-        margin-bottom: 35px; /* Apply margin to all except the last one */
+       margin-bottom: 35px; /* Apply margin to all except the last one */
     }
     .paper:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     .paper-links {
       font-size: 0.9em;
-      color: #7f8c8d; /* CORRECT CSS: color */
+      color: #7f8c8d;
       margin-top: 0;
       margin-bottom: 15px;
     }
     .paper-links a {
-      color: #3498db; /* CORRECT CSS: color */
+      color: #3498db;
       margin-right: 8px;
     }
     .paper-links a:last-child {
-        margin-right: 0;
+       margin-right: 0;
     }
-    /* Styling for the now active summary link */
     .summary-link {
-       /* Add any specific styling if needed */
-       /* font-weight: 500; */
+      /* Optional: Add any specific styling for summary links */
+      /* font-weight: 500; */
     }
-
 
     .paper-category {
-        font-size: 0.95em;
-        color: #666; /* CORRECT CSS: color */
-        margin-bottom: 15px;
+       font-size: 0.95em;
+       color: #666;
+       margin-bottom: 15px;
     }
 
     .paper-abstract {
-        font-size: 1em;
+       font-size: 1em;
+    }
+
+    /* --- Working Paper Section Styling --- */
+    .working-paper-section {
+      margin-top: 50px; /* Space above the section */
+      padding-top: 25px; /* Space below the heading */
+      border-top: 1px dashed #ccc; /* A lighter, dashed border */
+    }
+
+    .working-paper-section h3 {
+      font-size: 1.3em; /* Slightly smaller than h2 */
+      color: #555;     /* Greyer color */
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .working-paper {
+       padding: 15px; /* Less padding than main papers */
+       background-color: #f9f9f9; /* Slightly off-white background */
+       border: 1px solid #f0f0f0; /* Lighter border */
+       border-radius: 4px;
+       margin-bottom: 20px; /* Space below if you add more working papers */
+    }
+    /* No hover effect for working papers */
+
+    .working-paper h4 {
+      font-size: 1.2em; /* Smaller title font */
+      color: #444; /* Dark grey */
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .working-paper .paper-abstract { /* Slightly smaller abstract for working paper */
+        font-size: 0.95em;
+        color: #555;
+    }
+    .working-paper .paper-category strong {
+        color: #666;
+    }
+    .working-paper .paper-links a {
+        color: #3498db; /* Keep link color consistent */
     }
 
     /* --- Contact Info --- */
     .contact-info {
-        margin-top: 50px;
-        padding-top: 20px;
-        border-top: 2px solid #ecf0f1;
-        font-size: 0.9em;
-        color: #555; /* CORRECT CSS: color */
-        text-align: center; /* CORRECT CSS: center */
+       margin-top: 50px;
+       padding-top: 20px;
+       border-top: 2px solid #ecf0f1;
+       font-size: 0.9em;
+       color: #555;
+       text-align: center;
     }
     .contact-info strong {
-        color: #333; /* CORRECT CSS: color */
+       color: #333;
     }
     .contact-info a {
-        margin: 0 10px;
+       margin: 0 10px;
     }
 
     /* --- Schema.org hidden metadata --- */
     .hidden-metadata {
-        display: none;
+       display: none;
     }
 
   </style>
@@ -135,8 +183,7 @@
 <body>
   <header>
     <h1>Independent Mathematical Research</h1>
-    <p style="text-align: center; margin-top: -15px; margin-bottom: 30px;"> <!-- CORRECT Inline CSS: center -->
-      Undergraduate independent AI researcher exploring combinatorics, numerical analysis, information theory, and statistical inference.
+    <p class="intro-paragraph"> Undergraduate independent AI researcher exploring combinatorics, numerical analysis, information theory, and statistical inference.
     </p>
   </header>
 
@@ -149,127 +196,139 @@
         <a href="https://arxiv.org/pdf/2504.13433.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
         <a href="https://www.researchgate.net/publication/390959433_A_Recursive_Block_Pillar_Structure_in_the_Kolakoski_Sequence_K13" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
         <a href="https://drive.google.com/file/d/1AMvAy9Sdzp-q6O74b8TVc_ngJcNb8yhY/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a> |
-        <!-- NEW LINK ADDED HERE -->
         <a href="https://drive.google.com/file/d/1liFHjRb2qZQStO4sfN-Xhd2Y0P_mds1P/view?usp=sharing" title="In-progress extension note (PDF)" target="_blank" rel="noopener noreferrer">In Progress Extension Note</a>
       </p>
       <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Combinatorics (math.CO)</span></p>
-      <p class="paper-abstract" itemprop="abstract">
+      <p class="paper-abstract" itemprop="description abstract">
         The Kolakoski sequence K(1,3) is known to possess regularity unlike K(1,2). This work introduces a recursive construction of two sequence families—blocks B(n) and pillars P(n)—which converge to K(1,3). The defining recursions reveal explicit self-similarity tied to the Pisot number $\alpha$, and the block lengths are shown to grow geometrically with ratio $\alpha$. The framework provides a new combinatorial lens for interpreting K(1,3)'s regularity and self-encoding property.
       </p>
       <div class="hidden-metadata">
-          <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.13433" />
-          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-              <span itemprop="name">William Cook</span>
-          </span>
-          <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
-              <span itemprop="name">arXiv</span>
-          </span>
-          <meta itemprop="datePublished" content="2025-04">
+         <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.13433" />
+         <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span itemprop="name">William Cook</span>
+         </span>
+         <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
+            <span itemprop="name">arXiv</span>
+         </span>
+         <meta itemprop="datePublished" content="2025-04">
       </div>
     </article>
 
     <article class="paper" itemscope itemtype="http://schema.org/ScholarlyArticle">
-        <h2 itemprop="headline">
-          <a href="https://arxiv.org/abs/2503.12117" target="_blank" rel="noopener noreferrer" itemprop="url">The Resonance Bias Framework: Resonance, Structure, and Arithmetic in Quadrature Error</a>
-        </h2>
-        <p class="paper-links">
-          <a href="https://arxiv.org/pdf/2503.12117.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
-          <a href="https://www.researchgate.net/publication/391150066_The_Resonance_Bias_Framework_Resonance_Structure_and_Arithmetic_in_Quadrature_Error" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
-          <a href="https://drive.google.com/file/d/1tQKyOX6P2VWDVTquZh_jfnxHZejI1e5w/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
-        </p>
-        <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Numerical Analysis (math.NA)</span></p>
-        <p class="paper-abstract" itemprop="abstract">
-          This paper analyses the deterministic structure of error in trapezoidal integration of periodic functions. The Resonance Bias Framework interprets quadrature error via spectral filters and phase cancellation effects, rooted in the arithmetic of the function’s frequency relative to grid size. The framework connects numerical error to number theory and offers a structural alternative to conventional stochastic or asymptotic views.
-        </p>
-        <div class="hidden-metadata">
-            <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2503.12117" />
-            <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                <span itemprop="name">William Cook</span>
-            </span>
-            <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
-                <span itemprop="name">arXiv</span>
-            </span>
-            <meta itemprop="datePublished" content="2025-03">
-        </div>
-      </article>
+       <h2 itemprop="headline">
+         <a href="https://arxiv.org/abs/2503.12117" target="_blank" rel="noopener noreferrer" itemprop="url">The Resonance Bias Framework: Resonance, Structure, and Arithmetic in Quadrature Error</a>
+       </h2>
+       <p class="paper-links">
+         <a href="https://arxiv.org/pdf/2503.12117.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
+         <a href="https://www.researchgate.net/publication/391150066_The_Resonance_Bias_Framework_Resonance_Structure_and_Arithmetic_in_Quadrature_Error" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
+         <a href="https://drive.google.com/file/d/1tQKyOX6P2VWDVTquZh_jfnxHZejI1e5w/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
+       </p>
+       <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Numerical Analysis (math.NA)</span></p>
+       <p class="paper-abstract" itemprop="description abstract">
+         This paper analyses the deterministic structure of error in trapezoidal integration of periodic functions. The Resonance Bias Framework interprets quadrature error via spectral filters and phase cancellation effects, rooted in the arithmetic of the function’s frequency relative to grid size. The framework connects numerical error to number theory and offers a structural alternative to conventional stochastic or asymptotic views.
+       </p>
+       <div class="hidden-metadata">
+          <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2503.12117" />
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+             <span itemprop="name">William Cook</span>
+          </span>
+          <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
+             <span itemprop="name">arXiv</span>
+          </span>
+          <meta itemprop="datePublished" content="2025-03">
+       </div>
+     </article>
 
     <article class="paper" itemscope itemtype="http://schema.org/ScholarlyArticle">
-        <h2 itemprop="headline">
-          <a href="https://arxiv.org/abs/2504.13423" target="_blank" rel="noopener noreferrer" itemprop="url">Mixed Fractional Information: Consistency of Dissipation Measures for Stable Laws</a>
-        </h2>
-        <p class="paper-links">
-          <a href="https://arxiv.org/pdf/2504.13423.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
-          <a href="https://www.researchgate.net/publication/390959517_Mixed_Fractional_Information_Consistency_of_Dissipation_Measures_for_Stable_Laws" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
-          <a href="https://drive.google.com/file/d/14wse6juDnPzUqA6M93AHDqOIeHDHdau2/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
-        </p>
-        <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Information Theory (cs.IT)</span></p>
-        <p class="paper-abstract" itemprop="abstract">
-          Stable laws with infinite Fisher information pose difficulties for classical information theory. This work introduces Mixed Fractional Information (MFI), a dissipation-based measure that remains finite and coherent for symmetric $\alpha$-stable distributions. Two equivalent formulations of MFI are proven, and a consistency identity is established linking score function differences to entropy dissipation. The measure provides a foundation for exploring fractional analogues of Fisher information and related inequalities.
-        </p>
-        <div class="hidden-metadata">
-            <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.13423" />
-            <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                <span itemprop="name">William Cook</span>
-            </span>
-            <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
-                <span itemprop="name">arXiv</span>
-            </span>
-            <meta itemprop="datePublished" content="2025-04">
-        </div>
-      </article>
+       <h2 itemprop="headline">
+         <a href="https://arxiv.org/abs/2504.13423" target="_blank" rel="noopener noreferrer" itemprop="url">Mixed Fractional Information: Consistency of Dissipation Measures for Stable Laws</a>
+       </h2>
+       <p class="paper-links">
+         <a href="https://arxiv.org/pdf/2504.13423.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
+         <a href="https://www.researchgate.net/publication/390959517_Mixed_Fractional_Information_Consistency_of_Dissipation_Measures_for_Stable_Laws" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
+         <a href="https://drive.google.com/file/d/14wse6juDnPzUqA6M93AHDqOIeHDHdau2/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
+       </p>
+       <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Information Theory (cs.IT)</span></p>
+       <p class="paper-abstract" itemprop="description abstract">
+         Stable laws with infinite Fisher information pose difficulties for classical information theory. This work introduces Mixed Fractional Information (MFI), a dissipation-based measure that remains finite and coherent for symmetric $\alpha$-stable distributions. Two equivalent formulations of MFI are proven, and a consistency identity is established linking score function differences to entropy dissipation. The measure provides a foundation for exploring fractional analogues of Fisher information and related inequalities.
+       </p>
+       <div class="hidden-metadata">
+          <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.13423" />
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+             <span itemprop="name">William Cook</span>
+          </span>
+          <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
+             <span itemprop="name">arXiv</span>
+          </span>
+          <meta itemprop="datePublished" content="2025-04">
+       </div>
+     </article>
 
     <article class="paper" itemscope itemtype="http://schema.org/ScholarlyArticle">
-        <h2 itemprop="headline">
-          <a href="https://arxiv.org/abs/2504.09029" target="_blank" rel="noopener noreferrer" itemprop="url">A Hierarchical Decomposition of Kullback-Leibler Divergence: Disentangling Marginal Mismatches from Statistical Dependencies</a>
-        </h2>
-        <p class="paper-links">
-          <a href="https://arxiv.org/pdf/2504.09029.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
-          <a href="https://www.researchgate.net/publication/390772673_A_Hierarchical_Decomposition_of_Kullback-Leibler_Divergence_Disentangling_Marginal_Mismatches_from_Statistical_Dependencies" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
-          <a href="https://drive.google.com/file/d/1DayqZtRDeukGAx2G-0dTJDLJaWyKhvVt/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
-        </p>
-        <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Information Theory (cs.IT)</span></p>
-        <p class="paper-abstract" itemprop="abstract">
-          KL divergence often conceals the source of discrepancy between multivariate distributions. This paper presents a hierarchical, exact decomposition separating marginal divergences from statistical dependencies. Using Möbius inversion on the subset lattice, total correlation is further split into signed contributions from pairwise to higher-order interactions. The decomposition is algebraic and requires no assumptions, enabling detailed diagnosis of divergence origins in probabilistic models.
-        </p>
-        <div class="hidden-metadata">
-            <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.09029" />
-            <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                <span itemprop="name">William Cook</span>
-            </span>
-            <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
-                <span itemprop="name">arXiv</span>
-            </span>
-            <meta itemprop="datePublished" content="2025-04">
-        </div>
-      </article>
+       <h2 itemprop="headline">
+         <a href="https://arxiv.org/abs/2504.09029" target="_blank" rel="noopener noreferrer" itemprop="url">A Hierarchical Decomposition of Kullback-Leibler Divergence: Disentangling Marginal Mismatches from Statistical Dependencies</a>
+       </h2>
+       <p class="paper-links">
+         <a href="https://arxiv.org/pdf/2504.09029.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
+         <a href="https://www.researchgate.net/publication/390772673_A_Hierarchical_Decomposition_of_Kullback-Leibler_Divergence_Disentangling_Marginal_Mismatches_from_Statistical_Dependencies" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
+         <a href="https://drive.google.com/file/d/1DayqZtRDeukGAx2G-0dTJDLJaWyKhvVt/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
+       </p>
+       <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Information Theory (cs.IT)</span></p>
+       <p class="paper-abstract" itemprop="description abstract">
+         KL divergence often conceals the source of discrepancy between multivariate distributions. This paper presents a hierarchical, exact decomposition separating marginal divergences from statistical dependencies. Using Möbius inversion on the subset lattice, total correlation is further split into signed contributions from pairwise to higher-order interactions. The decomposition is algebraic and requires no assumptions, enabling detailed diagnosis of divergence origins in probabilistic models.
+       </p>
+       <div class="hidden-metadata">
+          <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.09029" />
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+             <span itemprop="name">William Cook</span>
+          </span>
+          <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
+             <span itemprop="name">arXiv</span>
+          </span>
+          <meta itemprop="datePublished" content="2025-04">
+       </div>
+     </article>
 
     <article class="paper" itemscope itemtype="http://schema.org/ScholarlyArticle">
-        <h2 itemprop="headline">
-          <a href="https://arxiv.org/abs/2504.10667" target="_blank" rel="noopener noreferrer" itemprop="url">Beyond Coordinates: Meta-Equivariance in Statistical Inference</a>
-        </h2>
-        <p class="paper-links">
-          <a href="https://arxiv.org/pdf/2504.10667.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
-          <a href="https://www.researchgate.net/publication/390811543_Beyond_Coordinates_Meta-Equivariance_in_Statistical_Inference" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
-          <a href="https://drive.google.com/file/d/1a88tpRF-X4YKmBSSB5L-G3P4J3BD-2_v/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
-        </p>
-        <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Statistics Theory (math.ST)</span></p>
-        <p class="paper-abstract" itemprop="abstract">
-          This work introduces the principle of meta-equivariance: optimal solutions to convex matrix optimisation problems remain invariant under affine reparameterisations. The result is illustrated through estimator combination problems in statistics and generalised geometrically to decision theory. The paper offers a foundational insight—distinct from classical equivariance—about the coordinate-independence of optimal decisions under convex objectives.
-        </p>
-        <div class="hidden-metadata">
-            <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.10667" />
-            <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-                <span itemprop="name">William Cook</span>
-            </span>
-            <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
-                <span itemprop="name">arXiv</span>
-            </span>
-            <meta itemprop="datePublished" content="2025-04">
-        </div>
-      </article>
-  </main>
+       <h2 itemprop="headline">
+         <a href="https://arxiv.org/abs/2504.10667" target="_blank" rel="noopener noreferrer" itemprop="url">Beyond Coordinates: Meta-Equivariance in Statistical Inference</a>
+       </h2>
+       <p class="paper-links">
+         <a href="https://arxiv.org/pdf/2504.10667.pdf" target="_blank" rel="noopener noreferrer" itemprop="sameAs">arXiv PDF</a> |
+         <a href="https://www.researchgate.net/publication/390811543_Beyond_Coordinates_Meta-Equivariance_in_Statistical_Inference" target="_blank" rel="noopener noreferrer" itemprop="sameAs">ResearchGate</a> |
+         <a href="https://drive.google.com/file/d/1a88tpRF-X4YKmBSSB5L-G3P4J3BD-2_v/view?usp=sharing" class="summary-link" title="Two-page summary (PDF)" target="_blank" rel="noopener noreferrer">Two-Page Summary</a>
+       </p>
+       <p class="paper-category"><strong>Category:</strong> <span itemprop="keywords">Statistics Theory (math.ST)</span></p>
+       <p class="paper-abstract" itemprop="description abstract">
+         This work introduces the principle of meta-equivariance: optimal solutions to convex matrix optimisation problems remain invariant under affine reparameterisations. The result is illustrated through estimator combination problems in statistics and generalised geometrically to decision theory. The paper offers a foundational insight—distinct from classical equivariance—about the coordinate-independence of optimal decisions under convex objectives.
+       </p>
+       <div class="hidden-metadata">
+          <meta itemprop="mainEntityOfPage" content="https://arxiv.org/abs/2504.10667" />
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+             <span itemprop="name">William Cook</span>
+          </span>
+          <span itemprop="provider" itemscope itemtype="http://schema.org/Organization">
+             <span itemprop="name">arXiv</span>
+          </span>
+          <meta itemprop="datePublished" content="2025-04">
+       </div>
+     </article>
 
-  <footer class="contact-info">
+     <section class="working-paper-section">
+       <h3>Working Papers / Preliminary Notes</h3>
+       <div class="working-paper">
+           <h4>On the Impossibility of Case (iii) in Bombieri's Trichotomy for the Weil Functional</h4>
+           <p class="paper-links">
+               <a href="https://drive.google.com/file/d/1P901VCGeh62wf3J0E2WdFrcjgVi5XWnM/view?usp=sharing" title="Draft Paper (PDF)" target="_blank" rel="noopener noreferrer">[Link to Draft PDF]</a>
+               </p>
+           <p class="paper-category"><strong>Status:</strong> Draft / Unsubmitted</p>
+           <p class="paper-abstract" itemprop="description abstract">
+               We prove that Case (iii) of Bombieri’s trichotomy—arising from the analysis of the Weil quadratic functional connected to the Riemann zeta function \( \zeta(s) \) —is mathematically impossible. This scenario posits the existence of a non-trivial linear dependence relation among the non-trivial zeros of \( \zeta(s) \), hypothesised to hold identically over a real interval. Our proof assumes the validity of this relation and uses analytic continuation via the Identity Theorem to extend it from the real interval to a complex domain. We then apply standard uniqueness results for generalised Dirichlet series and exponential sums, leveraging limits and averaging arguments, to demonstrate that the defining hypotheses inevitably force all associated coefficients to vanish. This contradicts the scenario's essential normalisation condition. The refutation eliminates Case (iii), affirming that a failure of the Weil functional's positivity implies only two possibilities: either the Riemann Hypothesis is true, or it is false with infinitely many zeros off the critical line.
+           </p>
+           </div>
+     </section>
+
+  </main> <footer class="contact-info">
     Contact: <strong>gj23368@bristol.ac.uk</strong><br />
     <a href="https://github.com/wcook04" target="_blank" rel="noopener noreferrer">GitHub</a> |
     <a href="https://www.linkedin.com/in/will-cook-278127234/" target="_blank" rel="noopener noreferrer">LinkedIn</a> |
