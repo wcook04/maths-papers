@@ -134,7 +134,10 @@
        background-color: #f9f9f9; /* Slightly off-white background */
        border: 1px solid #f0f0f0; /* Lighter border */
        border-radius: 4px;
-       margin-bottom: 20px; /* Space below if you add more working papers */
+       margin-bottom: 20px; /* Space below each working paper */
+    }
+    .working-paper:last-of-type {
+        margin-bottom: 0; /* No bottom margin on the very last one */
     }
     /* No hover effect for working papers */
 
@@ -316,16 +319,33 @@
 
      <section class="working-paper-section">
        <h3>Working Papers / Preliminary Notes</h3>
-       <div class="working-paper">
-           <h4>On the Impossibility of Case (iii) in Bombieri's Trichotomy for the Weil Functional</h4>
+
+       <div class="working-paper"> <h4>On the Impossibility of Case (iii) in Bombieri's Trichotomy for the Weil Functional</h4>
            <p class="paper-links">
                <a href="https://drive.google.com/file/d/1P901VCGeh62wf3J0E2WdFrcjgVi5XWnM/view?usp=sharing" title="Draft Paper (PDF)" target="_blank" rel="noopener noreferrer">[Link to Draft PDF]</a>
-               </p>
+           </p>
            <p class="paper-category"><strong>Status:</strong> Draft / Unsubmitted</p>
            <p class="paper-abstract" itemprop="description abstract">
                We prove that Case (iii) of Bombieri’s trichotomy—arising from the analysis of the Weil quadratic functional connected to the Riemann zeta function \( \zeta(s) \) —is mathematically impossible. This scenario posits the existence of a non-trivial linear dependence relation among the non-trivial zeros of \( \zeta(s) \), hypothesised to hold identically over a real interval. Our proof assumes the validity of this relation and uses analytic continuation via the Identity Theorem to extend it from the real interval to a complex domain. We then apply standard uniqueness results for generalised Dirichlet series and exponential sums, leveraging limits and averaging arguments, to demonstrate that the defining hypotheses inevitably force all associated coefficients to vanish. This contradicts the scenario's essential normalisation condition. The refutation eliminates Case (iii), affirming that a failure of the Weil functional's positivity implies only two possibilities: either the Riemann Hypothesis is true, or it is false with infinitely many zeros off the critical line.
            </p>
-           </div>
+       </div>
+
+       <div class="working-paper"> <h4>Geometric Identifiability of Damped Oscillators from Local Extrema</h4>
+           <p class="paper-links">
+               <a href="https://drive.google.com/file/d/1mJciUHey6i5I3gVQLYUJMNGy270BxAqA/view?usp=sharing" title="Draft Paper (PDF)" target="_blank" rel="noopener noreferrer">[Link to Draft PDF]</a>
+           </p>
+           <p class="paper-category"><strong>Status:</strong> Draft / Unsubmitted</p>
+           <p class="paper-abstract" itemprop="description abstract">
+               Damped oscillatory phenomena, commonly modelled by functions of the form
+               $$ f(x; \Theta) = P_d(x) e^{-\alpha x} \cos(\omega x + \phi) $$
+               where $ P_d(x) $ is a polynomial envelope of degree $ d $, are ubiquitous across science and engineering. This paper establishes the fundamental conditions for uniquely identifying the $ n=d+4 $ parameters
+               $$ \Theta = \{a_0, \dots, a_d, \alpha, \omega, \phi\} $$
+               from minimal geometric data under ideal, noise-free conditions. We prove that global identifiability is achieved from a minimal number of consecutive local extrema given by
+               $$ N = N^*(d) = \max\left(\left\lceil \frac{d+4}{2} \right\rceil, d+1\right). $$
+               This result reveals a sharp threshold determined by the interplay between parameter count requirements and structural constraints imposed by the underlying function space (via Extended Chebyshev Systems). For the canonical case ($ d=0 $), the four parameters are exactly recoverable from $ N^*(0)=2 $ extrema via closed-form expressions, requiring no iterative optimisation. For the linear envelope case ($ d=1 $), $ N^*(1)=3 $ extrema guarantee global identifiability. For $ d \ge 2 $, the requirement $ N^*(d) $ is dictated by ensuring the number of constraints exceeds the zero bound of the function space. These structural identifiability results achieve mathematical certainty from minimal landmark points, contrasting with methods needing extensive data or iterative computation. This work establishes the information sufficiency (in a deterministic, geometric sense) of local extrema for an entire class of oscillators, quantifying how system dynamics are compactly encoded in geometric landmarks. While exact in the theoretical noise-free regime, sensitivity to perturbations is analysed via symbolic derivatives and condition numbers, highlighting the distinction between structural identifiability and practical estimation robustness. This hierarchy establishes a foundational principle for geometric identifiability in non-linear systems.
+           </p>
+       </div>
+
      </section>
 
   </main> <footer class="contact-info">
