@@ -124,9 +124,19 @@
     .working-paper-section h3 {
       font-size: 1.3em; /* Slightly smaller than h2 */
       color: #555;     /* Greyer color */
-      margin-bottom: 20px;
+      margin-bottom: 15px; /* Reduced margin before feedback note */
       font-weight: 600;
       text-align: center;
+    }
+
+    .feedback-note { /* Style for the feedback invitation note */
+        font-style: italic;
+        font-size: 0.9em;
+        color: #666;
+        text-align: center;
+        margin-bottom: 30px; /* Add space below the note */
+        margin-top: 0;
+        padding: 0 20px; /* Add padding if centered text looks too wide */
     }
 
     .working-paper {
@@ -319,6 +329,9 @@
 
      <section class="working-paper-section">
        <h3>Working Papers / Preliminary Notes</h3>
+       <p class="feedback-note">
+         Feedback, critique, and potential collaboration on these preliminary works are warmly welcomed. Contributions will gladly be co-authored or appropriately accredited.
+       </p>
 
        <div class="working-paper"> <h4>On the Impossibility of Case (iii) in Bombieri's Trichotomy for the Weil Functional</h4>
            <p class="paper-links">
@@ -343,6 +356,15 @@
                from minimal geometric data under ideal, noise-free conditions. We prove that global identifiability is achieved from a minimal number of consecutive local extrema given by
                $$ N = N^*(d) = \max\left(\left\lceil \frac{d+4}{2} \right\rceil, d+1\right). $$
                This result reveals a sharp threshold determined by the interplay between parameter count requirements and structural constraints imposed by the underlying function space (via Extended Chebyshev Systems). For the canonical case (\( d=0 \)), the four parameters are exactly recoverable from \( N^*(0)=2 \) extrema via closed-form expressions, requiring no iterative optimisation. For the linear envelope case (\( d=1 \)), \( N^*(1)=3 \) extrema guarantee global identifiability. For \( d \ge 2 \), the requirement \( N^*(d) \) is dictated by ensuring the number of constraints exceeds the zero bound of the function space. These structural identifiability results achieve mathematical certainty from minimal landmark points, contrasting with methods needing extensive data or iterative computation. This work establishes the information sufficiency (in a deterministic, geometric sense) of local extrema for an entire class of oscillators, quantifying how system dynamics are compactly encoded in geometric landmarks. While exact in the theoretical noise-free regime, sensitivity to perturbations is analysed via symbolic derivatives and condition numbers, highlighting the distinction between structural identifiability and practical estimation robustness. This hierarchy establishes a foundational principle for geometric identifiability in non-linear systems.
+           </p>
+       </div>
+
+       <div class="working-paper"> <h4>An Optimal, Forecast-Free Spot Hedging Strategy for FRS 102 Foreign Currency Liabilities</h4>
+           <p class="paper-links">
+               <a href="https://drive.google.com/file/d/19RIFa0lbbMMJDNx70QCG3cHyz7qrt3HE/view?usp=sharing" title="Draft Paper (PDF)" target="_blank" rel="noopener noreferrer">[Link to Draft PDF]</a>
+           </p>
+           <p class="paper-category"><strong>Status:</strong> Draft / Unsubmitted &nbsp; | &nbsp; <strong>Field:</strong> Financial Accounting/Hedging</p> <p class="paper-abstract" itemprop="description abstract">
+               Under FRS 102 (Section 30), UK firms must revalue foreign-currency liabilities at spot exchange rates each accounting period, creating Profit & Loss volatility when paired with historical-rate assets. This paper proves that the incremental hedge sequence \( \{F_k\} = \frac{N}{S_k} - \frac{N}{S_{k-1}} \), executed via periodic spot transactions, is the uniquely inevitable and optimal solution to eliminate this mismatch perfectly each period without forecasts, under constraints derived directly from the accounting rule. Using a telescoping-sum proof, a uniqueness argument by contradiction, and supported by visual confirmation, we demonstrate \( \{F_k\} \)'s mathematical necessity and potential cost superiority over alternatives (e.g., forwards, options), which involve additional structural costs (like forward points or option premiums) and regulatory complexity (e.g., EMIR reporting, from which spot trades are exempt [FCA_EMIR]). Targeting a substantial market niche identified from Bank of England data (UK PNFC FC Liabilities totalling £651.6B, Q4 2023 [BoE_Data_A4_2]), and applying an illustrative 30% FRS 102 applicability estimate due to data limitations, yields an estimated £195.5 billion addressable market. Based on illustrative cost assumptions (0.35% annualised for alternatives vs. 0.12% for \{Fk\} execution), this strategy offers financial providers a potential profit wedge estimated at 0.23%, yielding an illustrative £22.5–£450 million annually at 5–100% market penetration, figures highly dependent on the underlying estimates. This work provides treasurers with an optimal compliance tool and financial providers with a scalable, low-cost hedging product, highlighting efficiency gains in FRS 102-driven markets, while acknowledging the need for further empirical validation of market size and cost estimates.
            </p>
        </div>
 
