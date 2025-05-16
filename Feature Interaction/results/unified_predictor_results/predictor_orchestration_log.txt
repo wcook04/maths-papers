@@ -1,0 +1,136 @@
+--- Unified Hierarchical Prediction Started: Fri May 16 11:52:30 2025 ---
+
+Step 1: Loading Master Feature DataFrame from /Users/willcook/Desktop/RH/Paper_12 /data/processed/master_feature_df.parquet
+SUCCESS: Loaded DataFrame from /Users/willcook/Desktop/RH/Paper_12 /data/processed/master_feature_df.parquet (Shape: (2001051, 66)).
+
+Step 2: Data Preparation
+  Initial rows: 2001051
+  Rows after dropping NaNs in required features/target: 2001050 (dropped 1)
+
+Step 3: Implementing Base C2 Law Prediction
+  Base C2 Law predictions applied. Distribution:
+Predicted_Next_Branch_Base_C2Law
+Transition/Other    48.2%
+Branch_Pi_Half      25.9%
+Branch_3Pi_Half     25.9%
+
+Step 4: Initializing Final Predictions
+  Initial Base C2 Law Accuracy: 75.0285%
+
+Step 5: Implementing Hierarchical Corrections
+
+  Applying C3-C2 Interactions Correction Layer...
+    Errors from previous layers before C3 corrections: 499693
+    Applied SpineToPiHalf rule: 23486 corrections.
+    Applied SpineTo3PiHalf rule: 17921 corrections.
+    Applied ArmToSpine rule: 225409 corrections.
+    Total corrections applied by C3-C2 layer: 266816
+    Accuracy after C3 layer: 88.3623%
+
+  Applying C5-C2 Interactions Correction Layer...
+    Errors from previous layers before C5 corrections: 232877
+    Applied SpineToPiHalf rule: 19057 corrections.
+    Applied SpineTo3PiHalf rule: 14131 corrections.
+    Applied ArmToSpine rule: 19678 corrections.
+    Total corrections applied by C5-C2 layer: 52866
+    Accuracy after C5 layer: 91.0042%
+
+  Applying C7-C2 Interactions Correction Layer...
+    Errors from previous layers before C7 corrections: 180011
+    Applied SpineToPiHalf rule: 15093 corrections.
+    Applied SpineTo3PiHalf rule: 12730 corrections.
+    Applied ArmToSpine rule: 2857 corrections.
+    Total corrections applied by C7-C2 layer: 30680
+    Accuracy after C7 layer: 92.5374%
+
+  Applying C11-C2 Interactions Correction Layer...
+    Errors from previous layers before C11 corrections: 149331
+    Applied SpineToPiHalf rule: 12040 corrections.
+    Applied SpineTo3PiHalf rule: 11799 corrections.
+    Applied ArmToSpine rule: 751 corrections.
+    Total corrections applied by C11-C2 layer: 24590
+    Accuracy after C11 layer: 93.7662%
+
+  Applying C13-C2 Interactions Correction Layer...
+    Errors from previous layers before C13 corrections: 124741
+    Applied SpineToPiHalf rule: 9658 corrections.
+    Applied SpineTo3PiHalf rule: 10265 corrections.
+    Applied ArmToSpine rule: 285 corrections.
+    Total corrections applied by C13-C2 layer: 20208
+    Accuracy after C13 layer: 94.7761%
+
+Step 6: Evaluating Final Hierarchical Predictions
+  Overall Final Accuracy: 94.7761%
+  Improvement over Base C2 Law: 19.7476%
+
+  Confusion Matrix (Actual vs. Predicted):
+Predicted:                | Branch_Pi_Half  | Branch_3Pi_Half | Transition/Other
+--------------------------------------------------------------------------------
+Actual: Branch_Pi_Half    | 473160          | 25              | 45570          
+Actual: Branch_3Pi_Half   | 3               | 460650          | 58082          
+Actual: Transition/Other  | 511             | 342             | 962707         
+
+
+  Classification Report:
+                  precision    recall  f1-score   support
+
+  Branch_Pi_Half       1.00      0.91      0.95    518755
+ Branch_3Pi_Half       1.00      0.89      0.94    518735
+Transition/Other       0.90      1.00      0.95    963560
+
+        accuracy                           0.95   2001050
+       macro avg       0.97      0.93      0.95   2001050
+    weighted avg       0.95      0.95      0.95   2001050
+
+
+Step 7: Correction Layer Breakdown
+  Prediction Counts and Accuracy by Specific Layer/Rule:
+Layer/Rule         | Count   | Accuracy on Subset   | Needed Correction Count (from Base Error)
+-----------------------------------------------------------------------------------------------
+Base_C2Law         | 1605890 | 93.4907%             | -                                       
+C11_ArmToSpine     | 751     | 100.0000%            | 751                                     
+C11_SpineTo3PiHalf | 11799   | 100.0000%            | 11799                                   
+C11_SpineToPiHalf  | 12040   | 100.0000%            | 12040                                   
+C13_ArmToSpine     | 285     | 100.0000%            | 285                                     
+C13_SpineTo3PiHalf | 10265   | 100.0000%            | 10265                                   
+C13_SpineToPiHalf  | 9658    | 100.0000%            | 9658                                    
+C3_ArmToSpine      | 225409  | 100.0000%            | 225409                                  
+C3_SpineTo3PiHalf  | 17921   | 100.0000%            | 17921                                   
+C3_SpineToPiHalf   | 23486   | 100.0000%            | 23486                                   
+C5_ArmToSpine      | 19678   | 100.0000%            | 19678                                   
+C5_SpineTo3PiHalf  | 14131   | 100.0000%            | 14131                                   
+C5_SpineToPiHalf   | 19057   | 100.0000%            | 19057                                   
+C7_ArmToSpine      | 2857    | 100.0000%            | 2857                                    
+C7_SpineTo3PiHalf  | 12730   | 100.0000%            | 12730                                   
+C7_SpineToPiHalf   | 15093   | 100.0000%            | 15093                                   
+-----------------------------------------------------------------------------------------------
+
+  Overall Accuracy of points *assigned to any prime layer* (C3+): 100.0000% (395160 correct out of 395160 points assigned to prime layers)
+  Note: 'Accuracy on Subset' for prime layers is expected to be 100.00% if the rules precisely target and correct base errors.
+  'Needed Correction Count' shows how many of the points assigned to a prime layer were indeed mispredicted by the Base C2 Law.
+
+Step 7b: Analysis of Remaining Errors
+  Total remaining errors after all layers: 104533 (5.2239%)
+
+  Distribution of Remaining Errors (Actual Branch vs. Predicted Branch):
+Predicted_Next_Branch_Final_Hierarchical  Branch_3Pi_Half  Branch_Pi_Half  Transition/Other
+Actual_Next_Branch_Target                                                                  
+Branch_3Pi_Half                                         0               3             58082
+Branch_Pi_Half                                         25               0             45570
+Transition/Other                                      342             511                 0
+
+  Remaining Error Breakdown by Initial Base Prediction and Final Correction Layer Applied:
+Predicted_Next_Branch_Base_C2Law  Branch_3Pi_Half  Branch_Pi_Half  Transition/Other
+Correction_Layer_Applied                                                           
+Base_C2Law                                    367             514            103652
+  Note: A non-zero count under a prime layer column here would indicate an error occurred *after* a prime correction was applied.
+  A non-zero count under 'Base_C2Law' means the Base prediction was wrong, and no prime layer rule applied to correct it.
+
+  Remaining errors DataFrame (subset of the augmented DF) can be loaded from /Users/willcook/Desktop/RH/Paper_12 /results/unified_predictor_results/df_with_unified_predictions.parquet and filtered for detailed analysis.
+
+Step 8: Saving Outputs
+SUCCESS: Saved DataFrame to /Users/willcook/Desktop/RH/Paper_12 /results/unified_predictor_results/df_with_unified_predictions.parquet (Shape: (2001050, 69)).
+  Saved DataFrame with predictions and key features to: /Users/willcook/Desktop/RH/Paper_12 /results/unified_predictor_results/df_with_unified_predictions.parquet
+
+--- Unified Hierarchical Prediction Finished: Fri May 16 11:53:06 2025 ---
+Total execution time: 35.47 seconds.
