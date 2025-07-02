@@ -1,0 +1,174 @@
+
+### **BQuant Notebook: The Final MCPI Characterization Tool**
+
+#### **Cell 1: Import Packages and Setup Environment**
+
+*(Unchanged)*
+
+```python
+# --- Standard BQuant and Data Science Imports ---
+import bql
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.io as pio
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import datetime
+
+# --- Configure Plotly to match blog post style ---
+pio.renderers.default = "plotly_mimetype+notebook"
+pio.templates["iqmo"] = pio.templates["plotly"]
+pio.templates["iqmo"].layout.margin = dict(l=50, r=50, t=80, b=50)
+pio.templates.default = "iqmo"
+
+# --- Parameters for the focused test, from the refined plan ---
+LAMBDA = 0.975          # Slower decay for basis data
+Z_WINDOW = 252          # 1-year window for z-score
+MEAN_WINDOW = 252       # 1-year window for rolling mean
+VOL_WINDOW = 90         # 3-month window for vol-scaling
+
+# --- Test Universe: G4 3-Month Basis Swaps ---
+PAIRS_MAP = {
+    'EURUSD': 'EURUSD3M BGN Curncy',
+    'USDJPY': 'JPYUSD3M BGN Curncy',
+    'GBPUSD': 'GBPUSD3M BGN Curncy'
+}
+TICKERS = list(PAIRS_MAP.values())
+```
+
+#### **Cell 2: Define and Execute BQL Query for Basis Swaps**
+
+*(Unchanged)*
+
+```python
+# --- BQL Service and Query Definition ---
+bql_svc = bql.Service()
+securities_str = "','".join(TICKERS)
+start_date = "2018-12-31"
+query = f"""
+get(px_last) for(['{securities_str}']) 
+with(dates=range({start_date}, 0d), fill=prev, currency=USD)
+"""
+print("Executing BQL Query...")
+response = bql_svc.execute(query)
+raw_df = bql.combined_df(response)
+basis_df = raw_df.pivot_table(index='DATE', columns='ID', values='px_last')
+basis_df = basis_df.rename(columns={v: k for k, v in PAIRS_MAP.items()})
+basis_df.dropna(inplace=True)
+print("Data fetched and prepared.")
+```
+
+#### **Cell 3: Pre-Process Data (Mean-Centering and Volatility-Scaling)**
+
+*(Unchanged)*
+
+```python
+# --- Pre-processing: Apply peer-review suggestions ---
+print("Applying rolling-window normalization...")
+rolling_mean = basis_df.rolling(window=MEAN_WINDOW, min_periods=VOL_WINDOW).mean()
+rolling_std = basis_df.rolling(window=VOL_WINDOW).std()
+b_z = (basis_df - rolling_mean) / rolling_std
+b_z.dropna(inplace=True)
+print("Pre-processing complete.")
+```
+
+#### **Cell 4: Core MCPI Calculation Loop (with Eigenvector Capture)**
+
+***This cell is modified to store the primary eigenvector.***
+
+```python
+# --- Core MCPI Calculation Loop ---
+print("Calculating daily MCPI values and eigenvectors...")
+num_pairs = len(PAIRS_MAP)
+Sigma = np.identity(num_pairs) * b_z.var().mean()
+mcpi_values = []
+eigenvectors_1 = [] # New list to store the primary eigenvector each day
+
+for t in range(len(b_z)):
+    x = b_z.iloc[t].values.reshape(-1, 1)
+    Sigma = LAMBDA * Sigma + (1 - LAMBDA) * np.dot(x, x.T)
+    
+    diag_sigma = np.diag(Sigma)
+    D_inv_sqrt = np.diag(1.0 / np.sqrt(diag_sigma + 1e-12))
+    C = D_inv_sqrt @ Sigma @ D_inv_sqrt
+    
+    # Use eigh to get both eigenvalues and eigenvectors for the symmetric matrix C
+    eigenvalues, eigenvectors = np.linalg.eigh(C)
+    
+    # Find the largest eigenvalue (lambda_1) and its corresponding eigenvector
+    lambda_1_idx = np.argmax(eigenvalues)
+    lambda_1 = eigenvalues[lambda_1_idx]
+    eigenvector_1 = eigenvectors[:, lambda_1_idx]
+    
+    mcpi = (lambda_1 - 1) / (num_pairs - 1) if num_pairs > 1 else 0
+    
+    mcpi_values.append(mcpi)
+    eigenvectors_1.append(eigenvector_1) # Store the eigenvector
+
+print("MCPI calculation loop finished.")
+```
+
+#### **Cell 5: Final Diagnostic Log and Visualization**
+
+***This final cell now includes both the persistence analysis and the stress composition from the eigenvector.***
+
+```python
+# --- Final Signal Generation & Merging ---
+mcpi_series = pd.Series(mcpi_values, index=b_z.index, name='MCPI')
+z_score_series = (mcpi_series - mcpi_series.rolling(Z_WINDOW).mean()) / \
+                 (mcpi_series.rolling(Z_WINDOW).std())
+z_score_series.name = 'Z_SCORE'
+results_df = pd.concat([z_score_series, b_z], axis=1).dropna()
+pair_names = list(PAIRS_MAP.keys())
+
+# --- 1. Create the Final Diagnostic Event Log for COVID Period ---
+print("\n=== Final Diagnostic Event Log (COVID Period: 2019-2021) ===")
+test_df = results_df['2019-01-01':'2021-12-31'].copy()
+z_score_test = test_df['Z_SCORE']
+
+level_3_events = z_score_test[z_score_test > 3]
+
+print(f"\nSevere Stress Events (Z > 3σ): {len(level_3_events)} days")
+if not level_3_events.empty:
+    # --- Event Persistence Analysis ---
+    event_dates = level_3_events.index
+    consecutive_days = (event_dates.to_series().diff().dt.days > 1).cumsum()
+    durations = consecutive_days.value_counts().sort_values(ascending=False)
+    longest_duration = durations.iloc[0]
+    print(f"- Longest Consecutive Period: {longest_duration} days")
+
+    # --- Peak Day and Stress Composition Analysis ---
+    peak_date = z_score_test.idxmax()
+    print(f"\nPeak stress date: {peak_date.strftime('%Y-%m-%d')}")
+    print(f"- Peak Z-score: {z_score_test.max():.2f}")
+    
+    # Retrieve the eigenvector for the peak day
+    peak_date_index = b_z.index.get_loc(peak_date)
+    peak_eigenvector = eigenvectors_1[peak_date_index]
+    
+    # Calculate weights from the squared components of the eigenvector
+    weights = peak_eigenvector**2
+    weights /= np.sum(weights) # Normalize to sum to 100%
+    
+    print("- Stress Composition on Peak Day (Eigenvector Weights):")
+    for i, pair in enumerate(pair_names):
+        print(f"  - {pair}: {weights[i]:.0%}")
+
+# --- 2. Create Final Two-Pane Diagnostic Chart ---
+print("\nGenerating final diagnostic dashboard chart...")
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=("Systemic Stress (MCPI Z-Score)", "Standardized Basis Drivers (Stress Contribution)"))
+fig.add_trace(go.Scatter(x=results_df.index, y=results_df['Z_SCORE'], name='Z-Score', line=dict(color='crimson')), row=1, col=1)
+fig.add_hline(y=2, line_dash="dot", line_color="orange", annotation_text="Moderate Stress (2σ)", annotation_position="bottom right", row=1, col=1)
+fig.add_hline(y=3, line_dash="dot", line_color="red", annotation_text="Severe Stress (3σ)", annotation_position="bottom right", row=1, col=1)
+for pair in pair_names:
+    fig.add_trace(go.Scatter(x=results_df.index, y=results_df[pair], name=pair), row=2, col=1)
+
+fig.update_layout(height=700, title_text="MCPI Final Analysis: Stress, Duration, and Composition", legend_traceorder="normal")
+fig.update_yaxes(title_text="Z-Score", row=1, col=1)
+fig.update_yaxes(title_text="Std. Devs from Mean", row=2, col=1)
+fig.update_xaxes(showticklabels=False, row=1, col=1)
+fig.update_xaxes(title_text="Date", row=2, col=1)
+
+fig.show()
+```
