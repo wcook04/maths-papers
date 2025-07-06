@@ -1,0 +1,860 @@
+# ==============================================================================
+# ULTRA-ROBUST Kinetic Stress Index (KSI) Calculator for Bloomberg BQuant
+# Version 4.0 - FINAL PRODUCTION VERSION
+#
+# Copy this entire code into a BQuant cell and run. 
+# Set CONFIG['test_mode'] = True to test without Bloomberg data.
+# ==============================================================================
+
+import pandas as pd
+import numpy as np
+import itertools
+import matplotlib.pyplot as plt
+import warnings
+import traceback
+import sys
+import time
+from datetime import datetime
+import json
+import os  # Added missing import
+
+# Suppress warnings for cleaner output
+warnings.filterwarnings('ignore')
+
+# --- Check BQL and scikit-learn availability ---
+BQL_AVAILABLE = False
+SKLEARN_AVAILABLE = False
+
+try:
+    import bql
+    BQL_AVAILABLE = True
+    print("✓ BQL module imported successfully")
+except ImportError:
+    print("⚠️  BQL module not found. Set test_mode=True to run with synthetic data")
+
+try:
+    from sklearn.covariance import LedoitWolf
+    SKLEARN_AVAILABLE = True
+    print("✓ scikit-learn imported successfully")
+except ImportError:
+    print("⚠️  scikit-learn not found. Run: %pip install scikit-learn")
+    LedoitWolf = None
+
+# ==============================================================================
+# CONFIGURATION - ADJUST THESE SETTINGS AS NEEDED
+# ==============================================================================
+
+CONFIG = {
+    'assets': {
+        'STOCKS': {
+            'primary': 'SPX Index',
+            'fallbacks': ['SPY US Equity', 'ES1 Index'],
+            'asset_type': 'equity_index',
+            'description': 'S&P 500 Index'
+        },
+        'BONDS': {
+            'primary': 'CT10 Govt',
+            'fallbacks': ['USGG10YR Index', 'GT10 Govt'],
+            'asset_type': 'yield',  # Critical: This is a yield, not a price!
+            'description': 'US 10-Year Treasury Yield'
+        },
+        'GOLD': {
+            'primary': 'XAU Curncy',
+            'fallbacks': ['XAUUSD Curncy', 'GC1 Comdty'],
+            'asset_type': 'commodity',
+            'description': 'Gold Spot Price'
+        },
+        'CURRENCY': {
+            'primary': 'AUDJPY Curncy',
+            'fallbacks': ['AUDJPY BGN Curncy'],
+            'asset_type': 'fx',
+            'description': 'AUD/JPY Exchange Rate'
+        }
+    },
+    
+    # Date range
+    'start_date': '2007-01-01',
+    'end_date': pd.to_datetime('today').strftime('%Y-%m-%d'),
+    
+    # Model parameters
+    'correlation_window': 60,
+    'volatility_window': 60,
+    'warmup_period': 252,
+    'max_correlation_clip': 0.999,
+    
+    # Robustness parameters
+    'bql_retry_attempts': 3,
+    'min_data_points': 500,
+    'min_valid_pairs': 3,
+    'adaptive_regularization': True,
+    
+    # IMPORTANT: Set to True to test without Bloomberg
+    'test_mode': False,  # <<<< SET TO True IF TESTING WITHOUT BLOOMBERG
+    
+    'save_diagnostics': True,
+    'verbose': True,
+}
+
+class BQuantKSI:
+    """Ultra-robust KSI implementation for Bloomberg BQuant."""
+    
+    def __init__(self, config):
+        """Initialize the KSI calculator."""
+        self.config = config
+        self.diagnostics = {
+            'run_id': datetime.now().strftime('%Y%m%d_%H%M%S'),
+            'start_time': datetime.now(),
+            'environment': self._capture_environment(),
+            'errors': [],
+            'warnings': [],
+            'log': []
+        }
+        
+        # Data containers
+        self.bql_svc = None
+        self.price_df = pd.DataFrame()
+        self.ksi_series = pd.Series()
+        self.asset_metadata = {}
+        
+        # Print header
+        print("\n" + "="*70)
+        print("KINETIC STRESS INDEX (KSI) CALCULATOR")
+        print("="*70)
+        print(f"Run ID: {self.diagnostics['run_id']}")
+        print(f"Mode: {'TEST MODE (Synthetic Data)' if config['test_mode'] else 'LIVE MODE (Bloomberg Data)'}")
+        print("="*70 + "\n")
+        
+        # Run the pipeline
+        self._run_pipeline()
+    
+    def _capture_environment(self):
+        """Capture environment information."""
+        return {
+            'python_version': sys.version.split()[0],
+            'pandas_version': pd.__version__,
+            'numpy_version': np.__version__,
+            'bql_available': BQL_AVAILABLE,
+            'sklearn_available': SKLEARN_AVAILABLE,
+            'in_bquant': 'BQUANT_INSTANCEID' in os.environ or 'BQNT' in os.environ.get('JUPYTERHUB_SERVICE_PREFIX', '')
+        }
+    
+    def _log(self, message, level='INFO'):
+        """Log messages with timestamp."""
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        log_msg = f"[{timestamp}] {message}"
+        
+        if self.config['verbose'] or level in ['ERROR', 'WARNING']:
+            print(log_msg)
+        
+        self.diagnostics['log'].append({
+            'time': timestamp,
+            'level': level,
+            'message': message
+        })
+    
+    def _log_warning(self, context, message):
+        """Log warning."""
+        self._log(f"⚠️  WARNING [{context}]: {message}", 'WARNING')
+        self.diagnostics['warnings'].append({
+            'context': context,
+            'message': message,
+            'timestamp': datetime.now()
+        })
+    
+    def _log_error(self, context, message, exception=None):
+        """Log error with details."""
+        error_msg = f"❌ ERROR [{context}]: {message}"
+        if exception:
+            error_msg += f" | {type(exception).__name__}: {str(exception)}"
+        
+        self._log(error_msg, 'ERROR')
+        self.diagnostics['errors'].append({
+            'context': context,
+            'message': message,
+            'exception': str(exception) if exception else None,
+            'traceback': traceback.format_exc() if exception else None,
+            'timestamp': datetime.now()
+        })
+    
+    def _run_pipeline(self):
+        """Execute the main pipeline with error handling."""
+        try:
+            # Step 1: Validate environment
+            self._log("STEP 1: Validating environment...")
+            if not self._validate_environment():
+                return
+            
+            # Step 2: Acquire data
+            self._log("\nSTEP 2: Acquiring data...")
+            if not self._acquire_data():
+                return
+            
+            # Step 3: Build state vector
+            self._log("\nSTEP 3: Building state vector...")
+            if not self._build_state_vector():
+                return
+            
+            # Step 4: Compute KSI
+            self._log("\nSTEP 4: Computing KSI series...")
+            if not self._compute_ksi():
+                return
+            
+            # Step 5: Validate results
+            self._log("\nSTEP 5: Validating results...")
+            self._validate_results()
+            
+            self._log("\n✅ Pipeline completed successfully!", 'SUCCESS')
+            
+        except Exception as e:
+            self._log_error("PIPELINE", "Unexpected error in pipeline", e)
+        finally:
+            self._finalize()
+    
+    def _validate_environment(self):
+        """Validate the execution environment."""
+        if not self.config['test_mode'] and not BQL_AVAILABLE:
+            self._log_error("ENV", "BQL not available and test_mode=False. Cannot proceed.")
+            return False
+        
+        if not SKLEARN_AVAILABLE:
+            self._log_warning("ENV", "scikit-learn not available. Using basic covariance estimation.")
+        
+        self._log("✓ Environment validation passed")
+        return True
+    
+    def _acquire_data(self):
+        """Acquire data from Bloomberg or generate synthetic data."""
+        if self.config['test_mode']:
+            return self._generate_synthetic_data()
+        else:
+            return self._fetch_bloomberg_data()
+    
+    def _fetch_bloomberg_data(self):
+        """Fetch data from Bloomberg with fallback handling."""
+        # Initialize BQL service
+        for attempt in range(self.config['bql_retry_attempts']):
+            try:
+                self.bql_svc = bql.Service()
+                self._log("✓ BQL Service initialized")
+                break
+            except Exception as e:
+                if attempt < self.config['bql_retry_attempts'] - 1:
+                    self._log(f"  BQL init attempt {attempt + 1} failed, retrying...")
+                    time.sleep(2)
+                else:
+                    self._log_error("BQL_INIT", "Failed to initialize BQL service", e)
+                    return False
+        
+        # Fetch each asset
+        fetched_data = {}
+        
+        for asset_key, asset_config in self.config['assets'].items():
+            self._log(f"\nFetching {asset_key} ({asset_config['description']})...")
+            
+            tickers = [asset_config['primary']] + asset_config.get('fallbacks', [])
+            
+            for ticker in tickers:
+                self._log(f"  Trying: {ticker}")
+                
+                try:
+                    # Construct query based on asset type
+                    if asset_config['asset_type'] == 'yield':
+                        # For yields, don't use currency parameter
+                        query = f"""
+                        get(PX_LAST) 
+                        for(['{ticker}']) 
+                        with(
+                            dates=range('{self.config['start_date']}', '{self.config['end_date']}'),
+                            fill=prev
+                        )
+                        """
+                    else:
+                        # For non-yields, use currency
+                        query = f"""
+                        get(PX_LAST) 
+                        for(['{ticker}']) 
+                        with(
+                            dates=range('{self.config['start_date']}', '{self.config['end_date']}'),
+                            fill=prev,
+                            currency=USD
+                        )
+                        """
+                    
+                    # Execute query
+                    response = self.bql_svc.execute(query)
+                    
+                    # Parse response - handle different column name cases
+                    df = bql.combined_df(response)
+                    
+                    if df.empty:
+                        self._log(f"    Empty response for {ticker}")
+                        continue
+                    
+                    # Find date and value columns (case-insensitive)
+                    date_col = None
+                    value_col = None
+                    
+                    for col in df.columns:
+                        col_upper = col.upper()
+                        if 'DATE' in col_upper and date_col is None:
+                            date_col = col
+                        elif ('PX_LAST' in col_upper or 'LAST' in col_upper) and value_col is None:
+                            value_col = col
+                    
+                    if not date_col or not value_col:
+                        self._log(f"    Could not find required columns in response")
+                        continue
+                    
+                    # Extract series
+                    series = df.set_index(date_col)[value_col]
+                    series.name = asset_key
+                    
+                    # Remove any duplicate dates
+                    series = series[~series.index.duplicated(keep='first')]
+                    
+                    if len(series) > 0:
+                        fetched_data[asset_key] = series
+                        self.asset_metadata[asset_key] = {
+                            'ticker_used': ticker,
+                            'asset_type': asset_config['asset_type']
+                        }
+                        self._log(f"  ✓ Success with {ticker} ({len(series)} observations)")
+                        break
+                    
+                except Exception as e:
+                    self._log(f"    Failed: {str(e)[:100]}")
+                    continue
+            else:
+                self._log_warning("DATA_FETCH", f"Could not fetch {asset_key} from any ticker")
+        
+        if not fetched_data:
+            self._log_error("DATA_FETCH", "No data fetched for any asset")
+            return False
+        
+        # Combine and process data
+        self._log(f"\n✓ Fetched data for {len(fetched_data)} assets")
+        return self._process_fetched_data(fetched_data)
+    
+    def _process_fetched_data(self, fetched_data):
+        """Process and align fetched data."""
+        try:
+            # Align all series to common dates
+            all_series = list(fetched_data.values())
+            
+            # Find common date range
+            common_dates = all_series[0].index
+            for series in all_series[1:]:
+                common_dates = common_dates.intersection(series.index)
+            
+            self._log(f"Common date range: {len(common_dates)} observations")
+            
+            if len(common_dates) < self.config['min_data_points']:
+                self._log_error("DATA", f"Insufficient common dates: {len(common_dates)}")
+                return False
+            
+            # Create aligned dataframe
+            aligned_data = {}
+            for asset_key, series in fetched_data.items():
+                aligned_data[asset_key] = series.reindex(common_dates)
+            
+            self.price_df = pd.DataFrame(aligned_data)
+            
+            # Clean data
+            self.price_df = self.price_df.ffill().bfill()
+            self.price_df = self.price_df.dropna()
+            
+            self._log(f"✓ Data processed: {self.price_df.shape}")
+            self._log(f"  Date range: {self.price_df.index[0].date()} to {self.price_df.index[-1].date()}")
+            
+            # Calculate standardized changes
+            self._calculate_standardized_changes()
+            
+            return True
+            
+        except Exception as e:
+            self._log_error("DATA_PROCESS", "Failed to process data", e)
+            return False
+    
+    def _calculate_standardized_changes(self):
+        """Calculate standardized changes for all assets."""
+        self._log("Calculating standardized changes...")
+        
+        changes = pd.DataFrame(index=self.price_df.index)
+        
+        for asset in self.price_df.columns:
+            if self.asset_metadata[asset]['asset_type'] == 'yield':
+                # For yields, use first differences
+                changes[asset] = self.price_df[asset].diff()
+            else:
+                # For prices, use log returns
+                changes[asset] = np.log(self.price_df[asset] / self.price_df[asset].shift(1))
+        
+        # Remove first row (NaN from diff/returns)
+        changes = changes.iloc[1:]
+        
+        # Standardize by rolling volatility
+        rolling_vol = changes.rolling(
+            window=self.config['volatility_window'],
+            min_periods=self.config['volatility_window'] // 2
+        ).std()
+        
+        self.standardized_changes = changes / rolling_vol
+        self.standardized_changes = self.standardized_changes.replace([np.inf, -np.inf], np.nan)
+        self.standardized_changes = self.standardized_changes.dropna()
+        
+        self._log(f"✓ Standardized changes calculated: {self.standardized_changes.shape}")
+    
+    def _build_state_vector(self):
+        """Build the state vector from correlations."""
+        if self.standardized_changes.empty:
+            self._log_error("STATE", "No standardized changes available")
+            return False
+        
+        # Calculate pairwise correlations
+        pairs = list(itertools.combinations(self.standardized_changes.columns, 2))
+        self._log(f"Calculating correlations for {len(pairs)} pairs...")
+        
+        corr_list = []
+        pair_names = []
+        
+        for asset1, asset2 in pairs:
+            corr = self.standardized_changes[asset1].rolling(
+                window=self.config['correlation_window'],
+                min_periods=30
+            ).corr(self.standardized_changes[asset2])
+            
+            if corr.notna().sum() > 30:
+                corr_list.append(corr)
+                pair_names.append(f"{asset1}-{asset2}")
+        
+        if len(corr_list) < self.config['min_valid_pairs']:
+            self._log_error("STATE", f"Too few valid correlations: {len(corr_list)}")
+            return False
+        
+        # Combine correlations
+        self.corr_df = pd.concat(corr_list, axis=1)
+        self.corr_df.columns = pair_names
+        
+        # Build state vector (position, velocity, acceleration)
+        try:
+            # Clip correlations to avoid infinities in arctanh
+            clipped_corr = self.corr_df.clip(
+                -self.config['max_correlation_clip'],
+                self.config['max_correlation_clip']
+            )
+            
+            # Position (Fisher transform)
+            position = clipped_corr.apply(np.arctanh)
+            position.columns = [f"pos_{name}" for name in pair_names]
+            
+            # Velocity (first difference)
+            velocity = position.diff()
+            velocity.columns = [f"vel_{name}" for name in pair_names]
+            
+            # Acceleration (second difference)
+            acceleration = velocity.diff()
+            acceleration.columns = [f"acc_{name}" for name in pair_names]
+            
+            # Combine all components
+            self.state_vector = pd.concat([position, velocity, acceleration], axis=1)
+            
+            # Clean up
+            self.state_vector = self.state_vector.replace([np.inf, -np.inf], np.nan)
+            self.state_vector = self.state_vector.dropna()
+            
+            self._log(f"✓ State vector built: {self.state_vector.shape}")
+            return True
+            
+        except Exception as e:
+            self._log_error("STATE", "Failed to build state vector", e)
+            return False
+    
+    def _compute_ksi(self):
+        """Compute the KSI series."""
+        if self.state_vector.empty:
+            self._log_error("KSI", "No state vector available")
+            return False
+        
+        S = self.state_vector.values
+        n_obs, n_dims = S.shape
+        warmup = min(self.config['warmup_period'], n_obs // 2)
+        
+        if n_obs <= warmup:
+            self._log_error("KSI", f"Insufficient data: {n_obs} <= {warmup}")
+            return False
+        
+        ksi_values = []
+        
+        # Use Ledoit-Wolf if available
+        if SKLEARN_AVAILABLE:
+            estimator = LedoitWolf()
+        else:
+            estimator = None
+        
+        self._log(f"Computing KSI for {n_obs - warmup} time steps...")
+        self._log("This may take a few minutes...")
+        
+        # Progress tracking
+        start_time = time.time()
+        last_progress_time = start_time
+        
+        for t in range(warmup, n_obs):
+            # Progress reporting (every 5 seconds)
+            current_time = time.time()
+            if current_time - last_progress_time > 5:
+                progress = (t - warmup) / (n_obs - warmup) * 100
+                elapsed = current_time - start_time
+                eta = (elapsed / progress * 100 - elapsed) if progress > 0 else 0
+                self._log(f"  Progress: {progress:.1f}% (ETA: {eta:.0f}s)")
+                last_progress_time = current_time
+            
+            try:
+                # Historical data up to time t
+                hist_data = S[:t, :]
+                current_obs = S[t, :]
+                
+                # Mean and covariance
+                mean_hist = np.mean(hist_data, axis=0)
+                
+                if estimator:
+                    cov_hist = estimator.fit(hist_data).covariance_
+                else:
+                    cov_hist = np.cov(hist_data, rowvar=False)
+                
+                # Regularization if needed
+                if self.config['adaptive_regularization']:
+                    cond_num = np.linalg.cond(cov_hist)
+                    if cond_num > 1e8:
+                        reg_strength = 1e-6 * max(1, cond_num / 1e8)
+                        cov_hist += np.eye(n_dims) * reg_strength
+                
+                # Compute Mahalanobis distance
+                try:
+                    cov_inv = np.linalg.inv(cov_hist)
+                except:
+                    cov_inv = np.linalg.pinv(cov_hist)
+                
+                deviation = current_obs - mean_hist
+                ksi_squared = deviation @ cov_inv @ deviation
+                ksi = np.sqrt(max(0, ksi_squared))
+                
+                # Sanity check
+                if np.isnan(ksi) or np.isinf(ksi) or ksi > 1000:
+                    ksi = np.nan
+                
+                ksi_values.append(ksi)
+                
+            except Exception as e:
+                ksi_values.append(np.nan)
+        
+        # Create KSI series
+        self.ksi_series = pd.Series(
+            ksi_values,
+            index=self.state_vector.index[warmup:]
+        )
+        
+        # Handle NaN values
+        nan_count = self.ksi_series.isna().sum()
+        if nan_count > 0:
+            self._log(f"  Interpolating {nan_count} NaN values...")
+            self.ksi_series = self.ksi_series.interpolate(method='linear')
+            self.ksi_series = self.ksi_series.ffill().bfill()
+        
+        total_time = time.time() - start_time
+        self._log(f"✓ KSI computation complete in {total_time:.1f} seconds")
+        
+        return True
+    
+    def _generate_synthetic_data(self):
+        """Generate synthetic test data."""
+        self._log("Generating synthetic test data...")
+        
+        # Date range
+        dates = pd.date_range(
+            start=self.config['start_date'],
+            end=self.config['end_date'],
+            freq='B'  # Business days
+        )
+        
+        np.random.seed(42)  # For reproducibility
+        n_days = len(dates)
+        
+        # Generate correlated returns
+        corr_matrix = np.array([
+            [1.0, -0.3, 0.2, 0.1],    # Stocks
+            [-0.3, 1.0, 0.4, -0.2],   # Bonds  
+            [0.2, 0.4, 1.0, 0.3],     # Gold
+            [0.1, -0.2, 0.3, 1.0]     # Currency
+        ])
+        
+        daily_vols = [0.015, 0.005, 0.010, 0.008]
+        cov_matrix = np.outer(daily_vols, daily_vols) * corr_matrix
+        
+        # Generate returns with stress periods
+        returns = np.random.multivariate_normal(
+            mean=[0.0002, 0.0001, 0.0002, 0],
+            cov=cov_matrix,
+            size=n_days
+        )
+        
+        # Add stress events
+        stress_periods = [
+            (n_days // 4, 20, 3),      # 25% through
+            (n_days // 2, 30, 2.5),    # 50% through
+            (3 * n_days // 4, 25, 4),  # 75% through
+        ]
+        
+        for start, duration, multiplier in stress_periods:
+            if start + duration < n_days:
+                returns[start:start+duration] *= multiplier
+        
+        # Convert to prices
+        price_data = {}
+        
+        for i, asset in enumerate(self.config['assets'].keys()):
+            if self.config['assets'][asset]['asset_type'] == 'yield':
+                # For yields, start at 2.5% and use cumulative changes
+                base_yield = 2.5
+                yield_changes = returns[:, i] * 20  # Scale to basis points
+                price_data[asset] = base_yield + np.cumsum(yield_changes)
+            else:
+                # For prices, compound returns
+                base_price = 100
+                price_data[asset] = base_price * np.exp(np.cumsum(returns[:, i]))
+        
+        self.price_df = pd.DataFrame(price_data, index=dates)
+        
+        # Set metadata
+        self.asset_metadata = {
+            asset: {
+                'ticker_used': 'SYNTHETIC',
+                'asset_type': self.config['assets'][asset]['asset_type']
+            }
+            for asset in self.config['assets'].keys()
+        }
+        
+        self._log(f"✓ Generated {len(self.price_df)} days of synthetic data")
+        self._log(f"  Included {len(stress_periods)} stress periods")
+        
+        # Calculate standardized changes
+        self._calculate_standardized_changes()
+        
+        return True
+    
+    def _validate_results(self):
+        """Validate the computed KSI series."""
+        if self.ksi_series.empty:
+            self._log_warning("VALIDATE", "KSI series is empty")
+            return
+        
+        # Basic statistics
+        stats = self.ksi_series.describe()
+        
+        self._log("\nKSI Statistics:")
+        self._log(f"  Count:  {stats['count']:.0f}")
+        self._log(f"  Mean:   {stats['mean']:.3f}")
+        self._log(f"  Std:    {stats['std']:.3f}")
+        self._log(f"  Min:    {stats['min']:.3f}")
+        self._log(f"  Max:    {stats['max']:.3f}")
+        
+        # Percentiles
+        self._log("\nKSI Percentiles:")
+        for p in [50, 75, 90, 95, 99]:
+            value = self.ksi_series.quantile(p/100)
+            self._log(f"  {p}th percentile: {value:.3f}")
+        
+        # Current status
+        current_ksi = self.ksi_series.iloc[-1]
+        current_pct = (self.ksi_series < current_ksi).mean() * 100
+        
+        self._log(f"\nCurrent Status:")
+        self._log(f"  Latest KSI: {current_ksi:.3f}")
+        self._log(f"  Percentile: {current_pct:.1f}%")
+        
+        # Warnings
+        if stats['max'] > 100:
+            self._log_warning("VALIDATE", f"Very high maximum KSI: {stats['max']:.1f}")
+        
+        if stats['std'] < 0.1:
+            self._log_warning("VALIDATE", "Low KSI variance - may indicate issue")
+    
+    def plot_ksi(self, top_n_events=10):
+        """Generate KSI plot."""
+        if self.ksi_series.empty:
+            self._log_error("PLOT", "No KSI series to plot")
+            return
+        
+        self._log("\nGenerating plot...")
+        
+        # Try different plot styles with fallback
+        plot_styles = ['seaborn-v0_8-whitegrid', 'seaborn-whitegrid', 'ggplot', 'default']
+        for style in plot_styles:
+            try:
+                plt.style.use(style)
+                break
+            except:
+                continue
+        
+        # Create figure
+        fig, ax = plt.subplots(figsize=(16, 8))
+        
+        # Plot KSI series
+        ax.plot(self.ksi_series.index, self.ksi_series.values,
+                'k-', linewidth=1.5, label='KSI', alpha=0.8)
+        
+        # Add percentile lines
+        q95 = self.ksi_series.quantile(0.95)
+        q99 = self.ksi_series.quantile(0.99)
+        
+        ax.axhline(q95, color='orange', linestyle='--', linewidth=1,
+                   label=f'95th %ile ({q95:.2f})', alpha=0.7)
+        ax.axhline(q99, color='red', linestyle='--', linewidth=1,
+                   label=f'99th %ile ({q99:.2f})', alpha=0.7)
+        
+        # Mark top events
+        top_events = self.ksi_series.nlargest(top_n_events * 2)
+        annotated = []
+        
+        for date, value in top_events.items():
+            if len(annotated) >= top_n_events:
+                break
+            
+            # Don't annotate if too close to another annotation
+            if not any(abs((date - d).days) < 180 for d in annotated):
+                ax.plot(date, value, 'ro', markersize=6, alpha=0.8)
+                ax.annotate(date.strftime('%b %Y'),
+                           xy=(date, value),
+                           xytext=(0, 15),
+                           textcoords='offset points',
+                           ha='center',
+                           fontsize=8,
+                           bbox=dict(boxstyle='round,pad=0.3',
+                                   facecolor='yellow',
+                                   alpha=0.5),
+                           arrowprops=dict(arrowstyle='->',
+                                         connectionstyle='arc3,rad=0'))
+                annotated.append(date)
+        
+        # Labels and formatting
+        ax.set_title('Kinetic Stress Index (KSI) - Systemic Market Fragility',
+                     fontsize=16, pad=20)
+        ax.set_xlabel('Date', fontsize=12)
+        ax.set_ylabel('KSI Value (log scale)', fontsize=12)
+        ax.set_yscale('log')
+        ax.legend(loc='upper left')
+        ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.show()
+        
+        self._log("✓ Plot displayed")
+    
+    def generate_report(self):
+        """Generate text report."""
+        if self.ksi_series.empty:
+            self._log_error("REPORT", "No KSI series for report")
+            return
+        
+        print("\n" + "="*70)
+        print("KSI ANALYSIS REPORT")
+        print("="*70)
+        print(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Data Range: {self.ksi_series.index[0].date()} to {self.ksi_series.index[-1].date()}")
+        print(f"Observations: {len(self.ksi_series)}")
+        print()
+        
+        # Current status
+        current_ksi = self.ksi_series.iloc[-1]
+        current_pct = (self.ksi_series < current_ksi).mean() * 100
+        
+        print("CURRENT STATUS")
+        print("-"*40)
+        print(f"Latest KSI Value: {current_ksi:.3f}")
+        print(f"Percentile: {current_pct:.1f}%")
+        print(f"Status: {'ELEVATED STRESS' if current_pct > 95 else 'NORMAL'}")
+        print()
+        
+        # Historical context
+        print("HISTORICAL CONTEXT")
+        print("-"*40)
+        
+        # Try to find known crisis periods
+        crisis_periods = [
+            ('2008 Financial Crisis', '2008-01-01', '2009-12-31'),
+            ('COVID-19 Pandemic', '2020-01-01', '2020-12-31'),
+        ]
+        
+        for name, start, end in crisis_periods:
+            try:
+                period_data = self.ksi_series[start:end]
+                if len(period_data) > 0:
+                    peak = period_data.max()
+                    print(f"{name} Peak: {peak:.2f}")
+                    print(f"  Current vs Peak: {current_ksi/peak:.1%}")
+            except:
+                pass
+        print()
+        
+        # Top stress events
+        print("TOP 10 STRESS EVENTS")
+        print("-"*40)
+        
+        top_10 = self.ksi_series.nlargest(10)
+        for i, (date, value) in enumerate(top_10.items(), 1):
+            print(f"{i:2d}. {date.date()} - KSI: {value:.3f}")
+        
+        print("="*70)
+    
+    def _finalize(self):
+        """Finalize the run and save diagnostics."""
+        self.diagnostics['end_time'] = datetime.now()
+        self.diagnostics['duration_seconds'] = (
+            self.diagnostics['end_time'] - self.diagnostics['start_time']
+        ).total_seconds()
+        
+        # Summary stats
+        self.diagnostics['summary'] = {
+            'success': len(self.ksi_series) > 0,
+            'ksi_observations': len(self.ksi_series),
+            'errors_count': len(self.diagnostics['errors']),
+            'warnings_count': len(self.diagnostics['warnings'])
+        }
+        
+        if self.config['save_diagnostics']:
+            filename = f"ksi_diagnostics_{self.diagnostics['run_id']}.json"
+            
+            try:
+                # Custom JSON encoder
+                class DateEncoder(json.JSONEncoder):
+                    def default(self, obj):
+                        if isinstance(obj, (datetime, pd.Timestamp)):
+                            return obj.isoformat()
+                        return super().default(obj)
+                
+                with open(filename, 'w') as f:
+                    json.dump(self.diagnostics, f, indent=2, cls=DateEncoder)
+                
+                self._log(f"\n✓ Diagnostics saved to: {filename}")
+                
+            except Exception as e:
+                self._log_error("SAVE", "Failed to save diagnostics", e)
+
+
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
+
+if __name__ == '__main__':
+    # Create and run the KSI analyzer
+    analyzer = BQuantKSI(CONFIG)
+    
+    # Generate outputs if successful
+    if not analyzer.ksi_series.empty:
+        # Plot the results
+        analyzer.plot_ksi()
+        
+        # Generate text report
+        analyzer.generate_report()
+    else:
+        print("\n⚠️  KSI calculation failed. Check the output above for errors.")
+        print("    Review the diagnostics JSON file for detailed information.")
