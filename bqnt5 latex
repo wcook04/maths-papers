@@ -1,0 +1,101 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{framed}
+\usepackage{mathtools} % Provides psmallmatrix environment
+
+\title{The Kinetic Stress Index: A Distilled Mathematical Framework}
+\author{W. Cook}
+\date{15th July 2025}
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\section{I. Model Setup}
+\subsection{Parameters and Asset Universe}
+The model uses $n=4$ assets (Stocks, Bonds, Gold, Currency), a correlation window of $w=60$ days, and a Mahalanobis lookback of $l=252$ days.
+\section{II. State Vector Construction ($\mathbf{s}_t$)}
+\subsection{Pairwise Kinetics}
+This involves the six unique asset pairs $(i,j)$, where $(i,j) \in \{(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)\}$.
+\begin{enumerate}
+    \item \textbf{Log-returns:} $r_{i,t} = \ln(P_{i,t}/P_{i,t-1})$
+    \item \textbf{Spearman Correlation ($\rho_{ij,t}$):} The rank correlation is computed over the window $w$.
+    \[ \rho_{ij,t} = \text{rank-corr}(r_{i,t-w+1:t}, r_{j,t-w+1:t}) \]
+    \item \textbf{Position ($\boldsymbol{\theta}_t \in \mathbb{R}^6$):} Fisher z-transform is applied to each $\rho_{ij,t}$, where $\theta_{ij,t} \in \mathbb{R}$.
+    \[ \theta_{ij,t} = \tanh^{-1}(\rho_{ij,t}) \]
+    The vector is ordered explicitly:
+    \[ \boldsymbol{\theta}_t = [\theta_{12,t}, \theta_{13,t}, \theta_{14,t}, \theta_{23,t}, \theta_{24,t}, \theta_{34,t}]^\top \]
+    \item \textbf{Velocity ($\mathbf{v}_t \in \mathbb{R}^6$) and Acceleration ($\mathbf{a}_t \in \mathbb{R}^6$):}
+    \[ \mathbf{v}_t = \boldsymbol{\theta}_t - \boldsymbol{\theta}_{t-1} \quad ; \quad \mathbf{a}_t = \mathbf{v}_t - \mathbf{v}_{t-1} \]
+\end{enumerate}
+\subsection{Global Dynamics}
+\begin{enumerate}
+    \item \textbf{Maximum Eigenvalue ($\lambda_{\text{max},t}$):} This is extracted from the full $4 \times 4$ asset correlation matrix, $\mathbf{R}_t$.
+    \[ \mathbf{R}_t = 
+    \begin{pmatrix} 
+    1 & \rho_{12,t} & \rho_{13,t} & \rho_{14,t} \\
+    \rho_{12,t} & 1 & \rho_{23,t} & \rho_{24,t} \\
+    \rho_{13,t} & \rho_{23,t} & 1 & \rho_{34,t} \\
+    \rho_{14,t} & \rho_{24,t} & \rho_{34,t} & 1
+    \end{pmatrix}
+    \]
+    The largest eigenvalue measures the strength of the dominant, collective mode of correlation in the system.
+    \[ \lambda_{\text{max},t} = \max(\text{eig}(\mathbf{R}_t)) \]
+    \item \textbf{Eigenvalue Velocity ($\Delta\lambda_{\text{max},t}$):} This is the day-over-day change in the maximum eigenvalue.
+    \[ \Delta\lambda_{\text{max},t} = \lambda_{\text{max},t} - \lambda_{\text{max},t-1} \]
+\end{enumerate}
+\subsection{State Vector Synthesis}
+The components are concatenated into the final state vector $\mathbf{s}_t \in \mathbb{R}^{20}$.
+\[
+\mathbf{s}_t = 
+\begin{pmatrix} 
+\boldsymbol{\theta}_t \\ \mathbf{v}_t \\ \mathbf{a}_t \\ \lambda_{\text{max},t} \\ \Delta \lambda_{\text{max},t} 
+\end{pmatrix}
+\]
+\section{III. KSI Calculation and Decomposition}
+\subsection{Adaptive Baseline Estimation}
+The baseline mean and covariance are estimated over the lookback window $l$.
+\[ \boldsymbol{\mu}_{t-1} = \frac{1}{l}\sum_{k=1}^{l} \mathbf{s}_{t-k} \]
+The covariance matrix $\boldsymbol{\Sigma}_{t-1}$ is a robust, shrunk estimator.
+\[ \boldsymbol{\Sigma}_{t-1} = (1-\alpha)\mathbf{S}_{t-1} + \alpha\mathbf{T} \]
+where $\mathbf{S}_{t-1}$ is the sample covariance, $\mathbf{T}$ is a shrinkage target, and $\alpha \in [0,1]$ is the shrinkage intensity (typically $\alpha \approx 0.1-0.3$).
+\[ \mathbf{S}_{t-1} = \frac{1}{l-1}\sum_{k=1}^{l} (\mathbf{s}_{t-k} - \boldsymbol{\mu}_{t-1})(\mathbf{s}_{t-k} - \boldsymbol{\mu}_{t-1})^\top \quad ; \quad \mathbf{T} = \text{diag}(\text{diag}(\mathbf{S}_{t-1})) \]
+\subsection{Kinetic Stress Index (KSI)}
+The KSI is the Mahalanobis distance between the current state vector $\mathbf{s}_t$ and its historical mean $\boldsymbol{\mu}_{t-1}$.
+\[ \mathrm{KSI}_t = \sqrt{(\mathbf{s}_t - \boldsymbol{\mu}_{t-1})^\top \boldsymbol{\Sigma}_{t-1}^{-1} (\mathbf{s}_t - \boldsymbol{\mu}_{t-1})} \]
+\begin{framed}
+\noindent\begin{minipage}{\linewidth} % This minipage helps protect the fragile align environment inside framed.
+\textbf{Simple 2D Mahalanobis Example:} Consider data with mean $\boldsymbol{\mu} = \begin{psmallmatrix} 0 \\ 0 \end{psmallmatrix}$ and covariance $\boldsymbol{\Sigma} = \begin{psmallmatrix} 4 & 0 \\ 0 & 1 \end{psmallmatrix}$.
+Two points $\mathbf{A} = \begin{psmallmatrix} 2 \\ 0 \end{psmallmatrix}$ and $\mathbf{B} = \begin{psmallmatrix} 0 \\ 2 \end{psmallmatrix}$ have the same Euclidean distance (2) from the centre, but different Mahalanobis distances:
+\begin{align}
+D_M(\mathbf{A}) &= \sqrt{\begin{psmallmatrix} 2 & 0 \end{psmallmatrix} \begin{psmallmatrix} 1/4 & 0 \\ 0 & 1 \end{psmallmatrix} \begin{psmallmatrix} 2 \\ 0 \end{psmallmatrix}} = \sqrt{1} = 1 \\
+D_M(\mathbf{B}) &= \sqrt{\begin{psmallmatrix} 0 & 2 \end{psmallmatrix} \begin{psmallmatrix} 1/4 & 0 \\ 0 & 1 \end{psmallmatrix} \begin{psmallmatrix} 0 \\ 2 \end{psmallmatrix}} = \sqrt{4} = 2
+\end{align}
+Point $\mathbf{B}$ is "more surprising" because it deviates along the direction with smaller historical variance.
+\end{minipage}
+\end{framed}
+\subsection*{Decomposition via Eigendecomposition}
+The squared KSI can be perfectly decomposed by re-expressing the problem in the natural coordinate system of the covariance matrix.
+\begin{enumerate}
+    \item \textbf{The Eigenvector Equation:} The eigenvectors $\mathbf{v}_j$ and eigenvalues $\ell_j$ of $\boldsymbol{\Sigma}_{t-1}$ define the principal axes of the data's variance.
+    \[ \boldsymbol{\Sigma}_{t-1} \mathbf{v}_j = \ell_j \mathbf{v}_j, \quad \text{for } j = 1, \dots, 20 \quad (\text{where } \ell_1 \geq \ell_2 \geq \dots \geq \ell_{20} > 0) \]
+
+    \item \textbf{Matrix Decomposition:} The covariance matrix can be expressed using its eigenvectors ($\mathbf{V}$) and eigenvalues ($\mathbf{L}$).
+    \[ \boldsymbol{\Sigma}_{t-1} = \mathbf{V} \mathbf{L} \mathbf{V}^\top, \quad \text{where } \mathbf{V} = [\mathbf{v}_1, \dots, \mathbf{v}_{20}], \quad \mathbf{L} = \text{diag}(\ell_1, \dots, \ell_{20}) \]
+    \item \textbf{Projection:} Project the raw deviation vector onto each eigenvector direction $\mathbf{v}_j$ to find the magnitude of deviation along that mode.
+    \[ y_j = \mathbf{v}_j^\top (\mathbf{s}_t - \boldsymbol{\mu}_{t-1}) \quad \implies \quad \mathbf{y} = \mathbf{V}^\top (\mathbf{s}_t - \boldsymbol{\mu}_{t-1}) \]
+    \item \textbf{Substitution and Simplification:} Substitute the decomposed inverse, $\boldsymbol{\Sigma}_{t-1}^{-1} = \mathbf{V} \mathbf{L}^{-1} \mathbf{V}^\top$, into the $\mathrm{KSI}^2$ formula.
+    \begin{align}
+    \mathrm{KSI}_t^2 &= (\mathbf{s}_t - \boldsymbol{\mu}_{t-1})^\top (\mathbf{V} \mathbf{L}^{-1} \mathbf{V}^\top) (\mathbf{s}_t - \boldsymbol{\mu}_{t-1}) \\
+    &= ((\mathbf{s}_t - \boldsymbol{\mu}_{t-1})^\top \mathbf{V}) \, \mathbf{L}^{-1} \, (\mathbf{V}^\top (\mathbf{s}_t - \boldsymbol{\mu}_{t-1})) \\
+    &= (\mathbf{V}^\top(\mathbf{s}_t - \boldsymbol{\mu}_{t-1}))^\top \, \mathbf{L}^{-1} \, (\mathbf{V}^\top(\mathbf{s}_t - \boldsymbol{\mu}_{t-1})) \\
+    &= \mathbf{y}^\top \mathbf{L}^{-1} \mathbf{y} = \sum_{j=1}^{20} \frac{y_j^2}{\ell_j}
+    \end{align}
+\end{enumerate}
+\textbf{Interpretation:} The contribution of each independent mode, $\text{Contrib}_j$, to the total squared stress is the ratio:
+\[ \text{Contrib}_j = \frac{y_j^2}{\ell_j} = \frac{(\text{Deviation along mode } j)^2}{\text{Typical variance of mode } j} \]
+\end{document}
