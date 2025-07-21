@@ -1,0 +1,312 @@
+import pandas as pd
+import numpy as np
+import sys
+from datetime import datetime
+from typing import Dict, List, Optional
+
+# --- Visualization ---
+try:
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    import seaborn as sns
+    VISUALIZATION_AVAILABLE = True
+except ImportError:
+    VISUALIZATION_AVAILABLE = False
+    print("⚠️ WARNING: Visualization libraries (matplotlib, seaborn) not found. Plots will not be generated.")
+
+# --- Step 1: Check for Bloomberg BQL Availability ---
+print("--- Initializing Prism Verification v1.4 ---")
+try:
+    import bql
+    BQL_SERVICE = bql.Service()
+    BQL_AVAILABLE = True
+    print("✅ Bloomberg BQL module imported successfully. Live data mode is active.")
+except ImportError:
+    BQL_AVAILABLE = False
+    BQL_SERVICE = None # Explicitly set to None
+    print("⚠️ WARNING: Bloomberg BQL module not found. Will fall back to synthetic data.")
+
+
+# ==============================================================================
+# --- CONFIGURATION: The Single Source of Truth for Your Data Universe ---
+# ==============================================================================
+CONFIG = {
+    'universe': {
+        'currencies': ['USD', 'EUR', 'JPY', 'GBP'],
+        'base_currency': 'USD',
+        'tenors': {'3M': 90, '1Y': 365, '5Y': 1825},
+    },
+    'date_range': {
+        'start': '2007-01-01',
+        'end': '2012-12-31',
+    },
+    'tickers': {
+        'spot': { 'EUR': 'EURUSD Curncy', 'JPY': 'JPYUSD Curncy', 'GBP': 'GBPUSD Curncy' },
+        'swaps': {
+            'EUR': {'3M': 'EUR3M BGN Curncy', '1Y': 'EUR1Y BGN Curncy', '5Y': 'EUR5Y BGN Curncy'},
+            'JPY': {'3M': 'JPY3M BGN Curncy', '1Y': 'JPY1Y BGN Curncy', '5Y': 'JPY5Y BGN Curncy'},
+            'GBP': {'3M': 'GBP3M BGN Curncy', '1Y': 'GBP1Y BGN Curncy', '5Y': 'GBP5Y BGN Curncy'},
+        },
+        'ois_curves': {
+            'USD': 'YCSW0023 Index', 'EUR': 'YCSW0004 Index',
+            'JPY': 'YCSW0007 Index', 'GBP': 'YCSW0015 Index',
+        },
+        'stress_indicator': 'VIX Index'
+    },
+    'constants': { 'swap_points_scale': 10000.0, 'days_in_year': 365.0 },
+    'plot_parameters': {
+        'geometric_warp_date': '2008-09-30', 'surface_plot_currency': 'EUR',
+    },
+    'synthetic_data_params': {
+        'crisis_start': '2008-09-15', 'crisis_end': '2009-06-30',
+        'normal_basis_bps': 2, 'crisis_basis_bps': 150,
+    }
+}
+
+
+def load_and_prepare_market_data(config: Dict, bql_service: 'bql.Service') -> Optional[Dict[str, pd.DataFrame]]:
+    """[LIVE DATA] Handles data fetching and structuring from Bloomberg."""
+    print("\n--- [PHASE 1 - LIVE] FETCHING & STRUCTURING MARKET DATA ---")
+    try:
+        spot_tickers = list(config['tickers']['spot'].values())
+        swap_tickers = [t for ccy_swaps in config['tickers']['swaps'].values() for t in ccy_swaps.values()]
+        vix_ticker = [config['tickers']['stress_indicator']]
+        all_px_tickers = spot_tickers + swap_tickers + vix_ticker
+        
+        px_request = bql.Request(all_px_tickers, {'PX_LAST': bql.Service.data.px_last(fill='prev')},
+                                 with_params={'dates': bql.func.range(config['date_range']['start'], config['date_range']['end'])})
+        
+        ois_tickers = list(config['tickers']['ois_curves'].values())
+        tenor_keys = list(config['universe']['tenors'].keys())
+        ois_request = bql.Request(ois_tickers, {'Rate': bql.Service.data.curve_tenor_rates(tenors=tenor_keys, fill='prev')},
+                                  with_params={'dates': bql.func.range(config['date_range']['start'], config['date_range']['end'])})
+
+        response = bql_service.execute([px_request, ois_request])
+        df_px = response[0].df()
+        df_ois = response[1].df()
+
+        df_px_pivot = df_px.reset_index().pivot(index='DATE', columns='ID', values='PX_LAST')
+        df_vix = df_px_pivot[[config['tickers']['stress_indicator']]].rename(columns={config['tickers']['stress_indicator']: 'VIX'})
+        df_ois_pivot = df_ois.reset_index().pivot(index='DATE', columns=['ID', 'tenor'], values='Rate') / 100.0
+
+        final_data_frames = []
+        ccy_pairs = [f"{ccy}{config['universe']['base_currency']}" for ccy in config['universe']['currencies'] if ccy != config['universe']['base_currency']]
+        
+        for pair in ccy_pairs:
+            ccy1, ccy2 = pair[:3], pair[3:]
+            df_pair = pd.DataFrame(index=df_px_pivot.index)
+            df_pair['Pair'] = pair
+            spot_ticker = config['tickers']['spot'][ccy1]
+            df_pair['Spot'] = df_px_pivot[spot_ticker]
+            for tenor in config['universe']['tenors']:
+                df_pair[f'SwapPoints_{tenor}'] = df_px_pivot[config['tickers']['swaps'][ccy1][tenor]]
+                df_pair[f'OIS_{ccy1}_{tenor}'] = df_ois_pivot[(config['tickers']['ois_curves'][ccy1], tenor)]
+                df_pair[f'OIS_{ccy2}_{tenor}'] = df_ois_pivot[(config['tickers']['ois_curves'][ccy2], tenor)]
+            final_data_frames.append(df_pair)
+            
+        df_market_data = pd.concat(final_data_frames).reset_index().set_index(['DATE', 'Pair'])
+        df_market_data = df_market_data.ffill().dropna()
+        
+        print("✅ Live data fetching and structuring successful.")
+        return {'market_data': df_market_data, 'vix': df_vix}
+    except Exception as e:
+        print(f"❌ ERROR: A critical error occurred during live data fetching. Details: {e}")
+        return None
+
+def generate_synthetic_market_data(config: Dict) -> Dict[str, pd.DataFrame]:
+    """[FALLBACK] Generates a realistic synthetic dataset if Bloomberg is unavailable."""
+    print("\n--- [PHASE 1 - SYNTHETIC] GENERATING MOCK MARKET DATA ---")
+    np.random.seed(42)
+    s_params = config['synthetic_data_params']
+    dates = pd.date_range(start=config['date_range']['start'], end=config['date_range']['end'], freq='B')
+    
+    vix = pd.Series(15.0 + np.random.randn(len(dates)) * 2, index=dates)
+    crisis_dates = (dates >= s_params['crisis_start']) & (dates <= s_params['crisis_end'])
+    vix[crisis_dates] = np.linspace(30, 80, np.sum(crisis_dates)) + np.random.randn(np.sum(crisis_dates)) * 5
+    df_vix = pd.DataFrame(vix, columns=['VIX'])
+
+    final_data_frames = []
+    ccy_pairs = [f"{ccy}{config['universe']['base_currency']}" for ccy in config['universe']['currencies'] if ccy != config['universe']['base_currency']]
+    
+    for pair in ccy_pairs:
+        ccy1, ccy2 = pair[:3], pair[3:]
+        df_pair = pd.DataFrame(index=dates)
+        df_pair['Pair'] = pair
+
+        initial_spot = 1.35 if ccy1 == 'EUR' else (0.01 if ccy1 == 'JPY' else 1.5)
+        df_pair['Spot'] = initial_spot + np.cumsum(np.random.randn(len(dates)) * (initial_spot * 0.005))
+        
+        for tenor, days in config['universe']['tenors'].items():
+            df_pair[f'OIS_{ccy1}_{tenor}'] = 0.02 + (days/10000) + np.cumsum(np.random.randn(len(dates)) * 0.0001)
+            df_pair[f'OIS_{ccy2}_{tenor}'] = 0.02 + np.cumsum(np.random.randn(len(dates)) * 0.0001)
+            
+            basis_bps = np.full(len(dates), s_params['normal_basis_bps']) + np.random.randn(len(dates))
+            basis_bps[crisis_dates] = s_params['crisis_basis_bps'] + np.random.randn(np.sum(crisis_dates)) * 10
+            
+            T = days / config['constants']['days_in_year']
+            spot, r_dom, r_for = df_pair['Spot'], df_pair[f'OIS_{ccy1}_{tenor}'], df_pair[f'OIS_{ccy2}_{tenor}']
+            basis_adj = (basis_bps / 10000) * T
+            
+            fwd_emp = spot * (1 + r_dom * T) / (1 + r_for * T + basis_adj)
+            df_pair[f'SwapPoints_{tenor}'] = (fwd_emp - spot) * config['constants']['swap_points_scale']
+        
+        final_data_frames.append(df_pair)
+
+    df_market_data = pd.concat(final_data_frames)
+    df_market_data.index.name = 'DATE'
+    df_market_data = df_market_data.reset_index().set_index(['DATE', 'Pair'])
+    
+    print("✅ Synthetic data generation successful.")
+    return {'market_data': df_market_data, 'vix': df_vix}
+
+class PrismVerifier:
+    def __init__(self, market_data: pd.DataFrame, vix_data: pd.DataFrame, config: Dict):
+        print("\n--- PrismVerifier Initialized ---")
+        self.market_data = market_data
+        self.vix_data = vix_data
+        self.config = config
+        self.results = {}
+
+    def calculate_basis_history(self):
+        print("  - Running: Vectorized Basis Calculation...")
+        df = self.market_data.copy()
+        k = self.config['constants']
+        basis_results = []
+        for tenor, days in self.config['universe']['tenors'].items():
+            T = days / k['days_in_year']
+            r_domestic = pd.Series(index=df.index, dtype=float)
+            r_foreign = pd.Series(index=df.index, dtype=float)
+            for ccy in self.config['universe']['currencies']:
+                if ccy == self.config['universe']['base_currency']: continue
+                pair_mask = df.index.get_level_values('Pair').str.startswith(ccy)
+                r_domestic[pair_mask] = df.loc[pair_mask, f'OIS_{ccy}_{tenor}']
+                r_foreign[pair_mask] = df.loc[pair_mask, f'OIS_{self.config["universe"]["base_currency"]}_{tenor}']
+            fwd_rate_emp = df['Spot'] + df[f'SwapPoints_{tenor}'] / k['swap_points_scale']
+            f_log_emp = np.log(fwd_rate_emp)
+            spot_log = np.log(df['Spot'])
+            interest_diff = (r_domestic - r_foreign) * T
+            f_log_theory = spot_log + interest_diff
+            basis = (f_log_emp - f_log_theory) * 10000
+            basis_results.append(pd.Series(basis, name=tenor))
+        df_basis = pd.concat(basis_results, axis=1)
+        df_tensor_norm = df_basis.groupby('DATE').apply(lambda x: np.sqrt(np.sum(np.square(x.values)))).rename('Tensor_Norm')
+        self.results['basis_by_pair'] = df_basis
+        self.results['systemic_deviation'] = pd.DataFrame(df_tensor_norm).join(self.vix_data).dropna()
+        print("  - Calculation complete.")
+
+    def plot_geometric_warp(self):
+        if not VISUALIZATION_AVAILABLE: return
+        date = pd.to_datetime(self.config['plot_parameters']['geometric_warp_date'])
+        ccy1 = self.config['plot_parameters']['surface_plot_currency']
+        ccy2 = self.config['universe']['base_currency']
+        pair = f"{ccy1}{ccy2}"
+        print(f"\n  - Generating: Geometric Warp proof for {pair} on {date.date()}...")
+        if not (date, pair) in self.results['basis_by_pair'].index:
+            print(f"    ⚠️ WARNING: No data for {pair} on {date.date()}. Skipping warp plot.")
+            return
+        day_basis = self.results['basis_by_pair'].loc[(date, pair)]
+        tenor, basis_value = day_basis.abs().idxmax(), day_basis.loc[day_basis.abs().idxmax()]
+        row = self.market_data.loc[(date, pair)]
+        days, T = self.config['universe']['tenors'][tenor], self.config['universe']['tenors'][tenor] / self.config['constants']['days_in_year']
+        k = self.config['constants']
+        s_log = np.log(row['Spot'])
+        f_log = np.log(row['Spot'] + row[f'SwapPoints_{tenor}'] / k['swap_points_scale'])
+        r_dom, r_for = row[f'OIS_{ccy1}_{tenor}'], row[f'OIS_{ccy2}_{tenor}']
+        v1, v2, v3, v4 = np.array([s_log, 0]), np.array([0, r_dom * T]), np.array([-f_log, 0]), np.array([0, -r_for * T])
+        p0, p1, p2, p3, p4 = np.array([0,0]), np.array([0,0]), np.array([0,0]), np.array([0,0]), np.array([0,0])
+        p1, p2, p3, p4 = p0 + v1, p0 + v1 + v2, p0 + v1 + v2 + v3, p0 + v1 + v2 + v3 + v4
+        plt.figure(figsize=(12, 8))
+        path_x, path_y = zip(*[p0, p1, p2, p3, p4])
+        plt.plot(path_x, path_y, 'o-', c='royalblue', label='Empirical Path (G_emp)')
+        plt.plot([p4[0], p0[0]], [p4[1], p0[1]], 'r--o', label=f'Basis "Gap" = {basis_value:.2f} bps')
+        for p, label in zip([p0, p1, p2, p3], [f'{ccy2}@t0', f'{ccy1}@t0', f'{ccy1}@t1', f'{ccy2}@t1']):
+             plt.text(p[0], p[1] + 0.0005 * np.sign(p[1] or 1), label, ha='center', fontsize=11)
+        plt.title(f'Geometric Proof: Basis as Prism Warp for {pair} ({tenor}) on {date.date()}', fontsize=16)
+        plt.xlabel('Log Currency Space'); plt.ylabel('Log Interest/Time Space')
+        plt.grid(True, linestyle='--', alpha=0.6); plt.legend(); plt.axhline(0, c='k', lw=0.5); plt.axvline(0, c='k', lw=0.5)
+        plt.show()
+
+    def plot_basis_surface(self):
+        """Plots the basis surface over time and tenor for a given currency."""
+        if not VISUALIZATION_AVAILABLE: return
+        
+        ccy = self.config['plot_parameters']['surface_plot_currency']
+        pair = f"{ccy}{self.config['universe']['base_currency']}"
+        print(f"  - Generating: Basis Surface plot for {pair}...")
+        
+        # Select data for the specific pair
+        df_surf = self.results['basis_by_pair'].reset_index()
+        df_surf = df_surf[df_surf['Pair'] == pair]
+        if df_surf.empty:
+            print(f"    ⚠️ WARNING: No basis data for {pair} to plot surface."); return
+
+        # --- THE FIX IS HERE ---
+        # Reshape the data robustly for plotting.
+        # The result 'pivot' will have dates as index and tenors as columns.
+        tenor_cols = list(self.config['universe']['tenors'].keys())
+        pivot = df_surf.set_index('DATE')[tenor_cols]
+
+        # Prepare meshgrid for the 3D plot
+        tenor_days = [self.config['universe']['tenors'][t] for t in pivot.columns]
+        X, Y = np.meshgrid(tenor_days, pivot.index.map(datetime.toordinal))
+        Z = pivot.values
+
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(Y, X, Z, cmap='viridis', edgecolor='none', rstride=5, cstride=5)
+        
+        ax.set_title(f'Basis Surface for {pair} ("Warp" Magnitude Over Time)', fontsize=16)
+        ax.set_xlabel('Date'); ax.set_ylabel('Tenor (Days)'); ax.set_zlabel('Basis (bps)')
+        
+        # Set date ticks dynamically
+        tick_locs = ax.get_xticks()
+        ax.set_xticklabels([datetime.fromordinal(int(t)).strftime('%Y-%m') for t in tick_locs if t > 0])
+        ax.view_init(elev=30, azim=-120)
+        plt.show()
+
+    def plot_systemic_deviation(self):
+        if not VISUALIZATION_AVAILABLE: return
+        print("  - Generating: Systemic Deviation vs. Market Stress plot...")
+        df_plot = self.results['systemic_deviation']
+        fig, ax1 = plt.subplots(figsize=(14, 7))
+        ax1.set_xlabel('Date'); ax1.set_ylabel('Arbitrage Tensor Norm ||B(t)||', color='tab:blue')
+        ax1.plot(df_plot.index, df_plot['Tensor_Norm'], color='tab:blue')
+        ax1.tick_params(axis='y', labelcolor='tab:blue')
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('VIX Index', color='tab:red')
+        ax2.plot(df_plot.index, df_plot['VIX'], color='tab:red', alpha=0.6)
+        ax2.tick_params(axis='y', labelcolor='tab:red')
+        correlation = df_plot['Tensor_Norm'].corr(df_plot['VIX'])
+        plt.title(f'Systemic Deviation vs. VIX (Correlation: {correlation:.2f})', fontsize=16)
+        fig.tight_layout(); plt.show()
+        
+    def run_analysis_and_visualization(self):
+        print("\n--- [PHASE 2] EXECUTING PRISM VERIFICATION ---")
+        self.calculate_basis_history()
+        print("\n--- [PHASE 3] GENERATING VISUAL PROOFS ---")
+        self.plot_geometric_warp()
+        self.plot_basis_surface()
+        self.plot_systemic_deviation()
+
+def main():
+    """Main function to orchestrate the entire verification process."""
+    data_bundle = None
+    if BQL_AVAILABLE and BQL_SERVICE:
+        data_bundle = load_and_prepare_market_data(config=CONFIG, bql_service=BQL_SERVICE)
+    else:
+        data_bundle = generate_synthetic_market_data(config=CONFIG)
+
+    if data_bundle and not data_bundle['market_data'].empty:
+        print("\n✅ Data pipeline successful. Handing off to the PrismVerifier.")
+        verifier = PrismVerifier(
+            market_data=data_bundle['market_data'],
+            vix_data=data_bundle['vix'],
+            config=CONFIG
+        )
+        verifier.run_analysis_and_visualization()
+        print("\n--- Verification Complete ---")
+    else:
+        print("\n❌ PIPELINE FAILED: No data was generated. Analysis cannot proceed.")
+
+if __name__ == '__main__':
+    main()
