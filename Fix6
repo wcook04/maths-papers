@@ -1,0 +1,430 @@
+# ========================================================================================
+# --- THE ULTIMATE KSI PHASE TRANSITION ANALYZER (v14.2 - Final, Robust Version) ---
+# ========================================================================================
+
+print("\n--- INITIALIZING KSI PHASE TRANSITION ANALYZER (v14.2 - Final, Robust Version) ---")
+
+# --- Core Libraries ---
+import pandas as pd
+import numpy as np
+import itertools
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+import traceback
+from datetime import datetime
+import math
+import networkx as nx
+import sys
+from collections import defaultdict
+
+# --- Suppress Warnings for Cleaner Output ---
+warnings.filterwarnings('ignore')
+
+# --- Step 1: Intelligent Environment Check for Bloomberg BQL ---
+BQL_AVAILABLE = False
+BQL_SERVICE = None
+try:
+    import bql
+    BQL_SERVICE = bql.Service()
+    BQL_AVAILABLE = True
+    print("✅ Bloomberg BQL module imported successfully. Live data mode is available.")
+except ImportError:
+    print("⚠️  Bloomberg BQL module not found. The script can only run if 'test_mode' is set to True in CONFIG.")
+
+# ==============================================================================
+# --- CONFIGURATION: The Single Source of Truth for the Analysis ---
+# ==============================================================================
+CONFIG = {
+    'assets': {
+        'USDV3M2Y':   {'primary': 'USDV3M2Y Index', 'bql_field': 'PX_LAST', 'group': 'PolicyJitters'},
+        'USDV1Y5Y':   {'primary': 'USDV1Y5Y Index', 'bql_field': 'PX_LAST', 'group': 'PolicyJitters'},
+        'USDV5Y10Y':  {'primary': 'USDV5Y10Y Index', 'bql_field': 'PX_LAST', 'group': 'StructuralFear'},
+        'USDV10Y30Y': {'primary': 'USDV10Y30Y Index', 'bql_field': 'PX_LAST', 'group': 'StructuralFear'},
+    },
+    'date_range': {
+        'start': '2010-01-01',
+        'end': pd.to_datetime('today').strftime('%Y-%m-%d'),
+    },
+    'model_params': {
+        'correlation_window': 60,
+        'correlation_method': 'spearman',
+        'mahalanobis_lookback': 252,
+        'max_correlation_clip': 0.999,
+    },
+    'analysis_params': {
+        'num_peaks_to_analyze': 5,
+        'peak_separation_days': 180,
+        'contamination_threshold_pct': 50.0,
+    },
+    'visual_intelligence': {
+        'create_regime_fingerprints': True,
+        'create_event_gallery': True,
+    },
+    'execution': {
+        'test_mode': False, # Set to False for Bloomberg Environment
+        'verbose': True,
+    }
+}
+
+# --- GIS Function (Required for robust covariance) ---
+def GIS(Y, k=None):
+    if Y.shape[0] < Y.shape[1]:
+        raise ValueError(f"GIS failed: Not enough observations ({Y.shape[0]}) for number of features ({Y.shape[1]})")
+    N, p = Y.shape
+    if isinstance(Y, pd.DataFrame): Y = Y.to_numpy()
+    if k is None or math.isnan(k): Y, k = Y - Y.mean(axis=0), 1
+    n, c = N - k, p / n
+    if p > n: raise ValueError(f"GIS failed: p={p} > n={n}")
+    sample = (Y.T @ Y) / n
+    sample = (sample + sample.T) / 2
+    lambda1, u = np.linalg.eigh(sample)
+    lambda1 = np.maximum(lambda1, 1e-12)
+    h = min(c**2, 1/c**2)**0.35 / p**0.35
+    invlambda = 1 / lambda1
+    Lj = np.tile(invlambda, (p, 1)).T
+    Lj_i = Lj - Lj.T
+    theta = np.mean(Lj * Lj_i / (Lj_i**2 + (Lj**2) * h**2), axis=0)
+    Htheta = np.mean(Lj * Lj * h / (Lj_i**2 + (Lj**2) * h**2), axis=0)
+    Atheta2 = theta**2 + Htheta**2
+    deltahat_1 = (1 - c) * invlambda + 2 * c * invlambda * theta
+    delta = 1 / ((1 - c)**2 * invlambda + 2 * c * (1 - c) * invlambda * theta + c**2 * invlambda * Atheta2)
+    deltaLIS_1 = np.maximum(deltahat_1, np.min(invlambda[invlambda > 0]))
+    sigmahat = u @ np.diag(np.sqrt(delta / deltaLIS_1)) @ u.T.conj() @ u @ np.diag(np.sqrt(delta / deltaLIS_1)) @ u.T.conj()
+    return (sigmahat + sigmahat.T) / 2
+
+
+class KineticPhaseTransitionAnalyzer:
+    def __init__(self, config):
+        self.config = config
+        self.bql_svc = BQL_SERVICE
+        self.short_names = {'USDV3M2Y': '3M2Y', 'USDV1Y5Y': '1Y5Y', 'USDV5Y10Y': '5Y10Y', 'USDV10Y30Y': '10Y30Y'}
+        self._log(f"Initializing Analyzer v14.2 with assets: {list(config['assets'].keys())}")
+
+    def run(self):
+        if not self._validate_environment():
+            return
+
+        price_df = self._acquire_data()
+        if price_df is None or price_df.empty: return
+
+        returns_df = self._process_data(price_df)
+        if returns_df is None: return
+
+        self.state_vector_df = self._build_state_vector(returns_df)
+        if self.state_vector_df is None: return
+
+        self.ksi_series = self._compute_adaptive_ksi()
+        if self.ksi_series is None: return
+
+        self._log("\n✅ Pipeline completed successfully! KSI Series is ready.", 'SUCCESS')
+        self._classify_components()
+
+        self.analyze_and_display_peaks()
+        self.plot_ksi()
+
+        print("\n" + "="*80 + "\n--- GENERATING VISUAL INTELLIGENCE REPORTS ---\n" + "="*80)
+        
+        peak_dates_for_reports = self._find_distinct_peaks(self.config['analysis_params']['num_peaks_to_analyze'])
+
+        if self.config['visual_intelligence']['create_regime_fingerprints']:
+            self._log("Creating Regime Fingerprints dashboard...")
+            self.create_regime_fingerprints()
+
+        if self.config['visual_intelligence']['create_event_gallery']:
+            self._log("Creating Top Stress Event gallery...")
+            self.create_event_gallery()
+
+        self._log("Creating detailed visual reports for top peaks...")
+        for i, date in enumerate(peak_dates_for_reports):
+            self._log(f"  - Generating report for peak #{i+1} on {date.date()}...")
+            self.analyze_single_peak_visual(date)
+
+    def _acquire_data(self):
+        self._log("\n--- [1] ACQUIRING DATA ---")
+        if self.config['execution']['test_mode']:
+            return self._generate_synthetic_data()
+        try:
+            grouped_tickers = defaultdict(list)
+            for metadata in self.config['assets'].values():
+                grouped_tickers[metadata['bql_field']].append(metadata['primary'])
+            all_fetched_data = []
+            for field, tickers in grouped_tickers.items():
+                self._log(f"  - Requesting field '{field}' for {len(tickers)} ticker(s)...")
+                data_item_builder = getattr(self.bql_svc.data, field)
+                data_item = data_item_builder(
+                    dates=self.bql_svc.func.range(self.config['date_range']['start'], self.config['date_range']['end']),
+                    fill='prev'
+                )
+                request = bql.Request(tickers, {field: data_item})
+                response = self.bql_svc.execute(request)
+                df = response[0].df().reset_index().pivot(index='DATE', columns='ID', values=field)
+                all_fetched_data.append(df)
+            if not all_fetched_data:
+                self._log_error("BQL_FETCH", "No data could be fetched.")
+                return None
+            raw_df = pd.concat(all_fetched_data, axis=1)
+            ticker_to_name = {v['primary']: k for k, v in self.config['assets'].items()}
+            raw_df.rename(columns=ticker_to_name, inplace=True)
+            raw_df = raw_df[[name for name in self.config['assets'].keys() if name in raw_df.columns]]
+            self._log(f"✓ Successfully fetched data. Shape: {raw_df.shape}")
+            return raw_df
+        except Exception as e:
+            self._log_error("BQL_FETCH", "A critical error occurred during data fetching.", e)
+            return None
+
+    def _process_data(self, price_df):
+        self._log("\n--- [2] PROCESSING DATA ---")
+        price_df = price_df.ffill().dropna(how='all')
+        if len(price_df) < self.config['model_params']['correlation_window'] + 5:
+            self._log_error("DATA_CLEAN", f"Insufficient data points: {len(price_df)} after cleaning.")
+            return None
+        returns_df = np.log(price_df).diff().dropna(how='all')
+        self._log(f"✓ Log returns calculated. Shape: {returns_df.shape}")
+        return returns_df
+
+    def _build_state_vector(self, returns_df):
+        self._log("\n--- [3] BUILDING KINETIC STATE VECTOR ---")
+        p = self.config['model_params']
+        window, corr_method, clip = p['correlation_window'], p['correlation_method'], p['max_correlation_clip']
+        pairs = list(itertools.combinations(returns_df.columns, 2))
+        self.pair_names = [f"{p1}-{p2}" for p1, p2 in pairs]
+        corr_series_list = [returns_df[p1].rolling(window).corr(returns_df[p2], method=corr_method).rename(f"{p1}-{p2}") for p1, p2 in pairs]
+        corr_df = pd.concat(corr_series_list, axis=1)
+        pos = corr_df.clip(-clip, clip).apply(np.arctanh)
+        vel, acc = pos.diff(1), pos.diff(1).diff(1)
+        pos.columns = [f"pos_{name}" for name in self.pair_names]
+        vel.columns = [f"vel_{name}" for name in self.pair_names]
+        acc.columns = [f"acc_{name}" for name in self.pair_names]
+        eigen_list = [np.linalg.eigh(returns_df.iloc[i-window:i].corr(method=corr_method).values)[0][-1] for i in range(window, len(returns_df) + 1)]
+        lambda_1 = pd.Series(eigen_list, index=returns_df.index[window-1:], name='lambda_max')
+        delta_lambda_1 = lambda_1.diff(1).rename('delta_lambda_max')
+        state_vector_df = pd.concat([pos, vel, acc, lambda_1, delta_lambda_1], axis=1).dropna()
+        self._log(f"✓ State vector created with shape: {state_vector_df.shape}")
+        return state_vector_df
+
+    def _compute_adaptive_ksi(self):
+        self._log("\n--- [4] COMPUTING ADAPTIVE KSI ---")
+        lookback = self.config['model_params']['mahalanobis_lookback']
+        S = self.state_vector_df.values
+        ksi_values = []
+        for t in range(lookback, S.shape[0]):
+            try:
+                history = S[t - lookback : t]
+                mu_hist = np.mean(history, axis=0)
+                sigma_hist = GIS(history)
+                sigma_inv = np.linalg.pinv(sigma_hist)
+                deviation = S[t] - mu_hist
+                ksi_squared = deviation.T @ sigma_inv @ deviation
+                ksi_values.append(np.sqrt(max(0, ksi_squared)))
+            except Exception:
+                ksi_values.append(np.nan)
+        ksi_series = pd.Series(ksi_values, index=self.state_vector_df.index[lookback:]).interpolate()
+        self._log(f"✓ KSI calculation finished. Series length: {len(ksi_series)}")
+        return ksi_series
+
+    def analyze_and_display_peaks(self):
+        print("\n" + "="*80 + "\n--- KINETIC PHASE TRANSITION ANALYSIS (CONSOLE REPORT) ---\n" + "="*80)
+        peak_dates = self._find_distinct_peaks(self.config['analysis_params']['num_peaks_to_analyze'])
+        for peak_date in peak_dates:
+            self._analyze_single_peak_text(peak_date)
+
+    def _analyze_single_peak_text(self, peak_date):
+        scores_pct = self._get_scores_pct(peak_date)
+        verdict, color_code = self._get_verdict(scores_pct)
+        ksi_val = self.ksi_series.loc[peak_date]
+        print(f"\n--- Peak Event: {peak_date.strftime('%d-%b-%Y')} | KSI: {ksi_val:.2f} ---")
+        print(f"Verdict: {color_code} {verdict}")
+        print("\n  Diagnostic Scorecard:")
+        print(f"    - Cross-Contamination Acceleration: {scores_pct.get('cross_accel', 0):>5.1f}%")
+        print(f"    - Other Cross-Pair Kinetics:        {scores_pct.get('cross_other', 0):>5.1f}%")
+        print(f"    - Intra-Pair Kinetics:              {scores_pct.get('intra_kinetics', 0):>5.1f}%")
+        print(f"    - Global Eigenvalue Dynamics:       {scores_pct.get('global_eigen', 0):>5.1f}%")
+        print("-" * 65)
+
+    def create_regime_fingerprints(self):
+        fig, axes = plt.subplots(2, 2, figsize=(20, 16), constrained_layout=True)
+        fig.suptitle("Visual Intelligence Dashboard: Regime Fingerprints", fontsize=20)
+        ax1, ax2, ax3, ax4 = axes.ravel()
+        
+        pos_cols = [col for col in self.state_vector_df.columns if 'pos_' in col]
+        yticklabels = [f"{self.short_names[p.split('-')[0]]}-{self.short_names[p.split('-')[1]]}" for p in self.pair_names]
+        sns.heatmap(self.state_vector_df[pos_cols].iloc[::5].apply(np.tanh).T, ax=ax1, cmap='RdBu_r', center=0, vmin=-1, vmax=1, cbar_kws={'label': 'Correlation'}, yticklabels=yticklabels)
+        ax1.set_title('Correlation Structure Evolution', fontsize=14)
+        
+        cross_accel_cols = [col for col, cat in self.component_categories.items() if cat == 'cross_accel']
+        cross_accel = self.state_vector_df[cross_accel_cols].abs().sum(axis=1)
+        ksi_aligned = self.ksi_series.reindex(self.state_vector_df.index).fillna(0)
+        scatter = ax2.scatter(self.state_vector_df['lambda_max'], cross_accel, c=ksi_aligned, cmap='viridis', alpha=0.6, s=20)
+        ax2.set(xlabel='Max Eigenvalue (System Integration)', ylabel='Cross-Pair Acceleration (Contamination)', title='Phase Space: When Worlds Collide')
+        plt.colorbar(scatter, ax=ax2, label='KSI')
+        
+        for ktype, label in [('pos_', 'Structure'), ('vel_', 'Momentum'), ('acc_', 'Shock')]:
+            energy = self.state_vector_df[[c for c in self.state_vector_df if ktype in c]].rolling(60).std().mean(axis=1).fillna(0)
+            ax3.fill_between(self.state_vector_df.index, 0, energy, alpha=0.4, label=f'{label} Energy')
+        ax3.set_title('Kinetic Energy Decomposition', fontsize=14); ax3.legend()
+        
+        top_events = self.ksi_series.nlargest(10)
+        signatures = [self.state_vector_df.loc[d].values for d in top_events.index if d in self.state_vector_df.index]
+        if signatures:
+            signatures_norm = [s / np.linalg.norm(s) for s in signatures]
+            sns.heatmap(np.array(signatures_norm), ax=ax4, cmap='coolwarm', center=0, cbar_kws={'label': 'Normalized State'})
+            ax4.set(title='Top 10 Stress Event Signatures', xlabel='State Vector Components', ylabel='Event Rank')
+        
+        plt.show()
+
+    def create_event_gallery(self):
+        peak_dates = self._find_distinct_peaks(6)
+        if not peak_dates: self._log("No distinct peaks found for event gallery.", "WARN"); return
+        fig, axes = plt.subplots(2, 3, figsize=(18, 12), constrained_layout=True)
+        fig.suptitle('Gallery of Top Stress Events: Correlation Network Evolution', fontsize=20)
+        for i, date in enumerate(peak_dates):
+            if i >= len(axes.flat): break
+            ax = axes.flat[i]
+            self.plot_correlation_network(date, ax=ax)
+            ax.set_title(f'{date.strftime("%d-%b-%Y")} (KSI: {self.ksi_series.loc[date]:.1f})', fontsize=14)
+        plt.show()
+
+    def analyze_single_peak_visual(self, peak_date):
+        fig, axes = plt.subplots(2, 2, figsize=(20, 15), constrained_layout=True)
+        fig.suptitle(f'Visual Analysis: {peak_date.strftime("%d-%b-%Y")} Stress Event', fontsize=20)
+        ax1, ax2, ax3, ax4 = axes.ravel()
+        
+        scores_pct = self._get_scores_pct(peak_date)
+        if scores_pct:
+            colors = {'cross_accel': '#E74C3C', 'cross_other': '#F39C12', 'intra_kinetics': '#F1C40F', 'global_eigen': '#3498DB'}
+            pie_data = {label: scores_pct.get(label, 0) for label in colors.keys()}
+            ax1.pie(pie_data.values(), labels=pie_data.keys(), colors=colors.values(), autopct='%1.1f%%', startangle=90)
+            ax1.set_title('Stress Decomposition')
+        else:
+            ax1.text(0.5, 0.5, "Score calculation failed.", ha='center', va='center', fontsize=12)
+
+        history = self.state_vector_df.loc[:peak_date].iloc[-self.config['model_params']['mahalanobis_lookback']:]
+        event_vector = self.state_vector_df.loc[peak_date]
+        mu_hist, std_hist = history.mean(), history.std()
+        state_norm = ((event_vector - mu_hist) / (std_hist + 1e-9)).values.reshape(1, -1)
+        sns.heatmap(state_norm, ax=ax2, cmap='RdBu_r', center=0, xticklabels=self.state_vector_df.columns, yticklabels=['Z-Score'])
+        ax2.set_title('Normalized State Vector (Z-Score)'); plt.setp(ax2.get_xticklabels(), rotation=90, fontsize=8)
+        
+        context_series = self.ksi_series.loc[peak_date-pd.Timedelta(days=60):peak_date+pd.Timedelta(days=60)]
+        ax3.plot(context_series.index, context_series.values, 'k-', linewidth=1.5)
+        ax3.axvline(peak_date, color='red', linestyle='--', linewidth=2)
+        q95 = self.ksi_series.quantile(0.95)
+        ax3.fill_between(context_series.index, q95, context_series.max(), where=context_series > q95, alpha=0.3, color='red', label=f'95th Pctile')
+        ax3.set(title='KSI Time Series Context', yscale='log'); ax3.legend()
+        
+        self.plot_correlation_network(peak_date, ax=ax4)
+        ax4.set_title("Correlation Network on Event Date")
+        plt.show()
+
+    def plot_correlation_network(self, date, ax):
+        correlations = {col.replace('pos_', ''): np.tanh(self.state_vector_df.loc[date, col]) for col in self.state_vector_df.columns if 'pos_' in col and date in self.state_vector_df.index}
+        G = nx.Graph()
+        pos = {'3M2Y': (-1, 1), '1Y5Y': (-1, -1), '5Y10Y': (1, 1), '10Y30Y': (1, -1)}
+        for pair_full, corr in correlations.items():
+            a1_full, a2_full = pair_full.split('-')
+            G.add_edge(self.short_names[a1_full], self.short_names[a2_full], weight=corr)
+        policy_nodes, struct_nodes = ['3M2Y', '1Y5Y'], ['5Y10Y', '10Y30Y']
+        nx.draw_networkx_nodes(G, pos, nodelist=policy_nodes, node_color='#FF6B6B', node_size=3000, alpha=0.9, ax=ax)
+        nx.draw_networkx_nodes(G, pos, nodelist=struct_nodes, node_color='#4D96FF', node_size=3000, alpha=0.9, ax=ax)
+        for u, v, d in G.edges(data=True):
+            width = abs(d['weight']) * 8
+            color = '#44AF69' if d['weight'] > 0 else '#C34A36'
+            style = 'dashed' if (u in policy_nodes) != (v in policy_nodes) else 'solid'
+            nx.draw_networkx_edges(G, pos, edgelist=[(u, v)], width=width, edge_color=color, alpha=min(abs(d['weight']) + 0.3, 1.0), style=style, ax=ax)
+        nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold', ax=ax)
+        ax.text(0.02, 0.98, f'KSI: {self.ksi_series.get(date, 0):.2f}', transform=ax.transAxes, va='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
+        ax.axis('off')
+
+    def plot_ksi(self):
+        if self.ksi_series.empty: return
+        self._log("\n--- [5] GENERATING PLOT ---")
+        plt.style.use('seaborn-v0_8-whitegrid')
+        fig, ax = plt.subplots(figsize=(16, 8))
+        self.ksi_series.plot(ax=ax, color='k', linewidth=1.5, label='KSI (v14.2 - IR Vol)')
+        q95 = self.ksi_series.quantile(0.95)
+        ax.axhline(q95, color='darkorange', linestyle='--', linewidth=1.2, label=f'95th Percentile ({q95:.2f})')
+        ax.set(title='Kinetic Stress Index (Interest Rate Volatility)', ylabel='KSI (Unitless Stress Level, Log Scale)', yscale='log')
+        ax.legend(loc='upper left'); plt.tight_layout(); plt.show()
+        
+    def _find_distinct_peaks(self, num_peaks):
+        separation = self.config['analysis_params']['peak_separation_days']
+        candidates = self.ksi_series.nlargest(num_peaks * 10)
+        peak_dates = []
+        for date, _ in candidates.items():
+            if len(peak_dates) >= num_peaks: break
+            if not any(abs((date - ad).days) < separation for ad in peak_dates):
+                peak_dates.append(date)
+        return sorted(peak_dates)
+
+    def _get_scores_pct(self, peak_date):
+        try:
+            peak_idx = self.state_vector_df.index.get_loc(peak_date, method='nearest')
+            history = self.state_vector_df.iloc[peak_idx - self.config['model_params']['mahalanobis_lookback'] : peak_idx].values
+            event_vector = self.state_vector_df.iloc[peak_idx].values
+            mu_hist = np.mean(history, axis=0)
+            sigma_hist = GIS(history)
+            eigenvalues, eigenvectors = np.linalg.eigh(sigma_hist)
+            y = eigenvectors.T @ (event_vector - mu_hist)
+            mode_contributions = (y**2) / np.maximum(eigenvalues, 1e-12)
+            scores = defaultdict(float)
+            for mode_idx, contribution in enumerate(mode_contributions):
+                eigenvector = eigenvectors[:, mode_idx]
+                for i, comp_name in enumerate(self.state_vector_df.columns):
+                    scores[self.component_categories.get(comp_name)] += contribution * (eigenvector[i]**2)
+            total_score = sum(scores.values())
+            return {k: (v / total_score) * 100 for k, v in scores.items()} if total_score > 0 else {}
+        except Exception as e:
+            self._log_error("SCORE_CALC", f"Could not calculate scores for {peak_date.date()}", e)
+            return {}
+
+    def _classify_components(self):
+        self.component_categories = {}
+        assets_cfg = self.config['assets']
+        for col in self.state_vector_df.columns:
+            if 'lambda' in col: self.component_categories[col] = 'global_eigen'; continue
+            kinetic_type, pair_name = col.split('_', 1)
+            p1, p2 = pair_name.split('-')
+            if assets_cfg.get(p1, {}).get('group') == assets_cfg.get(p2, {}).get('group'):
+                self.component_categories[col] = 'intra_kinetics'
+            else:
+                self.component_categories[col] = 'cross_accel' if kinetic_type == 'acc' else 'cross_other'
+
+    def _get_verdict(self, scores_pct):
+        if not scores_pct: return "ANALYSIS FAILED", "⚪️"
+        threshold = self.config['analysis_params']['contamination_threshold_pct']
+        if scores_pct.get('cross_accel', 0) >= threshold: return "KINETIC CROSS-CONTAMINATION EVENT", "🔴"
+        if scores_pct.get('cross_accel', 0) + scores_pct.get('cross_other', 0) >= threshold: return "STRUCTURAL TENSION WARNING", "🟠"
+        if scores_pct.get('intra_kinetics', 0) >= threshold: return "CONTAINED REGIME STRESS", "🟡"
+        return "UNDEFINED STRESS", "⚪️"
+
+    def _log(self, message, level='INFO'):
+        if self.config['execution']['verbose'] or level != 'INFO': print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
+
+    def _log_error(self, context, message, exception=None):
+        error_msg = f"❌ ERROR [{context}]: {message}" + (f" | {type(exception).__name__}: {str(exception)}" if exception else "")
+        self._log(error_msg, 'ERROR')
+        if exception and self.config['execution']['verbose']: traceback.print_exc(limit=2)
+    
+    def _validate_environment(self):
+        if not self.config['execution']['test_mode'] and not BQL_AVAILABLE:
+            self._log_error("ENV_CHECK", "Live data run requested but BQL is not available.")
+            return False
+        return True
+
+    def _generate_synthetic_data(self):
+        self._log("Generating synthetic test data...")
+        dates = pd.date_range(start=self.config['date_range']['start'], end=self.config['date_range']['end'], freq='B')
+        returns = pd.DataFrame(np.random.randn(len(dates), 4) * 0.02, columns=self.config['assets'].keys(), index=dates)
+        price_df = (10 * returns).cumsum() + np.random.uniform(20, 80, 4)
+        return price_df.clip(lower=1)
+
+if __name__ == '__main__':
+    try:
+        analyzer = KineticPhaseTransitionAnalyzer(CONFIG)
+        analyzer.run()
+        print("\n--- KSI ANALYSIS COMPLETE ---")
+    except Exception as e:
+        print(f"\n--- A CRITICAL ERROR OCCURRED DURING EXECUTION ---")
+        traceback.print_exc()
+
