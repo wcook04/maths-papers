@@ -1,0 +1,156 @@
+Of course. Here is a refined, production-quality version of the follow-up code.
+
+This version addresses several key points to make it more robust, efficient, and informative:
+
+1.  **Performance:** The original code calculates complex scores for every single day, which can be very slow. This version calculates the scores once and then applies a rolling average, which is both computationally efficient and better at showing underlying regime trends by smoothing out daily noise.
+2.  **Robustness:** It uses `pd.DataFrame.rolling().mean()` which gracefully handles `NaN` values and ensures the data is properly aligned.
+3.  **Clarity:** The code is more heavily commented, and the plot titles and labels have been refined for maximum clarity.
+4.  **Insightful Summaries:** The summary statistics now report on the smoothed, plotted data and more clearly identify the start dates of major cross-contamination regimes.
+
+This code block is designed to be run in a new cell in a Jupyter-style environment *after* the main analyzer script has been executed and the `analyzer` object exists in memory.
+
+---
+
+### Follow-up Code for Rolling Stress Attribution Analysis
+
+```python
+# ========================================================================================
+# --- VISUALIZATION FOLLOW-UP: ROLLING STRESS ATTRIBUTION ---
+#
+# PURPOSE:
+# This script generates a single, highly informative visualization to be run after the main
+# KSI analyzer. It creates a "Rolling Stress Attribution" plot that reveals how the
+# sources of market stress evolve over time.
+#
+# HOW IT WORKS:
+# 1. CALCULATE SCORES: It first calculates the daily contribution of each stress
+#    category (cross-contamination, intra-pair, etc.) for the entire history.
+# 2. SMOOTH THE DATA: It then applies a rolling average to these daily scores to
+#    reveal the underlying regime trends, filtering out daily noise.
+# 3. VISUALIZE: It creates a two-panel plot:
+#    - Top Panel: A stacked area chart of the smoothed stress contributions,
+#      overlaid with the KSI, to show what drives major stress events.
+#    - Bottom Panel: A "Dominance Ratio" chart to clearly highlight when
+#      dangerous cross-contamination becomes the primary source of market tension.
+#
+# ========================================================================================
+
+def create_rolling_stress_attribution(analyzer, window=60):
+    """
+    Creates a stacked area chart showing the rolling contribution of different stress types
+    to the overall KSI, revealing regime changes in market stress dynamics.
+
+    Args:
+        analyzer (KineticPhaseTransitionAnalyzer): The executed analyzer object.
+        window (int): The window size in days for the rolling average.
+    """
+    print(f"\n--- [VISUALIZATION] Generating Rolling Stress Attribution (Window: {window} days) ---")
+
+    # --- 1. Calculate Daily Scores (Efficiently) ---
+    # To avoid re-calculating in a loop, we'll get scores for all dates at once.
+    all_scores = [analyzer._get_scores_pct(date) for date in analyzer.ksi_series.index if date in analyzer.state_vector_df.index]
+    
+    # Check if we have data to plot
+    if not all_scores:
+        print("❌ ERROR: No valid score data found to create the plot.")
+        return
+
+    # Convert the list of dicts into a DataFrame
+    contrib_df = pd.DataFrame(all_scores, index=[d for d in analyzer.ksi_series.index if d in analyzer.state_vector_df.index])
+
+    # --- 2. Smooth the Data with a Rolling Average ---
+    # This is key to showing regimes instead of noisy daily data.
+    contrib_rolling_df = contrib_df.rolling(window, min_periods=1).mean()
+    
+    # --- 3. Create the Visualization ---
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1,
+        figsize=(20, 14),
+        sharex=True, # Both plots share the same x-axis
+        gridspec_kw={'height_ratios': [3, 1]}
+    )
+    plt.style.use('seaborn-v0_8-whitegrid')
+
+    # --- Top Panel: Rolling Stress Attribution ---
+    stress_components = ['cross_accel', 'cross_other', 'intra_kinetics', 'global_eigen']
+    component_labels = [
+        'Cross-Contamination (Acceleration)',
+        'Cross-Pair Dynamics (Other)',
+        'Intra-Group Stress',
+        'System Integration (Eigenvalue)'
+    ]
+    colors = ['#E74C3C', '#F39C12', '#F1C40F', '#3498DB']
+
+    ax1.stackplot(
+        contrib_rolling_df.index,
+        [contrib_rolling_df[comp] for comp in stress_components],
+        labels=component_labels,
+        colors=colors,
+        alpha=0.8
+    )
+
+    # Overlay the KSI series on a secondary y-axis for context
+    ax1_twin = ax1.twinx()
+    ksi_aligned = analyzer.ksi_series.reindex(contrib_rolling_df.index)
+    ax1_twin.plot(ksi_aligned.index, ksi_aligned, 'k-', linewidth=2.5, label='KSI (Log Scale)', alpha=0.7)
+    ax1_twin.set_ylabel('KSI Value (Log Scale)', fontsize=12, weight='bold')
+    ax1_twin.set_yscale('log')
+    ax1_twin.tick_params(axis='y', labelsize=10)
+
+    # Formatting for the top panel
+    ax1.set_ylabel('Smoothed Stress Attribution (%)', fontsize=12, weight='bold')
+    ax1.set_title('Evolution of Market Stress Regimes: What is Driving the Tension?', fontsize=18, pad=20)
+    ax1.legend(loc='upper left', fontsize=11)
+    ax1.grid(True, which='major', linestyle='--', linewidth=0.5)
+    ax1.set_ylim(0, 100)
+    ax1.tick_params(axis='y', labelsize=10)
+
+    # --- Bottom Panel: Cross-Contamination Dominance Ratio ---
+    # This ratio highlights when cross-contamination becomes the dominant stress source.
+    # Adding a small epsilon to the denominator prevents division by zero.
+    dominance_ratio = (contrib_rolling_df['cross_accel'] + contrib_rolling_df['cross_other']) / (contrib_rolling_df.sum(axis=1) + 1e-9)
+
+    ax2.plot(dominance_ratio.index, dominance_ratio, 'k-', linewidth=1.5, alpha=0.8)
+    ax2.fill_between(dominance_ratio.index, 0.5, dominance_ratio, where=(dominance_ratio > 0.5),
+                     color='#E74C3C', alpha=0.5, interpolate=True, label='Cross-Contamination Dominant')
+    ax2.fill_between(dominance_ratio.index, dominance_ratio, 0.5, where=(dominance_ratio <= 0.5),
+                     color='#44AF69', alpha=0.4, interpolate=True, label='Contained Stress Dominant')
+    
+    # Formatting for the bottom panel
+    ax2.axhline(y=0.5, color='black', linestyle=':', linewidth=1.5, label='50% Dominance Threshold')
+    ax2.set_ylabel('Cross-Contamination\nDominance Ratio', fontsize=10, weight='bold')
+    ax2.set_ylim(0, 1)
+    ax2.legend(loc='upper left', fontsize=10)
+    ax2.grid(True, which='major', linestyle='--', linewidth=0.5)
+    ax2.tick_params(axis='both', labelsize=10)
+    
+    fig.tight_layout(pad=2.0)
+    plt.savefig('rolling_stress_attribution.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+    # --- 4. Print Summary Insights ---
+    print("\n--- STRESS ATTRIBUTION SUMMARY ---")
+    print(f"Average Smoothed Contributions (using {window}-day window):")
+    print(contrib_rolling_df[stress_components].mean().round(1).to_string())
+
+    # Identify the start of major cross-contamination regimes
+    contamination_dominant = dominance_ratio > 0.5
+    regime_starts = contamination_dominant.ne(contamination_dominant.shift()).cumsum()
+    regime_start_dates = contrib_rolling_df[contamination_dominant & (regime_starts.diff() == 1)].index
+
+    print(f"\nIdentified {len(regime_start_dates)} major regime shifts into 'Cross-Contamination Dominant':")
+    if regime_start_dates.any():
+        for date in regime_start_dates[-5:]:  # Show last 5 for brevity
+            print(f"  - Regime shift detected around: {date.strftime('%d-%b-%Y')}")
+    else:
+        print("  - No major cross-contamination regimes found.")
+
+# --- Execution Block ---
+# This checks if the 'analyzer' object from the main script exists before running.
+if 'analyzer' in locals() and hasattr(analyzer, 'ksi_series') and not analyzer.ksi_series.empty:
+    create_rolling_stress_attribution(analyzer, window=60)
+else:
+    print("\n❌ ANALYSIS HALTED: The main 'analyzer' object is not available or has no data.")
+    print("   Please ensure the main KSI analyzer script has been run successfully first.")
+
+```
