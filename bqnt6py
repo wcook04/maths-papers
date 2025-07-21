@@ -1,5 +1,5 @@
 # ========================================================================================
-# --- THE ULTIMATE KSI PHASE TRANSITION ANALYZER (v14.0 - Production Grade) ---
+# --- THE ULTIMATE KSI PHASE TRANSITION ANALYZER (v14.1 - Production Grade, Corrected) ---
 #
 # PURPOSE:
 # This production-grade script combines a robust Bloomberg data foundation with a
@@ -25,7 +25,7 @@
 #
 # ========================================================================================
 
-print("\n--- INITIALIZING KSI PHASE TRANSITION ANALYZER (v14.0 - Production Grade) ---")
+print("\n--- INITIALIZING KSI PHASE TRANSITION ANALYZER (v14.1 - Production Grade, Corrected) ---")
 
 # --- Core Libraries ---
 import pandas as pd
@@ -86,7 +86,7 @@ CONFIG = {
         'create_event_gallery': True,
     },
     'execution': {
-        'test_mode': True, # <<<< SET TO True IF TESTING WITHOUT BLOOMBERG
+        'test_mode': False, # <<<< SET TO False FOR BLOOMBERG ENVIRONMENT
         'verbose': True,
     }
 }
@@ -130,7 +130,7 @@ class KineticPhaseTransitionAnalyzer:
             'USDV3M2Y': '3M2Y', 'USDV1Y5Y': '1Y5Y',
             'USDV5Y10Y': '5Y10Y', 'USDV10Y30Y': '10Y30Y',
         }
-        self._log(f"Initializing Analyzer v14.0 with assets: {list(config['assets'].keys())}")
+        self._log(f"Initializing Analyzer v14.1 with assets: {list(config['assets'].keys())}")
 
     def run(self):
         """Executes the full analysis and visualization pipeline."""
@@ -172,8 +172,15 @@ class KineticPhaseTransitionAnalyzer:
             self.create_event_gallery()
 
         self._log("Creating detailed visual reports for top 5 peaks...")
-        top_5_events = self.ksi_series.nlargest(5)
-        for i, date in enumerate(top_5_events.index):
+        # Find 5 distinct peaks to analyze
+        top_events = self.ksi_series.nlargest(self.config['analysis_params']['num_peaks_to_analyze'] * 10) # Look at more to find separated ones
+        peak_dates = []
+        for date, _ in top_events.items():
+            if len(peak_dates) >= self.config['analysis_params']['num_peaks_to_analyze']: break
+            if not any(abs((date - ad).days) < self.config['analysis_params']['peak_separation_days'] for ad in peak_dates):
+                peak_dates.append(date)
+
+        for i, date in enumerate(sorted(peak_dates)):
             self._log(f"  - Generating report for peak #{i+1} on {date.date()}...")
             self.analyze_single_peak_visual(date)
 
@@ -244,24 +251,49 @@ class KineticPhaseTransitionAnalyzer:
         return returns_df
 
     def _build_state_vector(self, returns_df):
+        """
+        CORRECTED: This version uses a more robust method for calculating both
+        pairwise correlations and eigenvalues to prevent indexing errors.
+        """
         self._log("\n--- [3] BUILDING KINETIC STATE VECTOR ---")
         p = self.config['model_params']
         window, corr_method, clip = p['correlation_window'], p['correlation_method'], p['max_correlation_clip']
+        
+        # --- FIX 1: Robust Correlation Calculation ---
+        # The original unstack() method was fragile. This approach is explicit and safer.
+        # It calculates the rolling correlation for each specific pair, avoiding any
+        # ambiguity from DataFrame reshaping.
         pairs = list(itertools.combinations(returns_df.columns, 2))
         self.pair_names = [f"{p1}-{p2}" for p1, p2 in pairs]
         
-        corr_df = returns_df.rolling(window).corr(method=corr_method).unstack().iloc[:, ::len(returns_df.columns)].droplevel(0, axis=1)
-        corr_df = corr_df.reindex(columns=pairs).set_axis([f"{p1}-{p2}" for p1, p2 in pairs], axis=1)
+        corr_series_list = []
+        for p1, p2 in pairs:
+            series = returns_df[p1].rolling(window).corr(returns_df[p2], method=corr_method)
+            series.name = f"{p1}-{p2}"
+            corr_series_list.append(series)
+        corr_df = pd.concat(corr_series_list, axis=1)
 
         pos = corr_df.clip(-clip, clip).apply(np.arctanh)
         vel, acc = pos.diff(1), pos.diff(1).diff(1)
         
-        # Rename columns to the standardized format
         pos.columns = [f"pos_{name}" for name in self.pair_names]
         vel.columns = [f"vel_{name}" for name in self.pair_names]
         acc.columns = [f"acc_{name}" for name in self.pair_names]
 
-        eigen_list = [np.linalg.eigh(returns_df.iloc[i-window:i].corr(method=corr_method).values)[0][-1] for i in range(window, len(returns_df))]
+        # --- FIX 2: Corrected Eigenvalue Calculation Loop ---
+        # The original loop had an off-by-one error in its range, which caused it to miss
+        # the last data window and created a data/index length mismatch.
+        # Correcting `range(window, len(returns_df))` to `range(window, len(returns_df) + 1)`
+        # ensures all data is processed.
+        eigen_list = []
+        for i in range(window, len(returns_df) + 1):
+            corr_matrix = returns_df.iloc[i-window:i].corr(method=corr_method).values
+            # Using eigh for symmetric matrices; it returns eigenvalues in ascending order.
+            eigenvalues = np.linalg.eigh(corr_matrix)[0]
+            eigen_list.append(eigenvalues[-1]) # Append the largest eigenvalue
+
+        # The index for the resulting series starts at the end of the first window.
+        # With the corrected loop length, this now aligns perfectly.
         lambda_1 = pd.Series(eigen_list, index=returns_df.index[window-1:], name='lambda_max')
         delta_lambda_1 = lambda_1.diff(1).rename('delta_lambda_max')
 
@@ -295,7 +327,7 @@ class KineticPhaseTransitionAnalyzer:
         print("\n" + "="*80)
         print("--- KINETIC PHASE TRANSITION ANALYSIS (CONSOLE REPORT) ---")
         print("="*80)
-        top_events = self.ksi_series.nlargest(self.config['analysis_params']['num_peaks_to_analyze'] * 5)
+        top_events = self.ksi_series.nlargest(self.config['analysis_params']['num_peaks_to_analyze'] * 10)
         peak_dates = []
         for date, _ in top_events.items():
             if len(peak_dates) >= self.config['analysis_params']['num_peaks_to_analyze']: break
@@ -332,7 +364,7 @@ class KineticPhaseTransitionAnalyzer:
         ax = axes[0,1]
         cross_accel_cols = [col for col, cat in self.component_categories.items() if cat == 'cross_accel']
         cross_accel = self.state_vector_df[cross_accel_cols].abs().sum(axis=1)
-        scatter = ax.scatter(self.state_vector_df['lambda_max'], cross_accel.reindex(self.state_vector_df.index).fillna(0), c=self.ksi_series, cmap='viridis', alpha=0.6, s=20)
+        scatter = ax.scatter(self.state_vector_df['lambda_max'], cross_accel.reindex(self.state_vector_df.index).fillna(0), c=self.ksi_series.reindex(self.state_vector_df.index).fillna(0), cmap='viridis', alpha=0.6, s=20)
         ax.set_xlabel('Max Eigenvalue (System Integration)', fontsize=12)
         ax.set_ylabel('Cross-Pair Acceleration (Policy↔Structural Contamination)', fontsize=12)
         ax.set_title('Phase Space: When Worlds Collide', fontsize=14)
@@ -414,7 +446,8 @@ class KineticPhaseTransitionAnalyzer:
         scores_pct = self._get_scores_pct(peak_date)
         colors = {'cross_accel': '#E74C3C', 'cross_other': '#F39C12', 'intra_kinetics': '#F1C40F', 'global_eigen': '#3498DB'}
         ax=axes[0,0]
-        ax.pie([scores_pct.get(k,0) for k in colors.keys()], labels=list(colors.keys()), colors=list(colors.values()), autopct='%1.1f%%', startangle=90)
+        pie_data = {label: scores_pct.get(label, 0) for label in colors.keys()}
+        ax.pie(pie_data.values(), labels=pie_data.keys(), colors=colors.values(), autopct='%1.1f%%', startangle=90)
         ax.set_title(f'Stress Decomposition')
         
         ax=axes[0,1]
@@ -423,11 +456,13 @@ class KineticPhaseTransitionAnalyzer:
         mu_hist, std_hist = history.mean(), history.std()
         state_norm = ((event_vector - mu_hist) / (std_hist + 1e-9)).values.reshape(1, -1)
         sns.heatmap(state_norm, ax=ax, cmap='RdBu_r', center=0, xticklabels=self.state_vector_df.columns, yticklabels=['Z-Score'])
-        ax.set_title('Normalized State Vector (How unusual is each component?)'); plt.setp(ax.get_xticklabels(), rotation=90)
+        ax.set_title('Normalized State Vector (How unusual is each component?)'); plt.setp(ax.get_xticklabels(), rotation=90, fontsize=8)
         
         ax = axes[1,0]
         window_days = pd.Timedelta(days=60)
-        context_series = self.ksi_series.loc[peak_date-window_days : peak_date+window_days]
+        start_date = peak_date - window_days
+        end_date = peak_date + window_days
+        context_series = self.ksi_series.loc[start_date:end_date]
         ax.plot(context_series.index, context_series.values, 'k-', linewidth=1.5)
         ax.axvline(peak_date, color='red', linestyle='--', linewidth=2)
         q95 = self.ksi_series.quantile(0.95)
@@ -445,15 +480,24 @@ class KineticPhaseTransitionAnalyzer:
 
     def _get_scores_pct(self, peak_date):
         try:
-            peak_idx = self.state_vector_df.index.get_loc(peak_date)
+            # Use get_loc for precise matching, handling potential non-existence
+            peak_idx = self.state_vector_df.index.get_loc(peak_date, method='nearest')
             lookback = self.config['model_params']['mahalanobis_lookback']
+            
+            # Ensure we don't slice with a negative index
+            if peak_idx < lookback:
+                self._log_error("SCORE_CALC", f"Not enough history for {peak_date.date()}", None)
+                return {}
+
             history = self.state_vector_df.iloc[peak_idx - lookback : peak_idx].values
             event_vector = self.state_vector_df.iloc[peak_idx].values
+            
             mu_hist = np.mean(history, axis=0)
             sigma_hist = GIS(history)
             eigenvalues, eigenvectors = np.linalg.eigh(sigma_hist)
             y = eigenvectors.T @ (event_vector - mu_hist)
             mode_contributions = (y**2) / np.maximum(eigenvalues, 1e-12)
+            
             scores = {'cross_accel': 0, 'cross_other': 0, 'intra_kinetics': 0, 'global_eigen': 0}
             for mode_idx, contribution in enumerate(mode_contributions):
                 eigenvector = eigenvectors[:, mode_idx]
@@ -475,6 +519,7 @@ class KineticPhaseTransitionAnalyzer:
                 self.component_categories[col] = 'global_eigen'
                 continue
             parts = col.split('_')
+            # Handle potential multiple underscores in pair names, though unlikely with current setup
             kinetic_type, pair_name = parts[0], '_'.join(parts[1:])
             p1, p2 = pair_name.split('-')
             if p1 in assets_cfg and p2 in assets_cfg:
@@ -485,12 +530,14 @@ class KineticPhaseTransitionAnalyzer:
 
     def _get_verdict(self, scores_pct):
         threshold = self.config['analysis_params']['contamination_threshold_pct']
+        if not scores_pct:
+            return "ANALYSIS FAILED", "⚪️"
         if scores_pct.get('cross_accel', 0) >= threshold:
-            return "KINETIC CROSS-CONTAMINATION EVENT (High Confidence)", "��"
+            return "KINETIC CROSS-CONTAMINATION EVENT (High Confidence)", "🔴"
         elif scores_pct.get('cross_accel', 0) + scores_pct.get('cross_other', 0) >= threshold:
-            return "STRUCTURAL TENSION WARNING (Moderate Confidence)", "��"
+            return "STRUCTURAL TENSION WARNING (Moderate Confidence)", "🟠"
         elif scores_pct.get('intra_kinetics', 0) >= threshold:
-            return "CONTAINED REGIME STRESS (Low Systemic Risk)", "��"
+            return "CONTAINED REGIME STRESS (Low Systemic Risk)", "🟡"
         else:
             return "UNDEFINED STRESS (No Clear Pattern)", "⚪️"
 
@@ -499,7 +546,7 @@ class KineticPhaseTransitionAnalyzer:
         self._log("\n--- [5] GENERATING PLOT ---")
         plt.style.use('seaborn-v0_8-whitegrid')
         fig, ax = plt.subplots(figsize=(16, 8))
-        self.ksi_series.plot(ax=ax, color='k', linewidth=1.5, label='KSI (v14.0 - IR Vol)')
+        self.ksi_series.plot(ax=ax, color='k', linewidth=1.5, label='KSI (v14.1 - IR Vol)')
         q95 = self.ksi_series.quantile(0.95)
         ax.axhline(q95, color='darkorange', linestyle='--', linewidth=1.2, label=f'95th Percentile ({q95:.2f})')
         ax.set_title('Kinetic Stress Index (Interest Rate Volatility)', fontsize=18)
@@ -514,6 +561,8 @@ class KineticPhaseTransitionAnalyzer:
     def _log_error(self, context, message, exception=None):
         error_msg = f"❌ ERROR [{context}]: {message}" + (f" | {type(exception).__name__}: {str(exception)}" if exception else "")
         self._log(error_msg, 'ERROR')
+        if exception:
+            traceback.print_exc(limit=1)
 
     def _generate_synthetic_data(self):
         self._log("Generating synthetic test data...")
