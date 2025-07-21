@@ -1,0 +1,71 @@
+This error means you are using square brackets [] on a Bloomberg DataItem object, which only supports attribute access using a dot ..
+Think of bql.Service().data as a special builder object, not a Python dictionary. You must use dot notation (or the getattr() function for dynamic access) to specify the data field you want.
+## The Cause: Dot Notation vs. Square Brackets
+The BQL data builder is designed to be used with dot notation to create a request. Using square brackets is an attempt to look up an item like in a dictionary, which the object doesn't support.
+❌ Incorrect Code (Causes the error):
+This treats bql_service.data like a dictionary, which is not allowed.
+# This will fail
+field_name = 'PX_LAST'
+data_item = bql_service.data[field_name] 
+
+✅ Correct Code (Using getattr):
+When the field name is stored in a variable (like in a loop), you must use Python's built-in getattr() function. This is the programmatic way of doing bql_service.data.PX_LAST.
+# This is the correct way for dynamic field names
+field_name = 'PX_LAST'
+data_item_builder = getattr(bql_service.data, field_name)
+
+# Now you can call the builder to add parameters
+data_item = data_item_builder(fill='prev', currency='USD')
+
+## The Fix for the KSI Analyzer Script
+This error is happening in the _acquire_data method of the script. The loop iterates through field names stored as strings, requiring getattr() for correct access.
+Here is the corrected code block for the _acquire_data method:
+def _acquire_data(self):
+    """
+    Handles the entire data fetching pipeline using robust, professional-grade logic.
+    """
+    self._log("\n--- [1] ACQUIRING DATA ---")
+    if self.config['execution']['test_mode']:
+        return self._generate_synthetic_data()
+
+    try:
+        grouped_tickers = defaultdict(list)
+        for asset_name, metadata in self.config['assets'].items():
+            grouped_tickers[metadata['bql_field']].append(metadata['primary'])
+
+        all_fetched_data = []
+        for field, tickers in grouped_tickers.items():
+            self._log(f"  - Requesting field '{field}' for {len(tickers)} ticker(s)...")
+            
+            # --- FIX ---
+            # Use getattr() to dynamically access the BQL field from the string variable 'field'
+            data_item_builder = getattr(self.bql_svc.data, field)
+            
+            # Now, call the builder object to apply parameters
+            data_item = data_item_builder(
+                dates=self.bql_svc.func.range(self.config['date_range']['start'], self.config['date_range']['end']),
+                fill='prev'
+            )
+            # --- END FIX ---
+            
+            request = bql.Request(tickers, {field: data_item})
+            response = self.bql_svc.execute(request)
+            df = response[0].df().reset_index().pivot(index='DATE', columns='ID', values=field)
+            all_fetched_data.append(df)
+
+        if not all_fetched_data:
+            self._log_error("BQL_FETCH", "No data could be fetched. Check tickers and fields in CONFIG.")
+            return None
+
+        raw_df = pd.concat(all_fetched_data, axis=1)
+        ticker_to_name = {v['primary']: k for k, v in self.config['assets'].items()}
+        raw_df.rename(columns=ticker_to_name, inplace=True)
+        raw_df = raw_df[[name for name in self.config['assets'].keys() if name in raw_df.columns]]
+        
+        self._log(f"✓ Successfully fetched data. Shape: {raw_df.shape}")
+        return raw_df
+
+    except Exception as e:
+        self._log_error("BQL_FETCH", "A critical error occurred during data fetching.", e)
+        return None
+
