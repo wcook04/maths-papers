@@ -1,23 +1,33 @@
 # ========================================================================================
-# --- KSI PHASE TRANSITION ANALYZER (v13.0 - Visual Intelligence) ---
+# --- THE ULTIMATE KSI PHASE TRANSITION ANALYZER (v14.0 - Production Grade) ---
 #
 # PURPOSE:
-# This version enhances the KSI model with a powerful visual intelligence layer.
-# It uses a specialized set of interest rate volatility assets to detect stress
-# between short-term "Policy Jitters" and long-term "Structural Fear".
+# This production-grade script combines a robust Bloomberg data foundation with a
+# sophisticated visual intelligence layer. It detects market stress by analyzing a
+# specialized quartet of interest rate volatility assets, identifying tension between
+# short-term "Policy Jitters" and long-term "Structural Fear".
 #
 # METHODOLOGY:
-# 1. CONFIGURE: The system is configured with the 4-asset interest rate vol quartet.
-# 2. CALCULATE: It computes the 20-dimensional kinetic state vector and the KSI.
-# 3. ANALYZE (TEXT): It provides a console-based report for top stress peaks.
-# 4. VISUALIZE (NEW): It generates a suite of "Visual Intelligence" plots:
-#    - Regime Fingerprints: A 4-panel dashboard showing system evolution.
-#    - Event Gallery: A side-by-side comparison of top stress events via network diagrams.
-#    - Detailed Event Analysis: A deep-dive visual report for each major peak.
+# 1. ENVIRONMENT CHECK: Intelligently detects BQuant availability, enabling either
+#    live data mode or a robust 'test_mode' with synthetic data.
+#
+# 2. ROBUST DATA FETCH: Utilizes a professional-grade data pipeline to acquire and
+#    clean the interest rate volatility asset data from Bloomberg.
+#
+# 3. KINETIC STATE CALCULATION: Computes the 20-dimensional kinetic state vector
+#    (correlations, velocities, accelerations, eigenvalue dynamics) and the KSI.
+#
+# 4. VISUAL INTELLIGENCE: Generates a suite of publication-quality plots to provide
+#    deep insights into market regimes and stress events, including:
+#    - Regime Fingerprints Dashboard
+#    - Top Stress Event Gallery (Network Diagrams)
+#    - Detailed Visual Reports for each major stress peak
+#
 # ========================================================================================
 
-print("\n--- RUNNING KSI PHASE TRANSITION ANALYZER (v13.0 - Visual Intelligence) ---\n")
+print("\n--- INITIALIZING KSI PHASE TRANSITION ANALYZER (v14.0 - Production Grade) ---")
 
+# --- Core Libraries ---
 import pandas as pd
 import numpy as np
 import itertools
@@ -28,28 +38,33 @@ import traceback
 from datetime import datetime
 import math
 import networkx as nx
+import sys
+from collections import defaultdict
 
 # --- Suppress Warnings for Cleaner Output ---
 warnings.filterwarnings('ignore')
 
-# --- Check BQL availability ---
+# --- Step 1: Intelligent Environment Check for Bloomberg BQL ---
 BQL_AVAILABLE = False
+BQL_SERVICE = None
 try:
     import bql
+    BQL_SERVICE = bql.Service()
     BQL_AVAILABLE = True
-    print("✓ BQL module imported successfully.")
+    print("✅ Bloomberg BQL module imported successfully. Live data mode is available.")
 except ImportError:
-    print("⚠️  BQL module not found. Set 'test_mode' in CONFIG to True to run with synthetic data.")
+    print("⚠️  Bloomberg BQL module not found. The script can only run if 'test_mode' is set to True in CONFIG.")
 
 # ==============================================================================
-# --- CONFIGURATION: The "Interest Rate Volatility Tension Matrix" ---
+# --- CONFIGURATION: The Single Source of Truth for the Analysis ---
 # ==============================================================================
 CONFIG = {
     'assets': {
-        'USDV3M2Y': {'primary': 'USDV3M2Y Index', 'asset_type': 'price', 'group': 'PolicyJitters'},
-        'USDV1Y5Y': {'primary': 'USDV1Y5Y Index', 'asset_type': 'price', 'group': 'PolicyJitters'},
-        'USDV5Y10Y': {'primary': 'USDV5Y10Y Index', 'asset_type': 'price', 'group': 'StructuralFear'},
-        'USDV10Y30Y': {'primary': 'USDV10Y30Y Index', 'asset_type': 'price', 'group': 'StructuralFear'},
+        # The Interest Rate Volatility Tension Matrix
+        'USDV3M2Y':   {'primary': 'USDV3M2Y Index', 'bql_field': 'PX_LAST', 'group': 'PolicyJitters'},
+        'USDV1Y5Y':   {'primary': 'USDV1Y5Y Index', 'bql_field': 'PX_LAST', 'group': 'PolicyJitters'},
+        'USDV5Y10Y':  {'primary': 'USDV5Y10Y Index', 'bql_field': 'PX_LAST', 'group': 'StructuralFear'},
+        'USDV10Y30Y': {'primary': 'USDV10Y30Y Index', 'bql_field': 'PX_LAST', 'group': 'StructuralFear'},
     },
     'date_range': {
         'start': '2010-01-01',
@@ -110,32 +125,35 @@ class KineticPhaseTransitionAnalyzer:
     """
     def __init__(self, config):
         self.config = config
-        self.bql_svc = None
-        # Map long asset names to short, plot-friendly names
+        self.bql_svc = BQL_SERVICE
         self.short_names = {
             'USDV3M2Y': '3M2Y', 'USDV1Y5Y': '1Y5Y',
             'USDV5Y10Y': '5Y10Y', 'USDV10Y30Y': '10Y30Y',
         }
-        self._log(f"Initializing Analyzer v13.0 with assets: {list(config['assets'].keys())}")
+        self._log(f"Initializing Analyzer v14.0 with assets: {list(config['assets'].keys())}")
 
     def run(self):
         """Executes the full analysis and visualization pipeline."""
-        if not self._validate_environment(): return
-        
+        if not self._validate_environment():
+            self._log_error("HALTED", "Execution halted due to environment mismatch.", None)
+            return
+
         price_df = self._acquire_data()
-        if price_df is None: return
+        if price_df is None or price_df.empty:
+            self._log_error("HALTED", "Data acquisition failed. Cannot proceed.", None)
+            return
 
         returns_df = self._process_data(price_df)
         if returns_df is None: return
 
         self.state_vector_df = self._build_state_vector(returns_df)
         if self.state_vector_df is None: return
-        
+
         self.ksi_series = self._compute_adaptive_ksi()
         if self.ksi_series is None: return
-        
+
         self._log("\n✅ Pipeline completed successfully! KSI Series is ready.", 'SUCCESS')
-        
+
         # --- Run Analysis & Visualization ---
         self._classify_components() # Critical setup step for all analysis
         self.analyze_and_display_peaks()
@@ -144,51 +162,84 @@ class KineticPhaseTransitionAnalyzer:
         print("\n" + "="*80)
         print("--- GENERATING VISUAL INTELLIGENCE REPORTS ---")
         print("="*80)
-        
+
         if self.config['visual_intelligence']['create_regime_fingerprints']:
             self._log("Creating Regime Fingerprints dashboard...")
             self.create_regime_fingerprints()
-        
+
         if self.config['visual_intelligence']['create_event_gallery']:
             self._log("Creating Top Stress Event gallery...")
             self.create_event_gallery()
-        
+
         self._log("Creating detailed visual reports for top 5 peaks...")
         top_5_events = self.ksi_series.nlargest(5)
         for i, date in enumerate(top_5_events.index):
             self._log(f"  - Generating report for peak #{i+1} on {date.date()}...")
             self.analyze_single_peak_visual(date)
-    
+
     # --- [Core Pipeline Stages] ---
 
     def _acquire_data(self):
+        """
+        Handles the entire data fetching pipeline using robust, professional-grade logic.
+        """
         self._log("\n--- [1] ACQUIRING DATA ---")
-        if self.config['execution']['test_mode']: return self._generate_synthetic_data()
+        if self.config['execution']['test_mode']:
+            return self._generate_synthetic_data()
+
         try:
-            self.bql_svc = bql.Service()
-            ticker_list = [v['primary'] for v in self.config['assets'].values()]
-            req = bql.Request(ticker_list, {'price': self.bql_svc.data.px_last(dates=self.bql_svc.func.range(self.config['date_range']['start'], self.config['date_range']['end']), fill='prev')})
-            res = self.bql_svc.execute(req)
-            price_df_raw = res[0].df().reset_index().pivot(index='DATE', columns='ID', values='price')
+            # Group tickers by the required BQL field for efficient, robust fetching.
+            grouped_tickers = defaultdict(list)
+            for asset_name, metadata in self.config['assets'].items():
+                grouped_tickers[metadata['bql_field']].append(metadata['primary'])
+
+            all_fetched_data = []
+            for field, tickers in grouped_tickers.items():
+                self._log(f"  - Requesting field '{field}' for {len(tickers)} ticker(s)...")
+                data_item = self.bql_svc.data[field](
+                    dates=self.bql_svc.func.range(self.config['date_range']['start'], self.config['date_range']['end']),
+                    fill='prev'
+                )
+                request = bql.Request(tickers, {field: data_item})
+                response = self.bql_svc.execute(request)
+                df = response[0].df().reset_index().pivot(index='DATE', columns='ID', values=field)
+                all_fetched_data.append(df)
+
+            if not all_fetched_data:
+                self._log_error("BQL_FETCH", "No data could be fetched. Check tickers and fields in CONFIG.")
+                return None
+
+            # Merge all data into a single DataFrame and rename columns to our friendly short names.
+            raw_df = pd.concat(all_fetched_data, axis=1)
             ticker_to_name = {v['primary']: k for k, v in self.config['assets'].items()}
-            price_df = price_df_raw.rename(columns=ticker_to_name)
-            self._log(f"✓ Successfully fetched data. Shape: {price_df.shape}")
-            return price_df
+            raw_df.rename(columns=ticker_to_name, inplace=True)
+            # Ensure columns are in the same order as CONFIG for consistency
+            raw_df = raw_df[[name for name in self.config['assets'].keys() if name in raw_df.columns]]
+            
+            self._log(f"✓ Successfully fetched data. Shape: {raw_df.shape}")
+            return raw_df
+
         except Exception as e:
-            self._log_error("BQL_FETCH", "Failed to execute BQL request", e)
+            self._log_error("BQL_FETCH", "A critical error occurred during data fetching.", e)
             return None
 
     def _process_data(self, price_df):
         self._log("\n--- [2] PROCESSING DATA ---")
+        # Forward-fill and drop any rows at the start that are still fully empty.
         price_df = price_df.ffill().dropna(how='all')
+        
+        # Identify and drop any assets that failed to load any data at all.
+        failed_assets = [col for col in price_df.columns if price_df[col].isnull().all()]
+        if failed_assets:
+            self._log(f"  - WARNING: The following assets failed to load and are being dropped: {failed_assets}", "WARN")
+            price_df.drop(columns=failed_assets, inplace=True)
+
         if len(price_df) < self.config['model_params']['correlation_window'] + self.config['model_params']['mahalanobis_lookback']:
-            self._log_error("DATA_CLEAN", f"Insufficient data points: {len(price_df)}.")
+            self._log_error("DATA_CLEAN", f"Insufficient data points: {len(price_df)} after cleaning.")
             return None
-        returns_df = pd.DataFrame(index=price_df.index)
-        for asset in self.config['assets']:
-            # For vol indices, simple differences (or log-returns) can be used. Log is often more stable.
-            returns_df[asset] = np.log(price_df[asset] / price_df[asset].shift(1))
-        returns_df = returns_df.dropna()
+        
+        # For vol indices, simple differences (or log-returns) can be used. Log is often more stable.
+        returns_df = np.log(price_df).diff().dropna(how='all')
         self._log(f"✓ Log returns calculated. Shape: {returns_df.shape}")
         return returns_df
 
@@ -198,13 +249,22 @@ class KineticPhaseTransitionAnalyzer:
         window, corr_method, clip = p['correlation_window'], p['correlation_method'], p['max_correlation_clip']
         pairs = list(itertools.combinations(returns_df.columns, 2))
         self.pair_names = [f"{p1}-{p2}" for p1, p2 in pairs]
-        corr_df = pd.concat([returns_df[p1].rolling(window).corr(returns_df[p2], method=corr_method) for p1, p2 in pairs], axis=1)
+        
+        corr_df = returns_df.rolling(window).corr(method=corr_method).unstack().iloc[:, ::len(returns_df.columns)].droplevel(0, axis=1)
+        corr_df = corr_df.reindex(columns=pairs).set_axis([f"{p1}-{p2}" for p1, p2 in pairs], axis=1)
+
         pos = corr_df.clip(-clip, clip).apply(np.arctanh)
         vel, acc = pos.diff(1), pos.diff(1).diff(1)
-        pos.columns, vel.columns, acc.columns = [f"{k}_{n}" for n in self.pair_names for k in ['pos', 'vel', 'acc']]
+        
+        # Rename columns to the standardized format
+        pos.columns = [f"pos_{name}" for name in self.pair_names]
+        vel.columns = [f"vel_{name}" for name in self.pair_names]
+        acc.columns = [f"acc_{name}" for name in self.pair_names]
+
         eigen_list = [np.linalg.eigh(returns_df.iloc[i-window:i].corr(method=corr_method).values)[0][-1] for i in range(window, len(returns_df))]
         lambda_1 = pd.Series(eigen_list, index=returns_df.index[window-1:], name='lambda_max')
         delta_lambda_1 = lambda_1.diff(1).rename('delta_lambda_max')
+
         state_vector_df = pd.concat([pos, vel, acc, lambda_1, delta_lambda_1], axis=1).dropna()
         self._log(f"✓ State vector created with shape: {state_vector_df.shape}")
         return state_vector_df
@@ -230,9 +290,8 @@ class KineticPhaseTransitionAnalyzer:
         return ksi_series
 
     # --- [Analysis & Interpretation] ---
-    
+
     def analyze_and_display_peaks(self):
-        # This method provides the text-based console output for quick review
         print("\n" + "="*80)
         print("--- KINETIC PHASE TRANSITION ANALYSIS (CONSOLE REPORT) ---")
         print("="*80)
@@ -246,7 +305,6 @@ class KineticPhaseTransitionAnalyzer:
             self._analyze_single_peak_text(peak_date)
 
     def _analyze_single_peak_text(self, peak_date):
-        # Generates and prints a detailed, interpretable report for a single peak.
         scores_pct = self._get_scores_pct(peak_date)
         verdict, color_code = self._get_verdict(scores_pct)
         ksi_val = self.ksi_series.loc[peak_date]
@@ -264,7 +322,6 @@ class KineticPhaseTransitionAnalyzer:
     def create_regime_fingerprints(self):
         fig, axes = plt.subplots(2, 2, figsize=(20, 16))
         
-        # 1. Correlation Matrix Evolution Heatmap
         ax = axes[0,0]
         pos_cols = [col for col in self.state_vector_df.columns if 'pos_' in col]
         corr_evolution = self.state_vector_df[pos_cols].iloc[::5].apply(np.tanh)
@@ -272,7 +329,6 @@ class KineticPhaseTransitionAnalyzer:
         sns.heatmap(corr_evolution.T, ax=ax, cmap='RdBu_r', center=0, vmin=-1, vmax=1, cbar_kws={'label': 'Correlation'}, yticklabels=yticklabels)
         ax.set_title('Correlation Structure Evolution (Policy vs Structural)', fontsize=14)
         
-        # 2. Phase Space Plot (Eigenvalue vs Cross-Correlation Acceleration)
         ax = axes[0,1]
         cross_accel_cols = [col for col, cat in self.component_categories.items() if cat == 'cross_accel']
         cross_accel = self.state_vector_df[cross_accel_cols].abs().sum(axis=1)
@@ -282,7 +338,6 @@ class KineticPhaseTransitionAnalyzer:
         ax.set_title('Phase Space: When Worlds Collide', fontsize=14)
         plt.colorbar(scatter, ax=ax, label='KSI')
         
-        # 3. Kinetic Energy Spectrum
         ax = axes[1,0]
         window = 60
         pos_energy = self.state_vector_df[[c for c in self.state_vector_df.columns if 'pos_' in c]].rolling(window).std().mean(axis=1).fillna(0)
@@ -293,7 +348,6 @@ class KineticPhaseTransitionAnalyzer:
         ax.fill_between(self.state_vector_df.index, pos_energy+vel_energy, pos_energy+vel_energy+acc_energy, alpha=0.4, label='Acceleration Energy (Shock)')
         ax.set_title('Kinetic Energy Decomposition', fontsize=14); ax.legend()
         
-        # 4. Event Signature Patterns
         ax = axes[1,1]
         top_events = self.ksi_series.nlargest(10)
         signatures = []
@@ -313,7 +367,6 @@ class KineticPhaseTransitionAnalyzer:
         plt.show()
 
     def plot_correlation_network(self, date, ax):
-        # Get correlations for this date
         correlations = {}
         for col in self.state_vector_df.columns:
             if 'pos_' in col and date in self.state_vector_df.index:
@@ -358,14 +411,12 @@ class KineticPhaseTransitionAnalyzer:
     def analyze_single_peak_visual(self, peak_date):
         fig, axes = plt.subplots(2, 2, figsize=(20, 15))
         
-        # 1. Component Contribution Pie Chart
         scores_pct = self._get_scores_pct(peak_date)
         colors = {'cross_accel': '#E74C3C', 'cross_other': '#F39C12', 'intra_kinetics': '#F1C40F', 'global_eigen': '#3498DB'}
         ax=axes[0,0]
         ax.pie([scores_pct.get(k,0) for k in colors.keys()], labels=list(colors.keys()), colors=list(colors.values()), autopct='%1.1f%%', startangle=90)
         ax.set_title(f'Stress Decomposition')
         
-        # 2. State Vector Heatmap (Z-Score)
         ax=axes[0,1]
         history = self.state_vector_df.loc[:peak_date].iloc[-self.config['model_params']['mahalanobis_lookback']:]
         event_vector = self.state_vector_df.loc[peak_date]
@@ -374,7 +425,6 @@ class KineticPhaseTransitionAnalyzer:
         sns.heatmap(state_norm, ax=ax, cmap='RdBu_r', center=0, xticklabels=self.state_vector_df.columns, yticklabels=['Z-Score'])
         ax.set_title('Normalized State Vector (How unusual is each component?)'); plt.setp(ax.get_xticklabels(), rotation=90)
         
-        # 3. Time Series Context
         ax = axes[1,0]
         window_days = pd.Timedelta(days=60)
         context_series = self.ksi_series.loc[peak_date-window_days : peak_date+window_days]
@@ -384,7 +434,6 @@ class KineticPhaseTransitionAnalyzer:
         ax.fill_between(context_series.index, q95, context_series.max(), where=context_series > q95, alpha=0.3, color='red', label=f'Above 95th Pctile ({q95:.2f})')
         ax.set_title('KSI Time Series Context'); ax.legend(); ax.set_yscale('log')
         
-        # 4. Correlation Network for this date
         self.plot_correlation_network(peak_date, ax=axes[1,1])
         axes[1,1].set_title("Correlation Network on Event Date")
         
@@ -395,7 +444,6 @@ class KineticPhaseTransitionAnalyzer:
     # --- [Helper & Utility Methods] ---
 
     def _get_scores_pct(self, peak_date):
-        """Refactored helper to calculate diagnostic scores for any peak date."""
         try:
             peak_idx = self.state_vector_df.index.get_loc(peak_date)
             lookback = self.config['model_params']['mahalanobis_lookback']
@@ -427,23 +475,22 @@ class KineticPhaseTransitionAnalyzer:
                 self.component_categories[col] = 'global_eigen'
                 continue
             parts = col.split('_')
-            kinetic_type, pair_name = parts[0], '-'.join(parts[1].split('-'))
-            if '-' in pair_name:
-                p1, p2 = pair_name.split('-')
-                if p1 in assets_cfg and p2 in assets_cfg:
-                    if assets_cfg[p1]['group'] == assets_cfg[p2]['group']:
-                        self.component_categories[col] = 'intra_kinetics'
-                    else:
-                        self.component_categories[col] = 'cross_accel' if kinetic_type == 'acc' else 'cross_other'
+            kinetic_type, pair_name = parts[0], '_'.join(parts[1:])
+            p1, p2 = pair_name.split('-')
+            if p1 in assets_cfg and p2 in assets_cfg:
+                if assets_cfg[p1]['group'] == assets_cfg[p2]['group']:
+                    self.component_categories[col] = 'intra_kinetics'
+                else:
+                    self.component_categories[col] = 'cross_accel' if kinetic_type == 'acc' else 'cross_other'
 
     def _get_verdict(self, scores_pct):
         threshold = self.config['analysis_params']['contamination_threshold_pct']
         if scores_pct.get('cross_accel', 0) >= threshold:
-            return "KINETIC CROSS-CONTAMINATION EVENT (High Confidence)", "🔴"
+            return "KINETIC CROSS-CONTAMINATION EVENT (High Confidence)", "��"
         elif scores_pct.get('cross_accel', 0) + scores_pct.get('cross_other', 0) >= threshold:
-            return "STRUCTURAL TENSION WARNING (Moderate Confidence)", "🟠"
+            return "STRUCTURAL TENSION WARNING (Moderate Confidence)", "��"
         elif scores_pct.get('intra_kinetics', 0) >= threshold:
-            return "CONTAINED REGIME STRESS (Low Systemic Risk)", "🟡"
+            return "CONTAINED REGIME STRESS (Low Systemic Risk)", "��"
         else:
             return "UNDEFINED STRESS (No Clear Pattern)", "⚪️"
 
@@ -452,7 +499,7 @@ class KineticPhaseTransitionAnalyzer:
         self._log("\n--- [5] GENERATING PLOT ---")
         plt.style.use('seaborn-v0_8-whitegrid')
         fig, ax = plt.subplots(figsize=(16, 8))
-        self.ksi_series.plot(ax=ax, color='k', linewidth=1.5, label='KSI (v13.0 - IR Vol)')
+        self.ksi_series.plot(ax=ax, color='k', linewidth=1.5, label='KSI (v14.0 - IR Vol)')
         q95 = self.ksi_series.quantile(0.95)
         ax.axhline(q95, color='darkorange', linestyle='--', linewidth=1.2, label=f'95th Percentile ({q95:.2f})')
         ax.set_title('Kinetic Stress Index (Interest Rate Volatility)', fontsize=18)
@@ -473,14 +520,17 @@ class KineticPhaseTransitionAnalyzer:
         dates = pd.date_range(start=self.config['date_range']['start'], end=self.config['date_range']['end'], freq='B')
         n_days = len(dates)
         np.random.seed(42)
-        returns = pd.DataFrame(np.random.randn(n_days, 4) * 0.02, columns=self.config['assets'].keys())
-        price_df = 10 * np.exp(returns.cumsum())
+        returns = pd.DataFrame(np.random.randn(n_days, len(self.config['assets'])) * 0.02, columns=self.config['assets'].keys(), index=dates)
+        # Create a more realistic price series for vol indices (they don't go to zero)
+        base_levels = np.random.uniform(20, 80, len(self.config['assets']))
+        price_df = base_levels + (10 * returns).cumsum()
+        price_df = price_df.clip(lower=1) # Vol can't be negative
         self._log(f"✓ Generated {len(price_df)} days of synthetic data.")
         return price_df
 
     def _validate_environment(self):
-        if not BQL_AVAILABLE and not self.config['execution']['test_mode']:
-            self._log_error("ENV", "BQL not available and test_mode is False. Cannot proceed.")
+        if not self.config['execution']['test_mode'] and not BQL_AVAILABLE:
+            self._log_error("ENV_CHECK", "Live data run requested (test_mode=False), but BQL is not available.")
             return False
         return True
 
@@ -488,6 +538,7 @@ if __name__ == '__main__':
     try:
         analyzer = KineticPhaseTransitionAnalyzer(CONFIG)
         analyzer.run()
+        print("\n--- KSI ANALYSIS COMPLETE ---")
     except Exception as e:
         print(f"\n--- A CRITICAL ERROR OCCURRED DURING EXECUTION ---")
         traceback.print_exc()
