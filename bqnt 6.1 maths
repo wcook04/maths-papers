@@ -1,0 +1,179 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- PACKAGES ---
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{framed}
+\usepackage{mathtools}
+\usepackage{caption}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+% --- CUSTOM COMMANDS ---
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\matr}[1]{\boldsymbol{#1}}
+
+% --- DOCUMENT INFORMATION ---
+\title{\textbf{A Mathematical Framework for the Kinetic Stress Index (KSI) \\ and its Attribution Analysis}}
+\author{Documentation for the KSI Phase Transition Analyzer (v14.0)}
+\date{\today}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\vspace{-0.5cm}
+
+\begin{abstract}
+This document provides a detailed mathematical exposition of the Kinetic Stress Index (KSI) model and its associated attribution analysis. The framework is designed to detect and diagnose systemic market stress by modeling the correlation structure of a specialized asset quartet as a dynamical system. We first detail the construction of the 20-dimensional state vector, which captures both pairwise kinetics and global systemic coherence. We then derive the KSI as a Mahalanobis distance, a geometry-aware measure of statistical anomaly. Finally, we present the methodology for decomposing a stress signal into its constituent sources, enabling a nuanced interpretation of market dislocations. This document serves as a formal companion to the Python implementation.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Core Model Philosophy and Parameters}
+The KSI framework quantifies market stress by measuring how "surprising" the current state of the market's correlation structure is, relative to its own recent history. It achieves this by combining two complementary perspectives:
+
+\begin{itemize}
+    \item \textbf{Pairwise Kinetics (The "Trees"):} Analyzing the individual relationships between asset pairs. We track not only their correlation level (position) but also their rate of change (velocity) and the rate of that change (acceleration). This provides a granular view of the forces acting within the system.
+    \item \textbf{Global Dynamics (The "Forest"):} Analyzing the system as a whole. We track a single, powerful measure of market-wide "herding" or coherence—the maximum eigenvalue of the correlation matrix—and its rate of change.
+\end{itemize}
+
+By synthesizing these views into a single state vector, we create a rich snapshot of the market's structural health. The model's key parameters are defined below.
+
+\begin{center}
+\captionsetup{type=table}
+\captionof{table}{Key Symbols and Parameters in the KSI Framework.}
+\label{tab:params}
+\begin{tabular}{>{\raggedright}p{2.5cm} >{\raggedright}p{5.5cm} >{\centering}p{1.5cm} >{\raggedright\arraybackslash}p{5cm}}
+\toprule
+\textbf{Symbol} & \textbf{Definition} & \textbf{Value} & \textbf{Justification for Inclusion} \\
+\midrule
+$n$ & Number of assets in the quartet & 4 & A specialized set chosen to represent the tension between short-term policy and long-term structural fears. \\
+$w$ & Correlation window & 60 days & Balances stability against responsiveness to new information in the correlation calculation. \\
+$l$ & Mahalanobis lookback & 252 days & Defines the one-year historical baseline of "normal" system behaviour against which anomalies are measured. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{State Vector Construction (\(\vect{s}_t \in \R^{20}\))}
+The 20-dimensional state vector is the mathematical core of the model. Its construction is a multi-step process that transforms raw asset prices into a robust representation of market dynamics.
+
+\subsection{Pairwise Kinetics (\(18\) dimensions)}
+For the $k = \binom{n}{2} = \binom{4}{2} = 6$ unique asset pairs $(i,j)$, we compute their kinetic properties.
+\begin{enumerate}
+    \item \textbf{Log-returns:} The analysis begins with daily log-returns, which are stationary and represent continuously compounded returns.
+    \[ r_{i,t} = \ln(P_{i,t}/P_{i,t-1}) \]
+
+    \item \textbf{Spearman Correlation ($\rho_{ij,t}$):} The rank correlation is computed over the window $w$. This non-parametric method is chosen for its resilience to outliers and non-linear relationships common in financial data.
+    \[ \rho_{ij,t} = \text{rank-corr}(r_{i,t-w+1:t}, r_{j,t-w+1:t}) \]
+
+    \item \textbf{Position Vector ($\boldsymbol{\theta}_t \in \R^6$):} To stabilize variance and map the bounded correlations ($[-1, 1]$) to the unbounded real line, Fisher's z-transform is applied. This correctly sensitizes the metric to changes near the critical boundaries.
+    \[ \theta_{ij,t} = \tanh^{-1}(\rho_{ij,t}) = \frac{1}{2}\ln\left(\frac{1+\rho_{ij,t}}{1-\rho_{ij,t}}\right) \]
+    These six values form the position vector $\boldsymbol{\theta}_t$.
+
+    \item \textbf{Velocity ($\vect{v}_t \in \R^6$) and Acceleration ($\vect{a}_t \in \R^6$):} The system's kinetics are derived from first and second-order finite differences of the position vector.
+    \[ \vect{v}_t = \boldsymbol{\theta}_t - \boldsymbol{\theta}_{t-1} \quad ; \quad \vect{a}_t = \vect{v}_t - \vect{v}_{t-1} = \boldsymbol{\theta}_t - 2\boldsymbol{\theta}_{t-1} + \boldsymbol{\theta}_{t-2} \]
+\end{enumerate}
+
+\subsection{Global Dynamics (\(2\) dimensions)}
+\begin{enumerate}
+    \item \textbf{Maximum Eigenvalue ($\lambda_{\text{max},t}$):} This is extracted from the full $4 \times 4$ correlation matrix, $\matr{R}_t$. It quantifies the variance explained by the first principal component, serving as an excellent measure of system-wide coherence or "herding."
+    \[ \lambda_{\text{max},t} = \max(\text{eig}(\matr{R}_t)) \]
+    \item \textbf{Eigenvalue Velocity ($\Delta\lambda_{\text{max},t}$):} We also track its rate of change to measure how quickly system-wide contagion is building or receding.
+    \[ \Delta\lambda_{\text{max},t} = \lambda_{\text{max},t} - \lambda_{\text{max},t-1} \]
+\end{enumerate}
+
+\subsection{State Vector Synthesis}
+The final step is to vertically concatenate the five component vectors into the single, comprehensive state vector:
+\[
+\vect{s}_t = 
+\begin{pmatrix} 
+\boldsymbol{\theta}_t \\ \vect{v}_t \\ \vect{a}_t \\ \lambda_{\text{max},t} \\ \Delta \lambda_{\text{max},t} 
+\end{pmatrix} \in \R^{20}
+\]
+
+\section{The Kinetic Stress Index (KSI)}
+\subsection{Calculation via Mahalanobis Distance}
+The KSI is defined as the Mahalanobis distance between the current state vector $\vect{s}_t$ and its historical mean $\boldsymbol{\mu}_{t-1}$. This is a scale-invariant, geometry-aware distance that accounts for the historical variance and covariance of the system's components.
+\[
+\mathrm{KSI}_t = \sqrt{ (\vect{s}_t - \boldsymbol{\mu}_{t-1})^\top \matr{\Sigma}_{t-1}^{-1} (\vect{s}_t - \boldsymbol{\mu}_{t-1}) }
+\]
+The inputs are estimated over the lookback window $l=252$:
+\[ \boldsymbol{\mu}_{t-1} = \frac{1}{l}\sum_{k=1}^{l} \vect{s}_{t-k} \]
+\[ \matr{\Sigma}_{t-1} = \text{Cov}(\vect{s}_{t-l}, \dots, \vect{s}_{t-1}) \]
+Because estimating a $20 \times 20$ covariance matrix from 252 data points is statistically challenging (the "curse of dimensionality"), a robust estimation technique is required. The code uses the \textbf{Graphical Inverse Shrinkage (GIS)} method, a sophisticated non-parametric approach to find a well-conditioned inverse covariance matrix. For pedagogical purposes, this can be thought of as an advanced form of Ledoit-Wolf shrinkage, which regularizes the sample covariance matrix towards a structured target.
+
+\begin{framed}
+\noindent\begin{minipage}{\linewidth}
+\textbf{Intuition: The Mahalanobis Distance}
+
+Consider a 2D system with mean $\boldsymbol{\mu} = \begin{psmallmatrix} 0 \\ 0 \end{psmallmatrix}$ and covariance $\matr{\Sigma} = \begin{psmallmatrix} 9 & 0 \\ 0 & 1 \end{psmallmatrix}$. This means the system typically varies much more along the x-axis than the y-axis.
+
+Two points, $\vect{A} = \begin{psmallmatrix} 3 \\ 0 \end{psmallmatrix}$ and $\vect{B} = \begin{psmallmatrix} 0 \\ 3 \end{psmallmatrix}$, are both at a Euclidean distance of 3 from the center. However, their Mahalanobis distances reveal which is more "surprising":
+\begin{align*}
+D_M(\vect{A}) &= \sqrt{\begin{psmallmatrix} 3 & 0 \end{psmallmatrix} \begin{psmallmatrix} 1/9 & 0 \\ 0 & 1 \end{psmallmatrix} \begin{psmallmatrix} 3 \\ 0 \end{psmallmatrix}} = \sqrt{1} = 1 \\
+D_M(\vect{B}) &= \sqrt{\begin{psmallmatrix} 0 & 3 \end{psmallmatrix} \begin{psmallmatrix} 1/9 & 0 \\ 0 & 1 \end{psmallmatrix} \begin{psmallmatrix} 0 \\ 3 \end{psmallmatrix}} = \sqrt{9} = 3
+\end{align*}
+Point $\vect{B}$ is three times more "stressful" or anomalous because it represents a 3-standard-deviation move along a direction of low historical variance, whereas point $\vect{A}$ is only a 1-standard-deviation move along a direction of high historical variance. The KSI applies this same logic in 20 dimensions.
+\end{minipage}
+\end{framed}
+
+\subsection{Stress Decomposition and Attribution}
+A key strength of this framework is that a high KSI value can be diagnosed. By performing an eigendecomposition on the covariance matrix ($\matr{\Sigma}_{t-1} = \matr{V} \matr{L} \matr{V}^\top$, where $\matr{L} = \text{diag}(\ell_1, \dots, \ell_{20})$), we can express the total squared KSI as a sum of 20 independent contributions.
+\begin{align}
+    \mathrm{KSI}_t^2 &= (\vect{s}_t - \boldsymbol{\mu}_{t-1})^\top (\matr{V} \matr{L}^{-1} \matr{V}^\top) (\vect{s}_t - \boldsymbol{\mu}_{t-1}) \\
+    &= \sum_{j=1}^{20} \frac{y_j^2}{\ell_j}, \quad \text{where } \vect{y} = \matr{V}^\top (\vect{s}_t - \boldsymbol{\mu}_{t-1})
+\end{align}
+The term $C_j = y_j^2 / \ell_j$ is the contribution to total squared stress from the $j$-th eigenmode. This represents the squared deviation along mode $j$, normalized by the typical variance of that mode.
+
+To make this interpretable, we attribute the stress from each mode back to the original 20 components. The squared loading of component $i$ on eigenvector $j$, denoted $v_{ij}^2$, tells us what fraction of mode $j$ is described by component $i$. The total contribution of component $i$, $\text{Stress}_i$, is the sum of its contributions from all 20 modes:
+\[
+\text{Stress}_i = \sum_{j=1}^{20} C_j \cdot v_{ij}^2
+\]
+This allows us to calculate the percentage of total stress coming from, for example, the acceleration of a specific correlation pair.
+
+\section{Interpreting the Code and its Visualizations}
+The Python scripts produce a suite of outputs, each with a specific purpose rooted in the mathematics above.
+
+\subsection{Main Analyzer Output}
+\begin{itemize}
+    \item \textbf{KSI Time Series Plot:} This is the primary output, showing $\mathrm{KSI}_t$ over time. High values indicate that the system's 20D state vector is in a statistically anomalous region relative to its one-year history.
+    \item \textbf{Console Report \& Peak Analysis:} The script identifies the highest, most separated KSI peaks. For each peak, it uses the stress attribution method to calculate the percentage contribution from four broad categories, which are defined in the `_classify_components` method:
+    \begin{itemize}
+        \item \textbf{Intra-Kinetics:} Stress from pairs within the same group (e.g., Policy-Policy).
+        \item \textbf{Cross-Other (Position/Velocity):} Stress from changing correlation levels between groups.
+        \item \textbf{Cross-Accel:} Stress from the \textit{acceleration} of correlations between groups. This is a key indicator of sudden, forceful cross-contamination.
+        \item \textbf{Global Eigen:} Stress from the system-wide herding measures.
+    \end{itemize}
+    \item \textbf{Visual Intelligence Plots:}
+    \begin{itemize}
+        \item \textit{Regime Fingerprints:} A dashboard showing the long-term evolution of the system's correlation structure, phase space, and kinetic energy.
+        \item \textit{Event Gallery \& Detailed Event Analysis:} These use network diagrams to visualize the correlation matrix $\matr{R}_t$ on specific high-stress dates. The pie chart in the detailed analysis is a direct visualization of the stress attribution percentages described above.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Follow-up: Rolling Stress Attribution Plot}
+This crucial visualization, generated by the second script, provides a temporal view of the stress attribution.
+\begin{itemize}
+    \item \textbf{Methodology:} It first computes the daily stress attribution percentages for the four categories above. It then applies a rolling average (e.g., 60-day window) to this data to smooth out daily noise and reveal the underlying \textbf{stress regime}.
+    \item \textbf{Top Panel (Stacked Area Chart):} This shows the evolution of the smoothed stress contributions over time. It answers the question: "Over the last quarter, what has been the primary source of market tension?" A shift from a yellow-dominant (Intra-Kinetics) regime to a red-dominant (Cross-Accel) regime signifies a dangerous change from contained stress to systemic contagion.
+    \item \textbf{Bottom Panel (Dominance Ratio):} This plot makes the regime shift explicit by charting the ratio:
+    \[
+    \text{Dominance Ratio}_t = \frac{\text{Cross-Contamination Stress}_t}{\text{Total Stress}_t}
+    \]
+    When this ratio is above 0.5, it signals that the tension between short-term and long-term fears has become the dominant driver of market risk, a potentially unstable condition.
+\end{itemize}
+
+\end{document}
