@@ -1,0 +1,213 @@
+\documentclass[11pt, letterpaper]{article}
+
+% --- PACKAGES ---
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{tikz}
+\usepackage{titlesec}
+
+% --- DOCUMENT CONFIGURATION ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={The Multi-Currency No-Arbitrage Prism},
+    pdfpagemode=FullScreen,
+}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+% --- DOCUMENT START ---
+\begin{document}
+
+\title{\textbf{The Multi-Currency No-Arbitrage Prism: \\ A Complete Framework for Analysis and Trading}}
+\author{}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+\noindent This paper introduces the Multi-Currency No-Arbitrage Prism, a graph-theoretic framework $G=(V,E,w)$ where vertices $(c_i, t_j)$ represent currency-time assets and weighted edges represent financial transformations. In a theoretical, frictionless market, the geometry of the prism is constrained by no-arbitrage principles, such as Covered Interest Parity (CIP) and Triangular Arbitrage. These manifest as a zero-sum condition on all closed cycles in log-space ($\sum w=0$), ensuring the prism's faces are perfectly planar. We leverage this ideal geometry as a benchmark to measure real-world market imperfections. By populating the graph with empirical market data, we quantify arbitrage opportunities as non-zero cycle sums ($\sum w_{\text{emp}} = b \neq 0$). The most significant of these, the cross-currency basis $b$, is visualized as a geometric "gap" or "warp" in the prism's faces. We formalize these deviations into a system-wide Arbitrage Basis Tensor $\mathbf{B}$ and present a complete, step-by-step methodology for a historical backtest of a strategy designed to trade these geometric inconsistencies. The resulting analysis demonstrates the framework's utility not only for systematic trading but also as a powerful indicator of systemic risk and global funding stress.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Multi-Currency No-Arbitrage Prism: A Complete Mathematical Formalism}
+
+This section establishes the foundational mathematics of the prism in an idealized, arbitrage-free world. We define its components as a weighted directed graph and derive its geometric properties as a direct consequence of fundamental no-arbitrage principles.
+
+\subsection{Core Components: The Graph G=(V,E,w)}
+
+The model is constructed as a weighted directed graph $G=(V,E,w)$ with the following components:
+\begin{itemize}
+    \item \textbf{Vertices $V$}: The set of vertices is the Cartesian product $V = C \times T$, where $C=\{c_1, c_2, \dots, c_n\}$ is a finite set of currencies and $T=\{t_0, t_1, \dots, t_m\}$ is an ordered set of settlement dates. Each vertex $(c_i, t_j)$ represents the asset "one unit of currency $c_i$ deliverable at time $t_j$."
+    \item \textbf{Edges $E$}: A directed edge $e: v_1 \to v_2$ represents a financial instrument or transaction that transforms asset $v_1$ into asset $v_2$.
+    \item \textbf{Weights $w$}: The function $w: E \to \mathbb{R}$ assigns a real-valued weight to each edge. If a transaction transforms 1 unit of a starting asset into $K$ units of an ending asset, the weight is its \textbf{log-multiplier}, $w(e) = \log(K)$.
+    \item \textbf{The No-Arbitrage Axiom}: In a frictionless, arbitrage-free market, any sequence of transactions that forms a closed cycle must result in zero net profit. In our log-space framework, this imposes the fundamental constraint that for any closed cycle $\text{Cyc}$ in the graph, the sum of the log-weights must be zero:
+    \begin{equation}
+        \sum_{e \in \text{Cyc}} w(e) = 0
+    \end{equation}
+\end{itemize}
+
+\subsection{Edge Definitions and Financial Meaning}
+
+\begin{itemize}
+    \item \textbf{Temporal Edges (Interest Rates)}: These vertical edges model the time value of money. An edge from $(c_i, t_j)$ to $(c_i, t_k)$ for $k > j$ represents investing in currency $c_i$. Its weight is the \textbf{log-accrual factor}, $\log(1/D_i(t_j,t_k)) = r_i(t_k-t_j)$, where $D$ is the discount factor and $r$ is the continuous interest rate.
+    \item \textbf{FX Spot Edges (Spot Rates)}: These horizontal edges model the exchange of currencies at the same maturity. An edge from $(c_i, t_j)$ to $(c_k, t_j)$ for $i \neq k$ represents a spot FX transaction. Its weight is the \textbf{log-spot rate}, $s_{i \to k}(t_j) = \log(S_{i \to k}(t_j))$.
+    \item \textbf{FX Forward Edges (Forward Rates)}: These diagonal edges model the exchange of currencies at different future dates. An edge from $(c_i, t_j)$ to $(c_k, t_m)$ for $i \neq k, m > j$ represents an FX forward contract. Its weight is the \textbf{log-forward rate}, $f_{i \to k}(t_j,t_m) = \log(F_{i \to k}(t_j,t_m))$.
+\end{itemize}
+
+\subsection{Geometric Derivation from No-Arbitrage Principles}
+
+\subsubsection{Triangular No-Arbitrage (The Prism's Bases)}
+A risk-free arbitrage attempt at time $t_j$ involving three currencies implies the condition $S_{i \to k}(t_j) \times S_{k \to l}(t_j) \times S_{l \to i}(t_j) = 1$. Taking the natural logarithm yields the zero-sum rule for the triangular cycle, which enforces that the bases of the prism are geometrically "flat":
+\begin{equation}
+    s_{i \to k}(t_j) + s_{k \to l}(t_j) + s_{l \to i}(t_j) = 0
+\end{equation}
+
+\subsubsection{Covered Interest Parity (The Prism's Faces)}
+A zero-cost, risk-free portfolio involving borrowing, a spot conversion, investing, and a forward hedge leads to the standard CIP equation: $F_{i \to k}(t_j,t_m) = S_{i \to k}(t_j) \cdot D_i(t_j,t_m) / D_k(t_j,t_m)$. Rearranging and taking the logarithm reveals the zero-sum condition for the four-sided faces of the prism:
+\begin{equation}
+    f_{i \to k}(t_j, t_m) - s_{i \to k}(t_j) - \log\left(\frac{D_i(t_j, t_m)}{D_k(t_j, t_m)}\right) = 0
+\end{equation}
+This proves that the quadrilateral faces of the theoretical prism must be \textbf{planar}.
+
+\subsection{The Geometric Construction and Visualization of the Prism}
+
+\subsubsection{Defining the Coordinate System}
+We map the abstract graph to a 3D coordinate space $(x, y, z)$:
+\begin{itemize}
+    \item \textbf{Time Axis (Z)}: Maturities $t_j \in T$ are mapped to discrete coordinates $z_j$ on the Z-axis.
+    \item \textbf{Currency Plane (X-Y)}: At each time slice $z_j$, the $n$ currencies are vertices of a regular $n$-gon. A vertex $(c_i, t_j)$ is assigned the unique coordinate:
+    \[ (c_i, t_j) \mapsto (R \cos(2\pi i/n), R \sin(2\pi i/n), z_j) \]
+\end{itemize}
+
+\subsubsection{The Theoretical ("Perfect") Prism}
+The ideal prism consists of parallel currency polygons (bases) connected by vertical edges (interest rates) and planar quadrilateral faces (CIP), forming a perfect geometric structure.
+
+\subsubsection{The Empirical ("Warped") Prism and the Basis}
+In real markets, the CIP cycle sum is generally non-zero:
+\[ s_{\text{emp}} + (\text{accrual}_{k, \text{emp}}) - f_{\text{emp}} - (\text{accrual}_{i, \text{emp}}) = b_{i \to k}(t_j, t_m) \neq 0 \]
+This non-zero \textbf{basis vector $b$} means the path of the four-leg portfolio fails to close. Geometrically, the four vertices of the empirical CIP quadrilateral are \textbf{not coplanar}, and the face is "warped."
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        \draw[gray, thick, ->] (0,0) -- (4,0) node[anchor=north west] {x};
+        \draw[gray, thick, ->] (0,0) -- (0,4) node[anchor=south east] {y};
+        \draw[gray, thick, ->] (0,0) -- (-2,-2) node[anchor=north east] {z (Time)};
+        \node[draw, rectangle, minimum height=3cm, minimum width=8cm, text width=7.5cm, align=center] at (4,2) {
+            \textbf{Placeholder for Figure 1: Prism Geometry}\\
+            A multi-panel diagram illustrating: \\
+            (A) The coordinate system definition. \\
+            (B) A single planar face of the theoretical prism. \\
+            (C) A warped empirical face showing the basis 'gap' vector. \\
+            (D) A complete 3-currency prism structure.
+        };
+    \end{tikzpicture}
+    \caption{The Geometric Structure of the Theoretical and Empirical Prisms.}
+    \label{fig:prism_geometry}
+\end{figure}
+
+\subsection{Advanced No-Arbitrage Conditions and Derivations}
+The framework's internal consistency allows for the derivation of advanced relationships, such as multi-tenor and multi-currency forward consistency, from the fundamental conditions.
+
+\subsection{The Complete Model and Extensions}
+The theoretical no-arbitrage state defines a potential field on the graph, making it ideal for arbitrage detection (e.g., using the Bellman-Ford algorithm) and for extension into a stochastic setting.
+
+\section{Quantifying Deviations: The Empirical Prism and the Arbitrage Field}
+
+\subsection{The Theoretical vs. Empirical Graphs}
+\begin{itemize}
+    \item \textbf{$G_{\text{theory}}$}: A prescriptive model where weights are calculated to enforce $\sum w=0$.
+    \item \textbf{$G_{\text{emp}}$}: A descriptive model where all weights are populated from observable market quotes, representing the real world.
+\end{itemize}
+
+\subsection{The Arbitrage Potential of a Cycle}
+We define the \textbf{arbitrage potential $\mathcal{A}(\text{Cyc})$} of any cycle in $G_{\text{emp}}$ as the sum of its observed log-weights. This value represents the pre-cost, risk-free log-return.
+\begin{equation}
+    \mathcal{A}(\text{Cyc}) = \sum_{e \in \text{Cyc}} w_{\text{emp}}(e)
+\end{equation}
+
+\subsection{The Fundamental Mispricing: The Cross-Currency Basis}
+The \textbf{log cross-currency basis $b$} is the arbitrage potential of the CIP cycle, representing the algebraic measure of the "gap vector".
+\begin{equation}
+    b_{i \to k}(t_j, t_m) = f_{\text{emp}_{i \to k}}(t_j, t_m) - [s_{\text{emp}_{i \to k}}(t_j) - r_{i,\text{emp}}(t_m-t_j) + r_{k,\text{emp}}(t_m-t_j)]
+\end{equation}
+
+\section{Geometric Visualization of Arbitrage}
+
+\subsection{The Basis Surface}
+To understand the dynamics of market dislocations, we visualize the basis as a surface. The \textbf{Basis Surface $B_{i \to k}(T, t)$} is a 3D plot where the x-axis is historical time $t$, the y-axis is forward tenor $T$, and the z-axis represents the magnitude of the log-basis $|b_{i \to k}(T)|$ on that day. This surface is a dynamic map of the prism's "warping."
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        \node[draw, rectangle, minimum height=4cm, minimum width=9cm, text width=8.5cm, align=center] at (0,0) {
+            \textbf{Placeholder for Figure 2: Basis Surface}\\
+            A 3D surface plot of a major cross-currency basis (e.g., EURUSD) over historical time and forward tenor, showing significant spikes during periods of market crisis.
+        };
+    \end{tikzpicture}
+    \caption{Visualization of the Cross-Currency Basis as a Dynamic Surface.}
+    \label{fig:basis_surface}
+\end{figure}
+
+\subsection{The Arbitrage Tensor: A System-Wide View}
+We define the \textbf{Arbitrage Basis Tensor}, a rank-4 tensor $\mathbf{B}$, to capture all mispricings simultaneously: $\mathbf{B}_{ik}^{jm} = b_{i \to k}(t_j, t_m)$. The Frobenius norm of this tensor, $\|\mathbf{B}(t)\| = \sqrt{\sum_{i,k,j,m} (b_{i \to k}(t_j, t_m))^2}$, aggregates all market dislocations into a single, powerful systemic risk indicator.
+
+\section{A Comprehensive Analysis of No-Arbitrage Principles}
+
+\begin{itemize}
+    \item \textbf{Fundamental Theorem of Asset Pricing (FTAP)}: The prism's $\sum w=0$ axiom is the discrete-time, deterministic analogue of the FTAP, which links the absence of arbitrage to the existence of a risk-neutral measure $\mathcal{Q}$.
+    \item \textbf{The Stochastic Extension}: In a continuous-time setting, the CIP condition becomes a no-arbitrage drift restriction on the spot exchange rate process under $\mathcal{Q}$:
+    \[ \frac{dS_t}{S_t} = (r_d - r_f) dt + \sigma dW_t^\mathcal{Q} \]
+    \item \textbf{The HJM and Multi-Curve Frameworks}: The prism is compatible with advanced term structure models and correctly captures the post-2008 multi-curve reality, where the basis $b$ measures the spread between OIS discounting rates and term projection rates.
+\end{itemize}
+
+\section{Backtesting the Prism: A Step-by-Step Mathematical and Computational Plan}
+
+\subsection{Phase 1: Data Acquisition and Structuring}
+\begin{itemize}
+    \item \textbf{Universe}: G7 currencies; Tenors $T = \{\text{SPOT, 1W, 1M, 3M, 6M, 1Y, 2Y}\}$.
+    \item \textbf{Required Data Series}: For each historical day, collect Spot FX rates, FX Swap Points, and OIS rates for each currency.
+\end{itemize}
+
+\subsection{Phase 2: The Daily Calculation Engine}
+For each day $t$ in the historical dataset, calculate the empirical weights $w_{\text{emp}}$ and compute the full Arbitrage Basis Tensor $\mathbf{B}(t)$.
+
+\subsection{Phase 3: Strategy Simulation}
+\begin{itemize}
+    \item \textbf{Transaction Costs $Cost$}: Estimate a realistic bid-ask spread for each of the four legs of the CIP portfolio to get a total log-cost.
+    \item \textbf{Entry Rule}: A trade is initiated if a measured arbitrage potential exceeds its cost: $|\mathcal{A}(\text{Cyc})| > \text{Cost}$.
+    \item \textbf{Portfolio Execution}: Execute a four-legged portfolio to exploit the mispricing (e.g., for $b>0$, sell the overpriced empirical forward and create a cheaper synthetic long forward).
+    \item \textbf{Profit and Loss (P\&L)}: The realized log-profit is $|b| - \text{Cost}$, logged at the maturity date of the contract.
+\end{itemize}
+
+\subsection{Phase 4: Performance Analysis and Visualization}
+Analyze strategy performance using standard metrics (Sharpe Ratio, Max Drawdown). Plot the time series of the aggregate arbitrage tensor norm $\|\mathbf{B}(t)\|$ against a market stress index (e.g., VIX) to visually confirm its power as a systemic risk gauge.
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        \node[draw, rectangle, minimum height=4cm, minimum width=9cm, text width=8.5cm, align=center] at (0,0) {
+            \textbf{Placeholder for Figure 3: Systemic Risk Plot}\\
+            A chart showing two time series: \\
+            1. The Arbitrage Tensor Norm $\|\mathbf{B}(t)\|$. \\
+            2. A market stress index (e.g., VIX). \\
+            The plot should highlight their strong correlation during financial crises.
+        };
+    \end{tikzpicture}
+    \caption{Systemic Risk Analysis: Correlation of Arbitrage Tensor Norm with VIX.}
+    \label{fig:arbitrage_surface}
+\end{figure}
+
+\end{document}
