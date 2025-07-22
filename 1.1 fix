@@ -1,0 +1,278 @@
+# ========================================================================================
+# --- PRODUCTION-GRADE BLOOMBERG DATA FOUNDATION (v3.1 - Corrected) ---
+#
+# PURPOSE:
+# This script serves as a robust, professional, and analysis-friendly foundation
+# for any project requiring Bloomberg data. It cleanly separates the complex task of
+# data fetching/cleaning from the creative task of data analysis.
+#
+# HOW IT WORKS (THE PHILOSOPHY):
+# 1. CONFIGURE: You define your entire data universe (any number of assets, any
+#    field) in the single, easy-to-use `CONFIG` dictionary.
+#
+# 2. FETCH & CLEAN: A single, powerful function (`load_and_clean_bloomberg_data`)
+#    handles all the complexities of talking to Bloomberg, handling errors, and
+#    processing the data into a perfectly clean, ready-to-use DataFrame.
+#
+# 3. ANALYZE: The clean data is handed off to the `AnalysisTemplate` class. This
+#    class is a blueprint for YOUR work. You simply fill its methods with your
+#    custom logic, providing a clear and organized structure for your analysis.
+#
+# ========================================================================================
+
+# --- Core Libraries ---
+import pandas as pd
+import numpy as np
+import sys
+from datetime import datetime
+from collections import defaultdict
+
+# --- Type Hinting (for clearer, more robust code) ---
+from typing import Dict, List, Optional
+
+# --- Visualization (optional, for the analysis part) ---
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    VISUALIZATION_AVAILABLE = True
+except ImportError:
+    VISUALIZATION_AVAILABLE = False
+
+
+# --- Step 1: Check for Bloomberg BQL Availability ---
+print("--- Initializing Data Foundation v3.1 ---")
+try:
+    import bql
+    BQL_SERVICE = bql.Service()
+    print("✅ Bloomberg BQL module imported successfully. Live data mode is active.")
+except ImportError:
+    print("\n❌ FATAL ERROR: Bloomberg BQL module not found.")
+    print("   This script requires a BQuant environment to fetch live data. Halting execution.")
+    sys.exit()
+
+
+# ==============================================================================
+# --- CONFIGURATION: The Single Source of Truth for Your Data Request ---
+#
+# INSTRUCTIONS:
+# This is the ONLY section you need to edit to define your data.
+# Add, remove, or modify assets in the 'assets' dictionary.
+#
+# For each asset, provide:
+#   - 'ticker': The official Bloomberg ticker.
+#   - 'bql_field': The specific data field (e.g., 'PX_LAST', 'YLD_CNV_LAST').
+#   - 'processing_method': How to treat the raw data.
+#       - 'log_return': For prices that compound (stocks, FX, commodities, bond prices).
+#       - 'diff': For rates/yields/scores that move linearly (bond yields, swap rates, VIX).
+# ==============================================================================
+CONFIG = {
+    'assets': {
+        # --- Add as many assets as you need below ---
+        'SPX_INDEX':     {'ticker': 'SPX Index',      'bql_field': 'PX_LAST',      'processing_method': 'log_return'},
+        'US_10YR_YIELD': {'ticker': 'USGG10YR Index', 'bql_field': 'YLD_CNV_LAST', 'processing_method': 'diff'},
+        'USD_SWAP_5Y':   {'ticker': 'USSW5 Curncy',   'bql_field': 'PX_LAST',      'processing_method': 'diff'},
+        'GOLD_FUTURE':   {'ticker': 'GCA Comdty',     'bql_field': 'PX_LAST',      'processing_method': 'log_return'},
+        'VIX_INDEX':     {'ticker': 'VIX Index',      'bql_field': 'PX_LAST',      'processing_method': 'diff'}, # VIX is a % value, so we use diff
+        'BCOM_INDEX':    {'ticker': 'BCOM Index',     'bql_field': 'PX_LAST',      'processing_method': 'log_return'},
+    },
+    'date_range': {
+        'start': '2010-01-01',
+        'end': datetime.today().strftime('%Y-%m-%d'),
+    },
+}
+
+
+def load_and_clean_bloomberg_data(config: Dict, bql_service: bql.Service) -> Optional[pd.DataFrame]:
+    """
+    Handles the entire data fetching and cleaning pipeline.
+
+    This function is designed to be a robust "black box". You give it the config,
+    and it returns a perfect, analysis-ready DataFrame or None if it fails.
+
+    Args:
+        config: The main configuration dictionary.
+        bql_service: The initialized BQL service object.
+
+    Returns:
+        A pandas DataFrame containing the cleaned, processed data, or None on failure.
+    """
+    print("\n--- [PHASE 1] DATA FETCHING ---")
+    try:
+        # Group tickers by the required BQL field for efficient, robust fetching.
+        grouped_tickers = defaultdict(list)
+        for metadata in config['assets'].values():
+            grouped_tickers[metadata['bql_field']].append(metadata['ticker'])
+
+        # Execute BQL requests for each group and collect the resulting DataFrames.
+        all_fetched_data = []
+        for field, tickers in grouped_tickers.items():
+            try:
+                print(f"  - Requesting field '{field}' for {len(tickers)} ticker(s)...")
+                
+                # ==================================================================
+                # --- CORE FIX: Use getattr() for robust BQL field access ---
+                # This robustly retrieves the BQL field (e.g., PX_LAST) from the
+                # service object using its string name from the CONFIG.
+                bql_field_object = getattr(bql_service.data, field)
+
+                # Call the retrieved field object with its parameters
+                data_item = bql_field_object(
+                    dates=bql_service.func.range(config['date_range']['start'], config['date_range']['end']),
+                    fill='prev'
+                )
+                # ==================================================================
+
+                request = bql.Request(tickers, {field: data_item})
+                response = bql_service.execute(request)
+                df = response[0].df().reset_index().pivot(index='DATE', columns='ID', values=field)
+                all_fetched_data.append(df)
+            except Exception as e:
+                print(f"    ⚠️ WARNING: BQL request failed for field '{field}'. Error: {e}")
+
+        if not all_fetched_data:
+            print("❌ ERROR: No data could be fetched. Please check tickers and fields in CONFIG.")
+            return None
+
+        # Merge all data into a single DataFrame and rename columns to our friendly short names.
+        raw_df = pd.concat(all_fetched_data, axis=1)
+        ticker_to_short_name = {v['ticker']: k for k, v in config['assets'].items()}
+        raw_df.rename(columns=ticker_to_short_name, inplace=True)
+        raw_df = raw_df[[name for name in config['assets'].keys() if name in raw_df.columns]]
+
+    except Exception as e:
+        print(f"❌ ERROR: A critical error occurred during data fetching. Details: {e}")
+        return None
+
+    print("\n--- [PHASE 2] DATA CLEANING & PROCESSING ---")
+    try:
+        # Forward-fill and drop any rows at the start that are still fully empty.
+        cleaned_df = raw_df.ffill().dropna(how='all')
+
+        # Identify and drop any assets that failed to load any data at all.
+        failed_assets = [col for col in cleaned_df.columns if cleaned_df[col].isnull().all()]
+        if failed_assets:
+            print(f"  - WARNING: The following assets failed to load and are being dropped: {failed_assets}")
+            cleaned_df.drop(columns=failed_assets, inplace=True)
+
+        if cleaned_df.empty:
+            print("❌ ERROR: Data is empty after cleaning. Halting.")
+            return None
+
+        # Process each column according to the 'processing_method' defined in the CONFIG.
+        processed_df = pd.DataFrame(index=cleaned_df.index)
+        for short_name in cleaned_df.columns:
+            method = config['assets'][short_name]['processing_method']
+            if method == 'diff':
+                processed_df[short_name] = cleaned_df[short_name].diff()
+            elif method == 'log_return':
+                processed_df[short_name] = np.log(cleaned_df[short_name] / cleaned_df[short_name].shift(1))
+
+        # Drop the first row (always NaN after diff/return) and fill any minor internal gaps with 0.
+        final_df = processed_df.dropna(how='all').fillna(0)
+        print("  - Data successfully cleaned and processed.")
+        return final_df
+
+    except Exception as e:
+        print(f"❌ ERROR: A critical error occurred during data processing. Details: {e}")
+        return None
+
+
+# ========================================================================================
+# --- ANALYSIS TEMPLATE: This is where YOUR logic goes! ---
+#
+# INSTRUCTIONS:
+# This class is a blueprint for your analysis. The `data` attribute holds the clean
+# DataFrame produced by the pipeline.
+#
+# 1. Add new methods to this class to perform specific parts of your analysis
+#    (e.g., `run_my_custom_model`, `calculate_volatility_regime`, etc.).
+# 2. Call your new methods from the main `run` method to execute them in order.
+# 3. Store your results (tables, values, etc.) in the `self.results` dictionary.
+#
+# ========================================================================================
+class AnalysisTemplate:
+    def __init__(self, data: pd.DataFrame):
+        """
+        Initializes the analysis project with the clean, processed data.
+        """
+        print("\n--- AnalysisTemplate Initialized ---")
+        print("  - Received data with shape:", data.shape)
+        self.data = data
+        self.results = {} # A dictionary to store any results you generate.
+
+    def run_descriptive_stats(self):
+        """A basic analysis step: calculate and store descriptive statistics."""
+        print("  - Running: Descriptive Statistics...")
+        self.results['descriptive_stats'] = self.data.describe()
+
+    def run_correlation_analysis(self):
+        """A second analysis step: calculate the correlation matrix."""
+        print("  - Running: Correlation Analysis...")
+        self.results['correlation_matrix'] = self.data.corr()
+
+    def plot_correlation_heatmap(self):
+        """A visualization step based on a prior result."""
+        if 'correlation_matrix' not in self.results:
+            print("  - Skipping plot: Correlation matrix not available. Run `run_correlation_analysis` first.")
+            return
+
+        if not VISUALIZATION_AVAILABLE:
+            print("  - Skipping plot: Matplotlib/Seaborn not installed.")
+            return
+
+        print("  - Generating: Correlation Heatmap...")
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(self.results['correlation_matrix'], annot=True, cmap='coolwarm', fmt='.2f')
+        plt.title('Correlation Matrix of Daily Asset Changes')
+        plt.show()
+
+    def run(self):
+        """
+        The main execution method for the analysis.
+        Call your analysis steps in the desired order here.
+        """
+        print("\n--- [PHASE 3] EXECUTING ANALYSIS WORKFLOW ---")
+        self.run_descriptive_stats()
+        self.run_correlation_analysis()
+        # --- > Add calls to your own custom methods here! < ---
+        # For example:
+        # self.run_my_custom_model()
+        # self.calculate_volatility_regime()
+
+        # Visualization can be called last.
+        self.plot_correlation_heatmap()
+        print("--- Analysis Workflow Complete ---")
+
+    def display_results(self):
+        """A helper method to print the stored results in a clean format."""
+        print("\n--- [PHASE 4] DISPLAYING ANALYSIS RESULTS ---")
+        for name, result in self.results.items():
+            print(f"\n--- Result: {name.replace('_', ' ').title()} ---")
+            print(result)
+            print("-" * 50)
+
+
+def main():
+    """The main function to orchestrate the entire process."""
+    # STEP 1: Run the data pipeline.
+    final_data = load_and_clean_bloomberg_data(config=CONFIG, bql_service=BQL_SERVICE)
+
+    # STEP 2: Validate the output and hand off to the analysis module.
+    if final_data is not None and not final_data.empty:
+        print("\n✅ Data pipeline successful. Handing off to the analysis module.")
+
+        # STEP 3: Initialize your analysis project with the clean data.
+        analysis_project = AnalysisTemplate(data=final_data)
+
+        # STEP 4: Execute your analysis workflow.
+        analysis_project.run()
+
+        # STEP 5: Display the final results.
+        analysis_project.display_results()
+
+    else:
+        print("\n❌ PIPELINE FAILED: No data was generated. Analysis cannot proceed.")
+
+
+if __name__ == '__main__':
+    main()
