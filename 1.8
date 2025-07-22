@@ -1,0 +1,291 @@
+import pandas as pd
+import numpy as np
+import sys
+from datetime import datetime
+from typing import Dict, Optional, List
+from functools import lru_cache
+
+# --- Visualization ---
+try:
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    import seaborn as sns
+    VISUALIZATION_AVAILABLE = True
+except ImportError:
+    VISUALIZATION_AVAILABLE = False
+    print("⚠️ WARNING: Visualization libraries (matplotlib, seaborn) not found. Plots will not be generated.")
+
+# --- Step 1: Check for Bloomberg BQL Availability ---
+print("--- Initializing Prism Verification v3.1 (Stable) ---")
+try:
+    import bql
+    BQL_SERVICE = bql.Service()
+    BQL_AVAILABLE = True
+    print("✅ Bloomberg BQL module imported successfully. Live data mode is active.")
+except ImportError:
+    BQL_AVAILABLE = False
+    BQL_SERVICE = None
+    print("⚠️ WARNING: Bloomberg BQL module not found. Will fall back to synthetic data.")
+
+
+# ==============================================================================
+# --- CONFIGURATION: The Single Source of Truth for Your Data Universe ---
+# ==============================================================================
+CONFIG = {
+    'universe': {
+        'currencies': ['USD', 'EUR', 'JPY', 'GBP'],
+        'base_currency': 'USD',
+        'tenors': {'1Y': 365, '2Y': 730, '3Y': 1095},
+    },
+    'date_range': {
+        'start': '2007-01-01',
+        'end': '2012-12-31',
+    },
+    'tickers': {
+        'spot': { 'EUR': 'EURUSD Curncy', 'JPY': 'JPYUSD Curncy', 'GBP': 'GBPUSD Curncy' },
+        'swaps': {
+            'EUR': {'1Y': 'EUSA1 Curncy', '2Y': 'EUSA2 Curncy', '3Y': 'EUSA3 Curncy'},
+            'JPY': {'1Y': 'JYSA1 Curncy', '2Y': 'JYSA2 Curncy', '3Y': 'JYSA3 Curncy'},
+            'GBP': {'1Y': 'BPSA1 Curncy', '2Y': 'BPSA2 Curncy', '3Y': 'BPSA3 Curncy'},
+        },
+        'ois_curves': {
+            'USD': 'YCSW0023 Index', 'EUR': 'YCSW0004 Index',
+            'JPY': 'YCSW0007 Index', 'GBP': 'YCSW0015 Index',
+        },
+        'stress_indicator': 'VIX Index'
+    },
+    'constants': { 'swap_points_scale': 10000.0, 'days_in_year': 365.0 },
+    'plot_parameters': {
+        'geometric_warp_date': '2008-09-30', 'surface_plot_currency': 'EUR',
+    }
+}
+
+# =================================================================================
+# --- DEFINITIVE DATA LOADING & PROCESSING (FETCH-THEN-INTERPOLATE STRATEGY) ---
+# =================================================================================
+
+@lru_cache(maxsize=None)
+def get_raw_curve_points(curve_ticker: str, query_date: str, bql_service: 'bql.Service') -> Optional[pd.DataFrame]:
+    """For a single curve on a single date, fetches all constituent member points."""
+    try:
+        curve_members = bql_service.univ.curvemembers(curve_ticker, dates=query_date)
+        data_items = {
+            'days': bql_service.data.duration(to_bd='Y') * 365.25,
+            'rate': bql_service.data.curve_rate(sides='mid')
+        }
+        request = bql.Request(curve_members, data_items, with_params={'dates': query_date})
+        response = bql_service.execute(request)
+        df = pd.concat([item.df() for item in response], axis=1).dropna().sort_values('days')
+        return df
+    except Exception as e:
+        print(f"    ⚠️ Could not fetch curve points for {curve_ticker} on {query_date}. Error: {e}")
+        return None
+
+def interpolate_rates_for_dates(dates: pd.DatetimeIndex, curve_ticker: str, target_tenors_days: List[int], bql_service: 'bql.Service') -> pd.DataFrame:
+    """
+    For a given curve and a range of dates, fetches raw curve points and interpolates
+    to find rates at the specified target tenors.
+    """
+    all_interpolated_rates = []
+    for date in dates:
+        # --- CORE FIX: Handle NaT (Not a Time) values in the date index ---
+        if pd.isna(date):
+            all_interpolated_rates.append([np.nan] * len(target_tenors_days))
+            continue
+        # --- END FIX ---
+            
+        date_str = date.strftime('%Y-%m-%d')
+        raw_points = get_raw_curve_points(curve_ticker, date_str, bql_service)
+        
+        if raw_points is not None and not raw_points.empty and len(raw_points) > 1:
+            x = raw_points['days'].values
+            y = raw_points['rate'].values
+            interpolated = np.interp(target_tenors_days, x, y)
+            all_interpolated_rates.append(interpolated)
+        else:
+            all_interpolated_rates.append([np.nan] * len(target_tenors_days))
+            
+    df_interpolated = pd.DataFrame(all_interpolated_rates, index=dates, columns=CONFIG['universe']['tenors'].keys())
+    return df_interpolated
+
+def load_and_prepare_market_data(config: Dict, bql_service: 'bql.Service') -> Optional[Dict[str, pd.DataFrame]]:
+    """[LIVE DATA] Handles data fetching and structuring using robust methods."""
+    print("\n--- [PHASE 1 - LIVE] FETCHING & STRUCTURING MARKET DATA ---")
+    try:
+        # 1. Fetch simple price-based data (Spot, Swaps, VIX)
+        print("  - Fetching Spot, Swap, and VIX prices...")
+        all_px_tickers = (
+            list(config['tickers']['spot'].values()) +
+            [t for ccy_swaps in config['tickers']['swaps'].values() for t in ccy_swaps.values()] +
+            [config['tickers']['stress_indicator']]
+        )
+        date_range = bql_service.func.range(config['date_range']['start'], config['date_range']['end'])
+        px_request = bql.Request(all_px_tickers, {'PX_LAST': bql_service.data.px_last(fill='prev')}, with_params={'dates': date_range})
+        px_response = bql_service.execute(px_request)
+        df_px_pivot = px_response[0].df().reset_index().pivot(index='DATE', columns='ID', values='PX_LAST')
+        df_vix = df_px_pivot[[config['tickers']['stress_indicator']]].rename(columns={config['tickers']['stress_indicator']: 'VIX'})
+        
+        # 2. Fetch and interpolate OIS curves
+        print("  - Fetching and interpolating OIS curves (this may take a moment)...")
+        all_ois_dfs = []
+        target_tenors_days = list(config['universe']['tenors'].values())
+        
+        for ccy, curve_ticker in config['tickers']['ois_curves'].items():
+            print(f"    - Processing {ccy} curve ({curve_ticker})...")
+            df_interpolated = interpolate_rates_for_dates(df_px_pivot.index, curve_ticker, target_tenors_days, bql_service)
+            df_interpolated.columns = pd.MultiIndex.from_product([[curve_ticker], df_interpolated.columns], names=['ID', 'tenor'])
+            all_ois_dfs.append(df_interpolated)
+            
+        df_ois_pivot = pd.concat(all_ois_dfs, axis=1) / 100.0
+
+        # 3. Assemble the final multi-index DataFrame
+        print("  - Assembling final market data DataFrame...")
+        final_data_frames = []
+        ccy_pairs = [f"{ccy}{config['universe']['base_currency']}" for ccy in config['universe']['currencies'] if ccy != config['universe']['base_currency']]
+        for pair in ccy_pairs:
+            ccy1, ccy2 = pair[:3], pair[3:]
+            df_pair = pd.DataFrame(index=df_px_pivot.index)
+            df_pair['Pair'] = pair
+            df_pair['Spot'] = df_px_pivot[config['tickers']['spot'][ccy1]]
+            for tenor in config['universe']['tenors']:
+                df_pair[f'SwapPoints_{tenor}'] = df_px_pivot[config['tickers']['swaps'][ccy1][tenor]]
+                df_pair[f'OIS_{ccy1}_{tenor}'] = df_ois_pivot[(config['tickers']['ois_curves'][ccy1], tenor)]
+                df_pair[f'OIS_{ccy2}_{tenor}'] = df_ois_pivot[(config['tickers']['ois_curves'][ccy2], tenor)]
+            final_data_frames.append(df_pair)
+
+        df_market_data = pd.concat(final_data_frames).reset_index().set_index(['DATE', 'Pair'])
+        df_market_data = df_market_data.ffill().dropna()
+
+        print("✅ Live data fetching and structuring successful.")
+        return {'market_data': df_market_data, 'vix': df_vix}
+    except Exception as e:
+        print(f"❌ ERROR: A critical error occurred during live data fetching. Details: {e}")
+        return None
+
+# The PrismVerifier and other functions remain unchanged as they consume the final, correctly formatted DataFrame.
+class PrismVerifier:
+    def __init__(self, market_data: pd.DataFrame, vix_data: pd.DataFrame, config: Dict):
+        print("\n--- PrismVerifier Initialized ---")
+        self.market_data = market_data
+        self.vix_data = vix_data
+        self.config = config
+        self.results = {}
+
+    def calculate_basis_history(self):
+        print("  - Running: Vectorized Basis Calculation...")
+        df = self.market_data.copy()
+        k = self.config['constants']
+        basis_results = []
+
+        for tenor, days in self.config['universe']['tenors'].items():
+            T = days / k['days_in_year']
+            r_domestic = pd.Series(index=df.index, dtype=float)
+            r_foreign = pd.Series(index=df.index, dtype=float)
+
+            for pair in df.index.get_level_values('Pair').unique():
+                mask = df.index.get_level_values('Pair') == pair
+                ccy1, ccy2 = pair[:3], pair[3:]
+                r_domestic.loc[mask] = df.loc[mask, f'OIS_{ccy1}_{tenor}']
+                r_foreign.loc[mask] = df.loc[mask, f'OIS_{ccy2}_{tenor}']
+
+            fwd_rate_emp = df['Spot'] + df[f'SwapPoints_{tenor}'] / k['swap_points_scale']
+            fwd_rate_theory = df['Spot'] * np.exp((r_domestic - r_foreign) * T)
+            
+            basis = (np.log(fwd_rate_emp) - np.log(fwd_rate_theory)) / T * 10000
+            basis_results.append(pd.Series(basis, name=tenor))
+            
+        df_basis = pd.concat(basis_results, axis=1)
+        df_tensor_norm = df_basis.groupby('DATE').apply(lambda x: np.sqrt(np.sum(np.square(x.values)))).rename('Tensor_Norm')
+        self.results['basis_by_pair'] = df_basis
+        self.results['systemic_deviation'] = pd.DataFrame(df_tensor_norm).join(self.vix_data).dropna()
+        print("  - Calculation complete.")
+
+    def plot_geometric_warp(self):
+        if not VISUALIZATION_AVAILABLE: return
+        date = pd.to_datetime(self.config['plot_parameters']['geometric_warp_date'])
+        ccy1 = self.config['plot_parameters']['surface_plot_currency']
+        pair = f"{ccy1}{self.config['universe']['base_currency']}"
+        print(f"\n  - Generating: Geometric Warp proof for {pair} on {date.date()}...")
+        if not (date, pair) in self.results['basis_by_pair'].index:
+            print(f"    ⚠️ WARNING: No data for {pair} on {date.date()}. Skipping warp plot.")
+            return
+        day_basis = self.results['basis_by_pair'].loc[(date, pair)]
+        tenor, basis_value = day_basis.abs().idxmax(), day_basis.loc[day_basis.abs().idxmax()]
+        row = self.market_data.loc[(date, pair)]
+        T = self.config['universe']['tenors'][tenor] / self.config['constants']['days_in_year']
+        s_log = np.log(row['Spot'])
+        f_log = np.log(row['Spot'] + row[f'SwapPoints_{tenor}'] / self.config['constants']['swap_points_scale'])
+        r_dom = row[f'OIS_{ccy1}_{tenor}']
+        r_for = row[f'OIS_{self.config["universe"]["base_currency"]}_{tenor}']
+        path = [(0, 0), (s_log, 0), (s_log, r_dom * T), (s_log - f_log, r_dom * T), (s_log - f_log, r_dom * T - r_for * T)]
+        plt.figure(figsize=(12, 8))
+        path_x, path_y = zip(*path)
+        plt.plot(path_x, path_y, 'o-', c='royalblue', label='Empirical Path')
+        plt.plot([path[-1][0], path[0][0]], [path[-1][1], path[0][1]], 'r--o', label=f'Basis "Gap" = {basis_value:.2f} bps')
+        for p, label in zip(path, [f'START', f'+log(S)', f'+log(S)+r_d*T', f'+log(S)-log(F)+r_d*T', 'END']):
+             plt.text(p[0], p[1] + 0.0005 * np.sign(p[1] or 1), label, ha='center', fontsize=11)
+        plt.title(f'Geometric Proof: Basis as Prism Warp for {pair} ({tenor}) on {date.date()}', fontsize=16)
+        plt.xlabel('Log Currency Space'); plt.ylabel('Log Interest/Time Space'); plt.grid(True, linestyle='--', alpha=0.6)
+        plt.legend(); plt.axhline(0, c='k', lw=0.5); plt.axvline(0, c='k', lw=0.5); plt.show()
+
+    def plot_basis_surface(self):
+        if not VISUALIZATION_AVAILABLE: return
+        ccy = self.config['plot_parameters']['surface_plot_currency']
+        pair = f"{ccy}{self.config['universe']['base_currency']}"
+        print(f"  - Generating: Basis Surface plot for {pair}...")
+        df_surf = self.results['basis_by_pair'].reset_index()
+        df_surf = df_surf[df_surf['Pair'] == pair]
+        if df_surf.empty:
+            print(f"    ⚠️ WARNING: No basis data for {pair} to plot surface."); return
+        tenor_cols = list(self.config['universe']['tenors'].keys())
+        pivot = df_surf.set_index('DATE')[tenor_cols]
+        tenor_days = [self.config['universe']['tenors'][t] for t in pivot.columns]
+        X, Y = np.meshgrid(tenor_days, pivot.index.map(datetime.toordinal))
+        Z = pivot.values
+        fig = plt.figure(figsize=(14, 10)); ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(Y, X, Z, cmap='viridis', edgecolor='none', rstride=10, cstride=10, alpha=0.9)
+        ax.set_title(f'Basis Surface for {pair} ("Warp" Magnitude Over Time)', fontsize=16)
+        ax.set_xlabel('Date'); ax.set_ylabel('Tenor (Days)'); ax.set_zlabel('Basis (bps)')
+        tick_locs = ax.get_xticks()
+        ax.set_xticklabels([datetime.fromordinal(int(t)).strftime('%Y-%m') for t in tick_locs if t > 0], rotation=30, ha='right')
+        ax.view_init(elev=30, azim=-120); plt.show()
+
+    def plot_systemic_deviation(self):
+        if not VISUALIZATION_AVAILABLE: return
+        print("  - Generating: Systemic Deviation vs. Market Stress plot...")
+        df_plot = self.results['systemic_deviation']
+        fig, ax1 = plt.subplots(figsize=(14, 7))
+        ax1.set_xlabel('Date'); ax1.set_ylabel('Arbitrage Tensor Norm ||B(t)||', color='tab:blue')
+        ax1.plot(df_plot.index, df_plot['Tensor_Norm'], color='tab:blue', label='Tensor Norm')
+        ax1.tick_params(axis='y', labelcolor='tab:blue')
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('VIX Index', color='tab:red')
+        ax2.plot(df_plot.index, df_plot['VIX'], color='tab:red', alpha=0.6, label='VIX')
+        ax2.tick_params(axis='y', labelcolor='tab:red')
+        correlation = df_plot['Tensor_Norm'].corr(df_plot['VIX'])
+        plt.title(f'Systemic Deviation vs. VIX (Correlation: {correlation:.2f})', fontsize=16)
+        fig.tight_layout(); plt.grid(True, linestyle='--', alpha=0.6); plt.show()
+
+def main():
+    """Main function to orchestrate the entire verification process."""
+    if not BQL_AVAILABLE:
+        print("\n❌ BQL not found. This script requires a live Bloomberg connection and cannot use synthetic data.")
+        print("   The 'fetch-then-interpolate' strategy is not compatible with a synthetic fallback.")
+        return
+
+    data_bundle = load_and_prepare_market_data(config=CONFIG, bql_service=BQL_SERVICE)
+
+    if data_bundle and not data_bundle['market_data'].empty:
+        print("\n✅ Data pipeline successful. Handing off to the PrismVerifier.")
+        verifier = PrismVerifier(
+            market_data=data_bundle['market_data'],
+            vix_data=data_bundle['vix'],
+            config=CONFIG
+        )
+        verifier.run_analysis_and_visualization()
+        print("\n--- Verification Complete ---")
+    else:
+        print("\n❌ PIPELINE FAILED: No data was generated. Analysis cannot proceed.")
+
+if __name__ == '__main__':
+    main()
