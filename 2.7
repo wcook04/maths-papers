@@ -1,0 +1,172 @@
+import numpy as np
+import pandas as pd
+import bql
+
+# It's a best practice to initialize the BQL service once
+bq = bql.Service()
+
+class ArbitrageMatrixEngine:
+    """
+    A vectorized engine for detecting multi-currency arbitrage opportunities
+    using a pre-defined incidence matrix and Bloomberg BQL data.
+    """
+    def __init__(self, currencies, tenors):
+        self.currencies = currencies
+        self.tenors = tenors
+        self.ccy_tickers = {
+            "USD/EUR": "EURUSD Curncy",
+            "EUR/JPY": "EURJPY Curncy",
+            "JPY/USD": "USDJPY Curncy"
+        }
+        self.w_map, self.incidence_matrix_A = self._setup_framework()
+        self.tx_costs_bps = 2.0
+
+    def _setup_framework(self):
+        # This financial setup logic is correct.
+        idx, w_map = 0, {}
+        ccy_pairs = list(self.ccy_tickers.keys())
+        for pair in ccy_pairs: w_map[f"s_{pair}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for pair in ccy_pairs: w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for ccy in self.currencies: w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        
+        A = np.zeros((1 + len(self.tenors) * len(ccy_pairs), idx))
+        p1, p2, p3 = "USD/EUR", "EUR/JPY", "JPY/USD"
+        A[0, w_map[f's_{p1}']], A[0, w_map[f's_{p2}']], A[0, w_map[f's_{p3}']] = -1, 1, -1
+        
+        cycle_idx = 1
+        for tenor in self.tenors:
+            for c1, c2 in [("USD", "EUR"), ("EUR", "JPY"), ("JPY", "USD")]:
+                pair_str = f"{c1}/{c2}"
+                A[cycle_idx, w_map[f's_{pair_str}']] = 1
+                A[cycle_idx, w_map[f'f_{pair_str}_{tenor}']] = -1
+                A[cycle_idx, w_map[f'r_{c1}_{tenor}']] = -1
+                A[cycle_idx, w_map[f'r_{c2}_{tenor}']] = 1
+                cycle_idx += 1
+        return w_map, A
+
+    def get_market_data_and_build_w(self, date):
+        """
+        [REFINED] Fetches all required market data from BQL for a given date
+        using a single batch request for each data type with corrected parameters.
+        """
+        spot_universe = list(self.ccy_tickers.values())
+
+        print("--- Acquiring Data Step-by-Step ---")
+        
+        # 1. Fetch Spot Prices (This method is confirmed to work)
+        print("✅ Fetching Spot...")
+        spot_req = bql.Request(spot_universe, {'spot': bq.data.px_last(dates=date)})
+        spot_res = bq.execute(spot_req)
+        spot_df = spot_res[0].df().reset_index()
+        spot_df = spot_df.rename(columns={'spot': 'VALUE', 'DATE': 'TENOR'})
+        spot_df['TENOR'] = pd.NaT
+        spot_df['TYPE'] = 'SPOT'
+
+        # 2. Fetch Forward Prices (Corrected Batch Request)
+        print("⏳ Fetching Forwards...")
+        try:
+            fwd_universe = bq.univ.curvemembers(
+                spot_universe,
+                tenors=self.tenors,
+                curve_type='FX',
+                quote_type='outright' # Using 'quote_type' as hinted in the images
+            )
+            fwd_req = bql.Request(fwd_universe, {'fwd_outright': bq.data.curve_rate(side='mid', dates=date)})
+            fwd_res = bq.execute(fwd_req)
+            fwd_df = fwd_res[0].df().reset_index()
+            fwd_df = fwd_df.rename(columns={'fwd_outright': 'VALUE'})
+            fwd_df['TYPE'] = 'FWD'
+            print("✅ Fetching Forwards... Success.")
+        except Exception as e:
+            print(f"❌ Fetching Forwards... Failed: {e}")
+            fwd_df = pd.DataFrame() # Create empty df on failure
+
+        # 3. Fetch Implied Yields (Corrected Batch Request)
+        print("⏳ Fetching Yields...")
+        try:
+            yield_universe = bq.univ.curvemembers(
+                spot_universe,
+                tenors=self.tenors,
+                curve_type='FX',
+                quote_type='implied_yield' # Applying the same logic for yields
+            )
+            yield_req = bql.Request(yield_universe, {'implied_yield': bq.data.curve_rate(side='mid', dates=date) / 100})
+            yield_res = bq.execute(yield_req)
+            yield_df = yield_res[0].df().reset_index()
+            yield_df = yield_df.rename(columns={'implied_yield': 'VALUE'})
+            yield_df['TYPE'] = 'YIELD'
+            print("✅ Fetching Yields... Success.")
+        except Exception as e:
+            print(f"❌ Fetching Yields... Failed: {e}")
+            yield_df = pd.DataFrame() # Create empty df on failure
+
+        # --- 4. Parse the Responses and Populate W (Unchanged) ---
+        market_data_df = pd.concat([spot_df, fwd_df, yield_df]).dropna(subset=['VALUE'])
+        if market_data_df.empty:
+            print("Warning: No market data was successfully retrieved.")
+            return np.zeros(self.w_size)
+            
+        market_data_df.set_index(['ID', 'TYPE', 'TENOR'], inplace=True)
+
+        W_emp = np.zeros(self.w_size)
+        for name, idx in self.w_map.items():
+            parts = name.split('_')
+            data_type, pair_or_ccy = parts[0], parts[1]
+            try:
+                if data_type == 's':
+                    ticker = self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'SPOT', pd.NaT), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'f':
+                    tenor = parts[2]
+                    ticker = self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'FWD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'r':
+                    tenor = parts[2]
+                    ccy = pair_or_ccy
+                    lookup_ticker = next(tkr for tkr in spot_universe if tkr.startswith(ccy) or tkr[3:6] == ccy)
+                    val = market_data_df.loc[(lookup_ticker, 'YIELD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(1 + val)
+            except (KeyError, IndexError, StopIteration):
+                W_emp[idx] = 0.0
+        return W_emp
+
+    def run_daily_analysis(self, date):
+        W_emp = self.get_market_data_and_build_w(date)
+        if not W_emp.any():
+             print(f"Critical: No data could be processed. Aborting analysis.")
+             return None
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000
+        trade_signals = np.where(np.abs(arbitrage_bps) > self.tx_costs_bps, np.sign(arbitrage_bps), 0)
+        return {"arbitrage_bps": arbitrage_bps, "trade_signals": trade_signals}
+
+
+# --- Main Execution Block ---
+if __name__ == '__main__':
+    engine = ArbitrageMatrixEngine(
+        currencies=['USD', 'EUR', 'JPY'],
+        tenors=['1M', '3M', '6M', '1Y']
+    )
+    
+    analysis_date = pd.Timestamp.now(tz='Europe/London').normalize() - pd.offsets.BDay(1)
+    analysis_date_str = analysis_date.strftime('%Y-%m-%d')
+
+    print(f"--- Running Arbitrage Matrix Engine for {analysis_date_str} ---")
+    result = engine.run_daily_analysis(analysis_date_str)
+    
+    if result:
+        print("\n\n--- FINAL REPORT ---")
+        trade_indices = np.where(result['trade_signals'] != 0)[0]
+        if len(trade_indices) == 0:
+            print("✅ No significant arbitrage opportunities detected after transaction costs.")
+        else:
+            print(f"🚨 Detected {len(trade_indices)} potential arbitrage opportunities.")
+    
+    print("\n" + "="*50)
+    print("|| End of Report")
+    print("="*50)
+
