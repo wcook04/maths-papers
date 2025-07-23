@@ -1,0 +1,292 @@
+\documentclass[11pt, letterpaper]{article}
+
+% --- PACKAGES ---
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{booktabs} % For professional-looking tables
+
+% --- REQUIRED TIKZ LIBRARIES ---
+\usetikzlibrary{arrows.meta, scopes} % Add to your document preamble
+
+% --- DOCUMENT CONFIGURATION ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={The Multi-Currency No-Arbitrage Prism},
+    pdfpagemode=FullScreen,
+}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+
+% --- DOCUMENT START ---
+\begin{document}
+
+\title{\textbf{The Multi-Currency No-Arbitrage Prism: \\ A Complete Framework for Analysis and Trading}}
+\author{}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+\noindent This paper introduces the Multi-Currency No-Arbitrage Prism, a graph-theoretic framework $G=(V,E,w)$ where vertices $(c_i, t_j)$ represent currency-time assets and weighted edges represent financial transformations. In a theoretical, frictionless market, the geometry of the prism is constrained by no-arbitrage principles, such as Covered Interest Parity (CIP) and Triangular Arbitrage. These manifest as a zero-sum condition on all closed cycles in log-space ($\sum w=0$), ensuring the prism's faces are perfectly planar. We leverage this ideal geometry as a benchmark to measure real-world market imperfections. By populating the graph with empirical market data, we quantify arbitrage opportunities as non-zero cycle sums ($\sum w_{\text{emp}} = b \neq 0$). The most significant of these, the cross-currency basis $b$, is visualized as a geometric "gap" or "warp" in the prism's faces. We formalize these deviations into a system-wide data structure, termed the Arbitrage Basis Matrix (or Tensor), and present a complete, step-by-step methodology for a historical backtest of a strategy designed to trade these geometric inconsistencies. The resulting analysis demonstrates the framework's utility not only for systematic trading but also as a powerful indicator of systemic risk and global funding stress.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section*{Notation and Conventions}
+This framework relies on a set of consistent definitions and assumptions, summarized below.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Symbol} & \textbf{Definition} \\ \midrule
+$c_i, t_j$ & Currency $i$ and time period $j$. \\
+$\Delta t$ & Time interval ($t_m - t_j$) in years. \\
+$r_i$ & Continuously compounded annualized interest rate for currency $c_i$. \\
+$S_{i \to k}$ & Spot exchange rate (units of $c_k$ per unit of $c_i$). \\
+$F_{i \to k}(t_j, t_m)$ & Forward exchange rate agreed at $t_j$ for delivery at $t_m$. \\
+$s_{i \to k}, f_{i \to k}$ & Log-values of spot and forward rates, e.g., $s_{i \to k} = \log(S_{i \to k})$. \\
+$b_{i \to k}(t_j, t_m)$ & The log cross-currency basis (the arbitrage potential) for a specific cycle. \\
+\addlinespace
+$\mathbf{A}$ & \textbf{Incidence Matrix}: Each row represents an arbitrage cycle; each column an instrument. \\
+$\mathbf{W}_{\text{emp}}$ & \textbf{Weight Vector}: A vector of all observed market log-prices and rates. \\
+$\mathbf{B}$ & \textbf{Arbitrage Basis Vector}: The result of $\mathbf{A} \cdot \mathbf{W}_{\text{emp}}$, holding the basis for each cycle. \\ \bottomrule
+\end{tabular}
+\caption{Glossary of key symbols and computational objects.}
+\end{table}
+
+\section{The Idealized Geometry of Arbitrage}
+
+\subsection{The Rationale for Logarithmic Space}
+The entire framework is constructed in logarithmic space for several powerful reasons that transform multiplicative financial relationships into a linear algebraic system:
+\begin{enumerate}
+    \item \textbf{Linearity}: Multiplicative cycles become additive sums. The triangular arbitrage condition $S_{1\to2} \cdot S_{2\to3} \cdot S_{3\to1} = 1$ becomes the simple sum $s_{1\to2} + s_{2\to3} + s_{3\to1} = 0$. This allows us to use matrix algebra to find all arbitrage opportunities at once.
+    \item \textbf{Symmetry}: Log-space naturally handles inverse quotes. Since $\log(1/X) = -\log(X)$, the rate for converting back, $s_{k \to i}$, is simply $-s_{i \to k}$. This simplifies cycle construction immensely.
+    \item \textbf{Rate Compatibility}: It aligns perfectly with continuously compounded interest rates. The future value of an investment is $P \cdot e^{r\Delta t}$, so its log-return is simply $r\Delta t$, an additive term.
+    \item \textbf{Intuitive Deviations}: For small values, the log-difference is a close approximation of the percentage change. A basis of $b=0.0015$ is approximately a 0.15\%, or 15 basis point, pre-cost profit.
+\end{enumerate}
+
+\subsection{The Building Block: The Two-Currency Rectangle}
+To construct our framework, we begin with the simplest case: two currencies, $c_1$ and $c_2$, and two time periods, $t_0$ (today) and $t_1$ (future). The vertices of this graph are the four currency-time assets: $(c_1, t_0)$, $(c_1, t_1)$, $(c_2, t_0)$, and $(c_2, t_1)$. The directed edges are financial transactions, weighted by their log-multiplier:
+
+\begin{enumerate}
+    \item \textbf{Spot Conversion} $(c_1, t_0) \to (c_2, t_0)$: Convert $c_1$ to $c_2$. Weight: $+s_{1 \to 2}(t_0)$.
+    \item \textbf{Invest Quote} $(c_2, t_0) \to (c_2, t_1)$: Invest $c_2$. Weight: $+r_2 \cdot \Delta t$.
+    \item \textbf{Forward Hedge} $(c_2, t_1) \to (c_1, t_1)$: Convert $c_2$ back to $c_1$ via a forward. Weight: $-f_{1 \to 2}(t_0, t_1)$.
+    \item \textbf{Borrow Base} $(c_1, t_1) \to (c_1, t_0)$: Represents the funding cost for $c_1$. Weight: $-r_1 \cdot \Delta t$.
+\end{enumerate}
+
+The foundational \textbf{No-Arbitrage Axiom} states that in a frictionless market, the sum of log-weights around any closed cycle must be zero. This yields the CIP equation in log-space:
+\begin{equation}
+    s_{1 \to 2}(t_0) + r_2 \cdot \Delta t - f_{1 \to 2}(t_0, t_1) - r_1 \cdot \Delta t = 0
+    \label{eq:cip_ideal}
+\end{equation}
+
+\subsection{The Geometry of Arbitrage: Measuring the "Warp"}
+The No-Arbitrage Axiom forces the four vertices of our cycle to be \textbf{coplanar}, forming a perfect, flat rectangle. In real markets, this ideal relationship breaks. We quantify this deviation by defining the \textbf{log cross-currency basis}, $b$, as the non-zero sum of the empirical log-weights:
+\begin{equation}
+    b_{1 \to 2}(t_0, t_1) = s_{1 \to 2}(t_0) + r_2 \cdot \Delta t - f_{1 \to 2}(t_0, t_1) - r_1 \cdot \Delta t
+    \label{eq:basis_real}
+\end{equation}
+This basis is the quantitative measure of the pre-cost arbitrage profit. A positive basis, $b_{1 \to 2} > 0$, means the return from the synthetic forward (created via legs 1, 2, and 4) is greater than the cost of the offsetting market forward (leg 3). This implies the synthetic forward is \textbf{overpriced}. Geometrically, the basis represents the "gap" or "warp" in the otherwise planar face of our prism (see Figure \ref{fig:warped_rectangle}).
+\begin{figure}[ht!]
+\centering
+\begin{tikzpicture}
+    % --- Diagram (a): No-Arbitrage (Ideal Cycle) ---
+    \begin{scope}[local bounding box=box_a]
+        % Use slightly larger dimensions for clarity
+        \draw[->] (0,0) node[below left]{$(c_1, t_0)$} -- (5,0) node[midway, below]{\scriptsize Spot} node[below right]{$(c_2, t_0)$};
+        \draw[->] (5,0) -- (5,3) node[midway, right]{\scriptsize Invest} node[above right]{$(c_2, t_1)$};
+        \draw[->] (5,3) -- (0,3) node[midway, above]{\scriptsize Forward} node[above left]{$(c_1, t_1)$};
+        \draw[->] (0,3) -- (0,0) node[midway, left]{\scriptsize Borrow};
+    \end{scope}
+    \node at (2.5, -1) {(a) No-Arbitrage: $b=0$, face is planar.};
+
+    % --- Diagram (b): Arbitrage (Warped Cycle) ---
+    % Increased xshift for more space between diagrams
+    \begin{scope}[xshift=9.5cm]
+        % Draw the complete ideal path in the background for reference
+        \draw[->, dashed, gray] (0,0) -- (5,0);
+        \draw[->, dashed, gray] (5,0) -- (5,3);
+        \draw[->, dashed, gray] (5,3) -- (0,3);
+        \draw[->, dashed, gray] (0,3) -- (0,0);
+        % Place the ideal label to the left to avoid overlap
+        \node[left=2pt, gray] at (0,3) {$(c_1, t_1)$};
+
+        % Draw the actual, "warped" path over the reference frame
+        \draw[->] (0,0) node[below left]{$(c_1, t_0)$} -- (5,0) node[below right]{$(c_2, t_0)$};
+        \draw[->] (5,0) -- (5,3) node[above right]{$(c_2, t_1)$};
+        % Displaced vertex and path
+        \draw[->, red, thick] (5,3) -- (0.6, 3.6) node[above left, red]{$(c_1, t_1)'$}; % Actual position
+        \draw[->] (0.6, 3.6) -- (0,0);
+
+        % Draw the basis measurement arrow with the label shifted to prevent overlap
+        \draw[<->, red, thick] (0,3) -- (0.6, 3.6) node[midway, right=2pt, red] {$b > 0$};
+        
+        % Positioned caption further below to avoid overlap
+        \node at (2.5, -1) {(b) Arbitrage: $b \neq 0$, face is warped.};
+    \end{scope}
+\end{tikzpicture}
+\caption{The geometric interpretation of the cross-currency basis. A non-zero basis measures the failure of the four currency-time vertices to lie on a single plane.}
+\label{fig:warped_rectangle}
+\end{figure}
+
+\section{Expanding the Model: The Multi-Currency Prism}
+
+\subsection{Adding Currencies: The Triangular Base}
+Introducing a third currency, $C = \{c_1, c_2, c_3\}$, gives rise to a new cycle that exists at each fixed time slice: \textbf{Triangular Arbitrage}. The No-Arbitrage Axiom requires that $S_{1\to 2} \cdot S_{2\to 3} \cdot S_{3\to 1} = 1$, which in log-space is:
+\begin{equation}
+    s_{1 \to 2}(t_0) + s_{2 \to 3}(t_0) + s_{3 \to 1}(t_0) = 0
+\end{equation}
+Geometrically, this condition ensures that the triangular "bases" of our prism are perfectly flat.
+
+\subsection{Adding Time: The Multi-Tenor Structure}
+Extending the model to multiple future time periods, $T = \{t_0, t_1, t_2\}$, introduces arbitrage conditions across the term structure. True no-arbitrage requires consistency between forwards of different tenors. For instance, a long-dated forward, $f_{1 \to 2}(t_0, t_2)$, must be consistent with a shorter forward, $f_{1 \to 2}(t_0, t_1)$, and the implied forward rate for the period $(t_1, t_2)$.
+
+A tradable arbitrage at $t_0$ requires that all instruments in the cycle are priced at $t_0$. Therefore, a term structure arbitrage would involve instruments like a \textbf{forward-starting FX swap}, which locks in the forward points for the period $(t_1, t_2)$ at time $t_0$. Let its log-price be $fwd\_start_{1 \to 2}(t_0; t_1, t_2)$. The testable no-arbitrage condition is:
+\begin{equation}
+    f_{1 \to 2}(t_0, t_2) - f_{1 \to 2}(t_0, t_1) - fwd\_start_{1 \to 2}(t_0; t_1, t_2) = 0
+\end{equation}
+Any non-zero result indicates an arbitrage opportunity. While our current implementation focuses on the more fundamental spot-starting cycles, the graph-theoretic framework can be extended to include these term-structure cycles by adding forward-starting instruments as edges.
+
+\section{Organizing Deviations: The Arbitrage Basis Matrix}
+To capture all CIP deviations simultaneously, we introduce a 2D data structure, the \textbf{CIP Basis Matrix}, $\mathbf{B}$. Each element $B_{p,t}$ represents the basis for a currency pair $p$ and tenor $t$. This can be generalized to a higher-rank Tensor if more dimensions (e.g., different risk-free rate sources) are considered.
+
+We can aggregate all market-wide CIP dislocations into a single metric by taking the Frobenius norm of this matrix, populated with values observed at time $t_{obs}$:
+\begin{equation}
+    \|\mathbf{B}(t_{obs})\| = \sqrt{\sum_{p,t} (B_{p,t}|_{t_{obs}})^2}
+\end{equation}
+This norm acts as a powerful systemic risk indicator. Historical analysis shows it spikes during banking crises (e.g., 2008), regulatory-driven quarter-end funding squeezes, and periods of central bank policy divergence. A sustained reading above 50-75 basis points often signals significant systemic stress.
+
+\section{From Theory to Implementation: A Practical Blueprint}
+
+\subsection{The Engine: Mapping Equations to Code}
+The framework's elegance translates into an efficient computational engine using a static \textbf{Incidence Matrix $\mathbf{A}$} and a dynamic \textbf{Weight Vector $\mathbf{W}_{\text{emp}}$}.
+
+\begin{itemize}
+    \item \textbf{The Weight Vector ($\mathbf{W}_{\text{emp}}$)} is a flat array of all market data (log-prices and rates) at a single point in time. A mapping dictionary (e.g., \texttt{w\_map} in the code) connects an instrument's name to its index in this vector.
+    \item \textbf{The Incidence Matrix ($\mathbf{A}$)} is the "brain" of the system. Each row encodes one no-arbitrage equation with coefficients of \texttt{+1}, \texttt{-1}, or \texttt{0}. Each column corresponds to an instrument in $\mathbf{W}_{\text{emp}}$.
+\end{itemize}
+
+The Arbitrage Basis Vector $\mathbf{B}$, containing the basis values for all defined cycles, is then calculated in a single, efficient matrix-vector multiplication:
+\begin{equation}
+    \mathbf{B} = \mathbf{A} \cdot \mathbf{W}_{\text{emp}}
+\end{equation}
+This single operation is how the system calculates all arbitrage potentials at once. A basis of $B[i] = -0.0015$ in the resulting vector corresponds to a -15 basis point opportunity for the i-th cycle.
+
+\begin{table}[ht!]
+\centering
+\caption{Visual representation of two rows in the Incidence Matrix $\mathbf{A}$. This matrix is built by the \texttt{\_setup\_framework} method in the code.}
+\label{tab:matrix_viz}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Cycle Description} & $s_{\text{USD/EUR}}$ & $s_{\text{EUR/JPY}}$ & $s_{\text{JPY/USD}}$ & $f_{\text{USD/EUR, 1M}}$ & $r_{\text{USD, 1M}}$ & $r_{\text{EUR, 1M}}$ & $\dots$ \\ \midrule
+Triangular Spot & $+1$ & $+1$ & $+1$ & $0$ & $0$ & $0$ & $\dots$ \\
+CIP 1M: USD/EUR & $+1$ & $0$ & $0$ & $-1$ & $-1$ & $+1$ & $\dots$ \\ \bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Backtesting Methodology}
+A full historical backtest follows a systematic process:
+\begin{enumerate}
+    \item \textbf{Data Acquisition and Robustness}: Collect historical daily time series. Handle non-trading days using a \texttt{fill='prev'} strategy. Use a deterministic mapping (e.g., \texttt{currency\_to\_yield\_ticker}) to source the correct yield curves for each currency.
+    \item \textbf{Daily Calculation}: For each day, populate $\mathbf{W}_{\text{emp}}$ and compute the Arbitrage Basis Vector $\mathbf{B} = \mathbf{A} \cdot \mathbf{W}_{\text{emp}}$.
+    \item \textbf{Strategy Simulation}: A trade is signaled if a basis value exceeds a cost threshold: $|\mathcal{A}(\text{Cyc})| > \text{Cost}$. The transaction cost for each leg, $\text{Cost}_e$, is typically half the bid-ask spread. The realized log-profit, $|b| - \text{Cost}$, is locked in at initiation.
+    \item \textbf{Performance Analysis}: Analyze the P\&L stream using standard metrics. Plot the systemic risk indicator $\|\mathbf{B}(t_{obs})\|$ against a known market stress index (e.g., VIX or SOFR-OIS spread) to validate its efficacy.
+\end{enumerate}
+
+\begin{table}[ht!]
+\centering
+\caption{Quick Reference: Mapping Theory to Code Variables}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Theory Symbol} & \textbf{Code Variable} \\ \midrule
+$\mathbf{A}$ & \texttt{self.incidence\_matrix\_A} \\
+$\mathbf{W}_{\text{emp}}$ & \texttt{W\_emp} (from \texttt{get\_market\_data\_and\_build\_w}) \\
+$\mathbf{B}$ & \texttt{arbitrage\_bps / 10000} \\
+Set of all Cycles & \texttt{self.arbitrage\_descriptions} \\
+Transaction Costs & \texttt{self.tx\_costs\_bps} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+\appendix
+\section{Full Derivation of Fundamental No-Arbitrage Equations}
+
+This appendix provides the rigorous derivations for the fundamental no-arbitrage conditions within a 3-currency, 3-period prism. All interest rates $r$ are continuously compounded.
+
+\subsection*{Part 1: Triangular Arbitrage Cycles}
+For each time slice $t_j \in \{t_0, t_1, t_2\}$, the no-arbitrage condition for the cycle $(c_1, t_j) \to (c_2, t_j) \to (c_3, t_j) \to (c_1, t_j)$ is:
+\begin{equation}
+s_{1 \to 2}(t_j) + s_{2 \to 3}(t_j) + s_{3 \to 1}(t_j) = 0
+\end{equation}
+
+\subsection*{Part 2: Covered Interest Parity (CIP) Cycles}
+For each currency pair $(c_i, c_k)$ and time interval starting at $t_0$, $(t_0, t_m)$, with $\Delta t = t_m - t_0$, the zero-sum condition for a spot-starting arbitrage cycle is:
+\begin{equation}
+s_{i \to k}(t_0) + r_k \cdot \Delta t - f_{i \to k}(t_0, t_m) - r_i \cdot \Delta t = 0
+\end{equation}
+This general formula applies to all tradable CIP cycles that can be analyzed and executed at time $t_0$. Cycles that depend on market prices from a future time point (e.g., $s_{i \to k}(t_1)$) are mathematically sound identities but are not testable arbitrage opportunities at $t_0$ and are therefore excluded from the real-time framework. The primary spot-starting cycles for a 3x3 prism are:
+\begin{itemize}
+    \item \textbf{Pair $c_1/c_2$}:
+    \begin{align}
+        s_{1 \to 2}(t_0) + r_2 \cdot (t_1 - t_0) - f_{1 \to 2}(t_0, t_1) - r_1 \cdot (t_1 - t_0) &= 0 \\
+        s_{1 \to 2}(t_0) + r_2 \cdot (t_2 - t_0) - f_{1 \to 2}(t_0, t_2) - r_1 \cdot (t_2 - t_0) &= 0
+    \end{align}
+    \item \textbf{Pair $c_1/c_3$}:
+    \begin{align}
+        s_{1 \to 3}(t_0) + r_3 \cdot (t_1 - t_0) - f_{1 \to 3}(t_0, t_1) - r_1 \cdot (t_1 - t_0) &= 0 \\
+        s_{1 \to 3}(t_0) + r_3 \cdot (t_2 - t_0) - f_{1 \to 3}(t_0, t_2) - r_1 \cdot (t_2 - t_0) &= 0
+    \end{align}
+    \item \textbf{Pair $c_2/c_3$}:
+    \begin{align}
+        s_{2 \to 3}(t_0) + r_3 \cdot (t_1 - t_0) - f_{2 \to 3}(t_0, t_1) - r_2 \cdot (t_1 - t_0) &= 0 \\
+        s_{2 \to 3}(t_0) + r_3 \cdot (t_2 - t_0) - f_{2 \to 3}(t_0, t_2) - r_2 \cdot (t_2 - t_0) &= 0
+    \end{align}
+\end{itemize}
+While not all of these cycles are mathematically independent, they represent all the fundamental spot-starting arbitrage relationships that must be checked.
+
+\section{Cycle Catalog for Default Configuration}
+For a typical configuration of \texttt{currencies=['USD', 'EUR', 'JPY']} and \texttt{tenors=['1M', '3M', '6M', '1Y']}, the framework constructs and monitors the following 13 fundamental arbitrage cycles.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Cycle Index in $\mathbf{A}$} & \textbf{Description} \\ \midrule
+0 & Triangular Spot (USD $\to$ EUR $\to$ JPY $\to$ USD) \\
+\addlinespace
+1 & CIP 1M: USD/EUR \\
+2 & CIP 3M: USD/EUR \\
+3 & CIP 6M: USD/EUR \\
+4 & CIP 1Y: USD/EUR \\
+\addlinespace
+5 & CIP 1M: EUR/JPY \\
+6 & CIP 3M: EUR/JPY \\
+7 & CIP 6M: EUR/JPY \\
+8 & CIP 1Y: EUR/JPY \\
+\addlinespace
+9 & CIP 1M: JPY/USD \\
+10 & CIP 3M: JPY/USD \\
+11 & CIP 6M: JPY/USD \\
+12 & CIP 1Y: JPY/USD \\ \bottomrule
+\end{tabular}
+\caption{The complete set of arbitrage cycles monitored for the default system configuration. Each corresponds to one row in the Incidence Matrix $\mathbf{A}$.}
+\end{table}
+
+\end{document}
