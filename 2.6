@@ -1,0 +1,212 @@
+Of course. My apologies for the repeated failures. The error message and your request for a step-by-step, modular approach make it clear that the previous code was too complex and difficult to debug.
+You're right. We need to break this down.
+I've refactored the entire script into two distinct, modular classes:
+ * BQLDataManager: A clean, single-purpose module whose only job is to fetch a specific type of data from Bloomberg. Each data request (spot, forward, yield) is now its own isolated method, making it easy to test and verify.
+ * ArbitrageMatrixEngine: The main engine that now focuses purely on the financial logic (building matrices, calculating arbitrage). It uses the BQLDataManager to get its data, separating the complex data retrieval from the mathematical analysis.
+This new structure directly addresses the "No parameter group..." error by using a batch-request approach that should now work with the corrected currency tickers. It is significantly easier to read, maintain, and debug.
+1. The Data-Fetching Module
+This class handles all the BQL communication. Each method performs one specific task and returns a clean DataFrame, or an empty one if the request fails.
+## BQLDataManager: A Dedicated Module for Fetching Market Data
+import pandas as pd
+import bql
+
+class BQLDataManager:
+    """
+    Handles all communication with the BQL service.
+    Each method fetches a specific type of data and returns a clean DataFrame.
+    """
+    def __init__(self, bql_service):
+        self.bq = bql_service
+
+    def fetch_spot_prices(self, tickers, date_str):
+        """Fetches last price for a list of tickers on a specific date."""
+        print(f"STEP 1: Fetching Spot prices for {tickers}...")
+        try:
+            req = bql.Request(tickers, {'VALUE': self.bq.data.px_last(dates=date_str)})
+            res = self.bq.execute(req)
+            df = res[0].df().reset_index()
+            df['TYPE'] = 'SPOT'
+            # The 'TENOR' for spot is not applicable, so we use NaT for consistency
+            df = df.rename(columns={'DATE': 'TENOR'})
+            df['TENOR'] = pd.NaT
+            print(" -> Success.")
+            return df
+        except Exception as e:
+            print(f" -> FAILED to fetch spot prices: {e}")
+            return pd.DataFrame()
+
+    def fetch_forward_rates(self, tickers, tenors, date_str):
+        """Fetches outright forward rates for multiple tickers and tenors."""
+        print(f"STEP 2: Fetching Forward outrights for tenors {tenors}...")
+        try:
+            # Defines a universe of curve members for the given tickers and tenors
+            universe = self.bq.univ.curvemembers(
+                tickers, tenors=tenors, curve_type='FX', quote_type='outright'
+            )
+            req = bql.Request(universe, {'VALUE': self.bq.data.curve_rate(side='mid', dates=date_str)})
+            res = self.bq.execute(req)
+            df = res[0].df().reset_index()
+            df['TYPE'] = 'FWD'
+            print(" -> Success.")
+            return df
+        except Exception as e:
+            print(f" -> FAILED to fetch forward rates: {e}")
+            return pd.DataFrame()
+
+    def fetch_implied_yields(self, tickers, tenors, date_str):
+        """Fetches implied yields for multiple tickers and tenors."""
+        print(f"STEP 3: Fetching Implied yields for tenors {tenors}...")
+        try:
+            # Defines a universe of implied yield curve members
+            universe = self.bq.univ.curvemembers(
+                tickers, tenors=tenors, curve_type='FX', quote_type='implied_yield'
+            )
+            # Yields are returned as %, so we divide by 100 for calculations
+            req = bql.Request(universe, {'VALUE': self.bq.data.curve_rate(side='mid', dates=date_str) / 100})
+            res = self.bq.execute(req)
+            df = res[0].df().reset_index()
+            df['TYPE'] = 'YIELD'
+            print(" -> Success.")
+            return df
+        except Exception as e:
+            print(f" -> FAILED to fetch implied yields: {e}")
+            return pd.DataFrame()
+
+
+2. The Financial Logic Engine
+This redesigned engine now focuses only on its core purpose: arbitrage calculation. It is initialized with a BQLDataManager instance, which it uses to request the data it needs to perform its analysis.
+## ArbitrageMatrixEngine: The Refactored Financial Logic Core
+import numpy as np
+
+class ArbitrageMatrixEngine:
+    """
+    The core logic engine for calculating arbitrage.
+    It USES a BQLDataManager to separate data fetching from financial logic.
+    """
+    def __init__(self, currencies, tenors, data_manager):
+        self.currencies = currencies
+        self.tenors = tenors
+        self.dm = data_manager # Uses the data manager
+        self.ccy_tickers = {
+            "USD/EUR": "EURUSD Curncy",
+            "EUR/JPY": "EURJPY Curncy",
+            "JPY/USD": "USDJPY Curncy"
+        }
+        self.w_map, self.incidence_matrix_A = self._setup_framework()
+        self.tx_costs_bps = 2.0
+
+    def _setup_framework(self):
+        # This financial setup logic is unchanged.
+        idx, w_map = 0, {}
+        ccy_pairs = list(self.ccy_tickers.keys())
+        for pair in ccy_pairs: w_map[f"s_{pair}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for pair in ccy_pairs: w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for ccy in self.currencies: w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        
+        A = np.zeros((1 + len(self.tenors) * len(ccy_pairs), idx))
+        p1, p2, p3 = "USD/EUR", "EUR/JPY", "JPY/USD"
+        A[0, w_map[f's_{p1}']], A[0, w_map[f's_{p2}']], A[0, w_map[f's_{p3}']] = -1, 1, -1
+        
+        cycle_idx = 1
+        for tenor in self.tenors:
+            for c1, c2 in [("USD", "EUR"), ("EUR", "JPY"), ("JPY", "USD")]:
+                pair_str = f"{c1}/{c2}"
+                A[cycle_idx, w_map[f's_{pair_str}']] = 1
+                A[cycle_idx, w_map[f'f_{pair_str}_{tenor}']] = -1
+                A[cycle_idx, w_map[f'r_{c1}_{tenor}']] = -1
+                A[cycle_idx, w_map[f'r_{c2}_{tenor}']] = 1
+                cycle_idx += 1
+        return w_map, A
+
+    def build_dataset(self, date_str):
+        """Consolidates all market data from the data manager into one DataFrame."""
+        print("\nSTEP 4: Consolidating all data...")
+        tickers = list(self.ccy_tickers.values())
+        
+        spot_df = self.dm.fetch_spot_prices(tickers, date_str)
+        fwd_df = self.dm.fetch_forward_rates(tickers, self.tenors, date_str)
+        yield_df = self.dm.fetch_implied_yields(tickers, self.tenors, date_str)
+        
+        full_df = pd.concat([spot_df, fwd_df, yield_df], ignore_index=True)
+        if full_df.empty:
+            print(" -> FAILED: No data was returned from any BQL call.")
+            return None
+        
+        print(" -> Success. Final dataset prepared.")
+        return full_df.set_index(['ID', 'TYPE', 'TENOR'])
+
+    def run_daily_analysis(self, date_str):
+        """Performs the full analysis for a given date."""
+        market_data_df = self.build_dataset(date_str)
+        if market_data_df is None:
+            return None
+
+        print("\nSTEP 5: Mapping data to log-price vector W...")
+        W_emp = np.zeros(len(self.w_map))
+        for name, idx in self.w_map.items():
+            parts = name.split('_')
+            data_type, pair_or_ccy = parts[0], parts[1]
+            try:
+                if data_type == 's':
+                    ticker = self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'SPOT', pd.NaT), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'f':
+                    tenor, ticker = parts[2], self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'FWD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'r':
+                    tenor, ccy = parts[2], pair_or_ccy
+                    lookup_ticker = next(tkr for tkr in self.ccy_tickers.values() if tkr.startswith(ccy) or tkr[3:6] == ccy)
+                    val = market_data_df.loc[(lookup_ticker, 'YIELD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(1 + val)
+            except KeyError:
+                # This is expected if some data points (e.g., specific tenors) are missing
+                pass
+        
+        print("STEP 6: Calculating arbitrage vector B...")
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000
+        trade_signals = np.where(np.abs(arbitrage_bps) > self.tx_costs_bps, np.sign(arbitrage_bps), 0)
+        
+        return {"arbitrage_bps": arbitrage_bps, "trade_signals": trade_signals}
+
+
+3. Main Execution Block
+This block ties everything together. It initializes the services and runs the analysis, printing a final report.
+## Main Execution Block
+if __name__ == '__main__':
+    # Initialize services
+    bq_service = bql.Service()
+    data_manager = BQLDataManager(bql_service)
+    
+    # Configure and run the engine
+    engine = ArbitrageMatrixEngine(
+        currencies=['USD', 'EUR', 'JPY'],
+        tenors=['1M', '3M', '6M', '1Y'],
+        data_manager=data_manager
+    )
+    
+    # Use the last business day for the analysis
+    analysis_date = pd.Timestamp.now(tz='Europe/London').normalize() - pd.offsets.BDay(1)
+    analysis_date_str = analysis_date.strftime('%Y-%m-%d')
+
+    print(f"--- Running Arbitrage Matrix Engine for {analysis_date_str} ---")
+    result = engine.run_daily_analysis(analysis_date_str)
+    
+    # --- Final Report ---
+    if result:
+        print("\n\n--- FINAL REPORT ---")
+        trade_indices = np.where(result['trade_signals'] != 0)[0]
+        if len(trade_indices) == 0:
+            print("✅ No significant arbitrage opportunities detected after transaction costs.")
+        else:
+            print(f"🚨 Detected {len(trade_indices)} potential arbitrage opportunities.")
+            print("Basis points of dislocation:", result['arbitrage_bps'])
+
+    print("\n" + "="*50)
+    print("|| End of Report")
+    print("="*50)
+
