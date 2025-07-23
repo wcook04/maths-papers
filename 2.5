@@ -1,0 +1,192 @@
+import numpy as np
+import pandas as pd
+import bql
+
+# It's a best practice to initialize the BQL service once
+bq = bql.Service()
+
+class ArbitrageMatrixEngine:
+    """
+    A vectorized engine for detecting multi-currency arbitrage opportunities
+    using a pre-defined incidence matrix and Bloomberg BQL data.
+    """
+    def __init__(self, currencies, tenors):
+        self.currencies = currencies
+        self.tenors = tenors
+        self.ccy_tickers = {
+            "USD/EUR": "EURUSD Curncy",
+            "EUR/JPY": "EURJPY Curncy",
+            "JPY/USD": "USDJPY Curncy"
+        }
+        self.w_map, self.cycle_descriptions, self.cycle_components = {}, [], []
+        self.incidence_matrix_A = self._setup_framework()
+        self.tx_costs_bps = self._get_transaction_costs_bps()
+
+    def _setup_framework(self):
+        # This setup logic is correct.
+        idx = 0
+        ccy_pairs = list(self.ccy_tickers.keys())
+        for pair in ccy_pairs: self.w_map[f"s_{pair}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for pair in ccy_pairs: self.w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for ccy in self.currencies: self.w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        self.w_size = idx
+        num_cycles = 1 + len(self.tenors) * len(ccy_pairs)
+        A = np.zeros((num_cycles, self.w_size))
+        self.cycle_descriptions = [""] * num_cycles
+        self.cycle_components = [{} for _ in range(num_cycles)]
+        c1, c2, c3 = "USD", "EUR", "JPY"
+        p1, p2, p3 = "USD/EUR", "EUR/JPY", "JPY/USD"
+        self.cycle_descriptions[0] = f"Triangular @ t0: {c1}->{c2}->{c3}"
+        A[0, self.w_map[f's_{p1}']] = -1
+        A[0, self.w_map[f's_{p2}']] = 1
+        A[0, self.w_map[f's_{p3}']] = -1
+        self.cycle_components[0] = {'type': 'tri', 's1': f's_{p1}', 's2': f's_{p2}', 's3': f's_{p3}'}
+        cycle_idx = 1
+        for tenor in self.tenors:
+            for c1, c2 in [("USD", "EUR"), ("EUR", "JPY"), ("JPY", "USD")]:
+                pair_str = f"{c1}/{c2}"
+                self.cycle_descriptions[cycle_idx] = f"CIP {tenor}: {pair_str}"
+                A[cycle_idx, self.w_map[f's_{pair_str}']] = 1
+                A[cycle_idx, self.w_map[f'f_{pair_str}_{tenor}']] = -1
+                A[cycle_idx, self.w_map[f'r_{c1}_{tenor}']] = -1
+                A[cycle_idx, self.w_map[f'r_{c2}_{tenor}']] = 1
+                self.cycle_components[cycle_idx] = {
+                    'type': 'cip', 'c1': c1, 'c2': c2, 'tenor': tenor,
+                    's': f's_{pair_str}', 'f': f'f_{pair_str}_{tenor}',
+                    'r1': f'r_{c1}_{tenor}', 'r2': f'r_{c2}_{tenor}'
+                }
+                cycle_idx += 1
+        return A
+
+    def _get_transaction_costs_bps(self):
+        return np.full(self.incidence_matrix_A.shape[0], 2.0)
+
+    def get_market_data_and_build_w(self, date):
+        """
+        [REFINED] Fetches data by retrieving the full curves without tenor pre-filtering.
+        """
+        spot_universe = list(self.ccy_tickers.values())
+
+        # --- 1. Fetch Spot Prices ---
+        spot_req = bql.Request(spot_universe, {'spot': bq.data.px_last(dates=date)})
+        spot_res = bq.execute(spot_req)
+        spot_df = spot_res[0].df().reset_index()
+        spot_df = spot_df.rename(columns={'spot': 'VALUE', 'DATE': 'TENOR'})
+        spot_df['TENOR'] = pd.NaT
+        spot_df['TYPE'] = 'SPOT'
+        
+        # --- 2. & 3. Fetch Forward and Yield curves one by one ---
+        fwd_dfs = []
+        yield_dfs = []
+
+        for ticker in spot_universe:
+            print(f"Fetching full curve data for {ticker}...")
+            # --- Forward Request: REMOVED 'tenors' parameter to match examples ---
+            fwd_universe = bq.univ.curvemembers(
+                ticker, curve_type='FX', market_type='onshore'
+            )
+            fwd_req = bql.Request(fwd_universe, {'fwd_outright': bq.data.curve_rate(side='mid', dates=date)})
+            fwd_res = bq.execute(fwd_req)
+            if fwd_res and fwd_res[0].df is not None:
+                df = fwd_res[0].df().reset_index().rename(columns={'fwd_outright': 'VALUE'})
+                df['TYPE'] = 'FWD'
+                fwd_dfs.append(df)
+
+            # --- Yield Request: REMOVED 'tenors' parameter to match examples ---
+            yield_universe = bq.univ.curvemembers(
+                ticker, curve_type='FX', data_type='implied_yield', pricing_source='L160'
+            )
+            yield_req = bql.Request(yield_universe, {'implied_yield': bq.data.curve_rate(side='mid', dates=date) / 100})
+            yield_res = bq.execute(yield_req)
+            if yield_res and yield_res[0].df is not None:
+                df = yield_res[0].df().reset_index().rename(columns={'implied_yield': 'VALUE'})
+                df['TYPE'] = 'YIELD'
+                yield_dfs.append(df)
+
+        # --- 4. Combine, filter, and parse all retrieved data ---
+        fwd_df = pd.concat(fwd_dfs) if fwd_dfs else pd.DataFrame()
+        yield_df = pd.concat(yield_dfs) if yield_dfs else pd.DataFrame()
+
+        # Combine all data and filter for only the tenors we care about
+        market_data_df = pd.concat([spot_df, fwd_df, yield_df])
+        all_tenors = self.tenors + [pd.NaT]
+        market_data_df = market_data_df[market_data_df['TENOR'].isin(all_tenors)]
+        
+        market_data_df = market_data_df.dropna(subset=['VALUE'])
+        if market_data_df.empty:
+            print(f"Warning: No market data was successfully retrieved for {date}.")
+            return np.zeros(self.w_size)
+            
+        market_data_df.set_index(['ID', 'TYPE', 'TENOR'], inplace=True)
+
+        W_emp = np.zeros(self.w_size)
+        for name, idx in self.w_map.items():
+            parts = name.split('_')
+            data_type, pair_or_ccy = parts[0], parts[1]
+            try:
+                if data_type == 's':
+                    ticker = self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'SPOT', pd.NaT), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'f':
+                    tenor = parts[2]
+                    ticker = self.ccy_tickers[pair_or_ccy]
+                    val = market_data_df.loc[(ticker, 'FWD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif data_type == 'r':
+                    tenor = parts[2]
+                    ccy = pair_or_ccy
+                    lookup_ticker = next(tkr for tkr in spot_universe if tkr.startswith(ccy) or tkr[3:6] == ccy)
+                    val = market_data_df.loc[(lookup_ticker, 'YIELD', tenor), 'VALUE']
+                    W_emp[idx] = np.log(1 + val)
+            except (KeyError, IndexError, StopIteration):
+                W_emp[idx] = 0.0
+        return W_emp
+
+    def run_daily_analysis(self, date):
+        W_emp = self.get_market_data_and_build_w(date)
+        if not W_emp.any():
+             print(f"Critical: No data could be processed for {date}. Aborting analysis.")
+             return None
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        systemic_risk = np.linalg.norm(arbitrage_vector_B)
+        arbitrage_bps = arbitrage_vector_B * 10000
+        trade_signals = np.where(np.abs(arbitrage_bps) > self.tx_costs_bps,
+                                 np.sign(arbitrage_bps), 0)
+        return {
+            "W_emp": W_emp,
+            "arbitrage_bps": arbitrage_bps,
+            "trade_signals": trade_signals,
+            "systemic_risk": systemic_risk
+        }
+
+# --- Main Execution Block ---
+
+if __name__ == '__main__':
+    engine = ArbitrageMatrixEngine(
+        currencies=['USD', 'EUR', 'JPY'],
+        tenors=['1M', '3M', '6M', '1Y']
+    )
+    
+    analysis_date = pd.Timestamp.now(tz='Europe/London').normalize() - pd.offsets.BDay(1)
+    analysis_date_str = analysis_date.strftime('%Y-%m-%d')
+
+    print(f"--- Running Arbitrage Matrix Engine for {analysis_date_str} ---")
+    result = engine.run_daily_analysis(analysis_date_str)
+    
+    if result:
+        print(f"\n\n--- MASTER REPORT FOR: {analysis_date_str} ---")
+        print(f"Overall Systemic Risk Indicator (Norm of B): {result['systemic_risk']:.6f}")
+        
+        trade_indices = np.where(result['trade_signals'] != 0)[0]
+        if len(trade_indices) == 0:
+            print("\nNo significant arbitrage opportunities detected after transaction costs.")
+        else:
+            print(f"\nDetected {len(trade_indices)} significant arbitrage opportunities.")
+
+    print("\n" + "="*75)
+    print("|| End of Report")
+    print("="*75)
+
