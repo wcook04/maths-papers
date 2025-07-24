@@ -1,0 +1,145 @@
+import numpy as np
+import pandas as pd
+import bql
+import logging
+import time
+
+# Use the logging module for clear, timestamped diagnostics
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+class ArbitrageEngine:
+    """A simplified engine focused on a single, robust arbitrage strategy."""
+    def __init__(self, config):
+        self.config = config
+        self.tx_costs_bps = 2.0  # Transaction cost in basis points
+        self.incidence_matrix_A = None
+        self.arbitrage_descriptions = None
+        self.w_map = None
+        self._setup_framework()
+
+    def _setup_framework(self):
+        """Builds the matrix A for the CIP arbitrage conditions."""
+        logging.info("Setting up arbitrage matrix for CIP strategy...")
+        pair = self.config['pair']
+        tenors = self.config['tenors']
+        base_ccy, term_ccy = self.config['base_ccy'], self.config['term_ccy']
+
+        # Define the instruments we need for this strategy
+        all_instruments = [f's_{pair}', f'r_{base_ccy}', f'r_{term_ccy}'] + [f'f_{pair}_{t}' for t in tenors]
+        self.w_map = {instrument: i for i, instrument in enumerate(all_instruments)}
+
+        # Build the incidence matrix A
+        # Each row represents one arbitrage check: log(S) - log(F) + r_base - r_term = Basis
+        num_cycles = len(tenors)
+        self.incidence_matrix_A = np.zeros((num_cycles, len(self.w_map)))
+        self.arbitrage_descriptions = []
+
+        for i, tenor in enumerate(tenors):
+            self.arbitrage_descriptions.append(f"CIP {tenor}: {pair}")
+            # Map the equation to the matrix
+            self.incidence_matrix_A[i, self.w_map[f's_{pair}']] = 1
+            self.incidence_matrix_A[i, self.w_map[f'f_{pair}_{tenor}']] = -1
+            # Note: For this example, we'll use a single interest rate for simplicity.
+            # A full model would use r_base_{tenor} and r_term_{tenor}.
+            self.incidence_matrix_A[i, self.w_map[f'r_{base_ccy}']] = 1
+            self.incidence_matrix_A[i, self.w_map[f'r_{term_ccy}']] = -1
+
+        logging.info(f"Framework complete. Monitoring {num_cycles} CIP conditions for {pair}.")
+
+    def run_analysis(self, bq_service, date_str):
+        """Fetches data sequentially and runs the arbitrage analysis."""
+        ticker = self.config['ticker']
+        tenors = self.config['tenors']
+        base_ccy, term_ccy = self.config['base_ccy'], self.config['term_ccy']
+
+        # === THE MAIN FIX: Fetch each data type sequentially for robustness ===
+        try:
+            logging.info(f"Step 1/3: Fetching Spot price for {ticker}...")
+            spot_req = bql.Request(ticker, {'spot': bq_service.data.px_last(dates=date_str, fill='prev')})
+            spot_res = bq_service.execute(spot_req)
+            spot_price = spot_res[0].df()['spot'].iloc[0]
+            logging.info(f"-> Spot Price = {spot_price:.4f}")
+
+            logging.info(f"Step 2/3: Fetching Forward prices for tenors {tenors}...")
+            fwd_universe = bq_service.univ.curvemembers(ticker, tenors=tenors, curve_type='FX', quote_type='outright')
+            fwd_req = bql.Request(fwd_universe, {'forward': bq_service.data.curve_rate(side='mid', dates=date_str)})
+            fwd_res = bq_service.execute(fwd_req)
+            fwd_df = fwd_res[0].df()
+            logging.info("-> Forward prices received.")
+
+            logging.info(f"Step 3/3: Fetching Implied Yields...")
+            # For simplicity, we fetch the benchmark rate for each currency. A real model uses the full curve.
+            base_rate_req = bql.Request(self.config['base_rate_ticker'], {'rate': bq_service.data.px_last(dates=date_str, fill='prev')})
+            term_rate_req = bql.Request(self.config['term_rate_ticker'], {'rate': bq_service.data.px_last(dates=date_str, fill='prev')})
+            base_res, term_res = bq_service.execute(base_rate_req, term_rate_req).result()
+            base_rate = base_res[0].df()['rate'].iloc[0] / 100
+            term_rate = term_res[0].df()['rate'].iloc[0] / 100
+            logging.info(f"-> Rates: {base_ccy}={base_rate:.2%}, {term_ccy}={term_rate:.2%}")
+
+        except Exception as e:
+            logging.error(f"Failed during BQL data fetch. Error: {e}", exc_info=True)
+            return None
+        # ========================================================================
+
+        # Build the weight vector W from our fetched data
+        W_emp = np.zeros(len(self.w_map))
+        W_emp[self.w_map[f's_{self.config["pair"]}']] = np.log(spot_price)
+        W_emp[self.w_map[f'r_{base_ccy}']] = base_rate
+        W_emp[self.w_map[f'r_{term_ccy}']] = term_rate
+        for tenor, fwd_price in fwd_df['forward'].items():
+            W_emp[self.w_map[f'f_{self.config["pair"]}_{tenor}']] = np.log(fwd_price)
+
+        # The core calculation: A * W = B
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000  # Convert to basis points
+
+        results_df = pd.DataFrame({
+            'Condition': self.arbitrage_descriptions,
+            'Arbitrage (bps)': arbitrage_bps
+        })
+        results_df['Signal'] = np.where(np.abs(results_df['Arbitrage (bps)']) > self.tx_costs_bps,
+                                        np.sign(results_df['Arbitrage (bps)']), 0)
+        return results_df
+
+
+if __name__ == '__main__':
+    try:
+        bq = bql.Service()
+        
+        # --- Simplified, Robust Configuration ---
+        # Focus on a single, clear CIP case: EUR/USD
+        CONFIG = {
+            "pair": "EUR/USD",
+            "ticker": "EURUSD Curncy",
+            "tenors": ['1M', '3M', '6M', '1Y'],
+            "base_ccy": "EUR",
+            "term_ccy": "USD",
+            "base_rate_ticker": "EONIA Index", # Example benchmark rate for EUR
+            "term_rate_ticker": "SOFRRATE Index"  # Example benchmark rate for USD
+        }
+
+        engine = ArbitrageEngine(CONFIG)
+        
+        analysis_date_str = (pd.Timestamp.now() - pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        
+        logging.info(f"--- Running Simplified Arbitrage Engine for {analysis_date_str} ---")
+        results = engine.run_analysis(bq, analysis_date_str)
+        
+        if results is not None:
+            opportunities = results[results['Signal'] != 0].sort_values(by='Arbitrage (bps)', key=abs, ascending=False)
+            
+            print("\n" + "="*80)
+            print(f"            --- ARBITRAGE REPORT FOR: {analysis_date_str} ---")
+            print("="*80)
+
+            if opportunities.empty:
+                print("\n✅ No significant arbitrage opportunities detected after transaction costs.")
+            else:
+                print(f"\n🔥 Detected {len(opportunities)} potential CIP opportunities for {CONFIG['pair']}:")
+                print(opportunities.to_string(index=False))
+        else:
+            logging.critical("Execution failed: Could not produce results.")
+            
+    except Exception as e:
+        logging.critical(f"A fatal error occurred in the main execution block: {e}", exc_info=True)
+
