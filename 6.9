@@ -1,0 +1,109 @@
+import bql
+import pandas as pd
+import numpy as np
+import logging
+import time
+
+# Setup basic logging to see every step
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def run_robust_multi_tenor_test():
+    """
+    A robust test that fetches each forward price individually to prevent empty results.
+    """
+    logging.info("--- Starting Robust Multi-Tenor CIP Test ---")
+    try:
+        # 1. Connect to the BQL service and define our targets
+        logging.info("Connecting to BQL service...")
+        bq = bql.Service()
+        logging.info("✅ SUCCESS: BQL service connected.")
+
+        # --- Configuration for our test ---
+        CONFIG = {
+            "pair_ticker": 'EURUSD Curncy',
+            "tenors": ['1M', '3M', '6M', '1Y'],
+            "base_rate_ticker": 'ESTRON Index',
+            "term_rate_ticker": 'SOFRRATE Index'
+        }
+        # Use yesterday's business day to ensure market data is settled
+        date_str = (pd.Timestamp.now() - pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        
+        logging.info(f"Fetching common data for {CONFIG['pair_ticker']} on {date_str}...")
+
+        # 2. Fetch the common data points (Spot and Rates)
+        
+        spot_req = bql.Request(CONFIG['pair_ticker'], {'S': bq.data.px_last(dates=date_str, fill='prev')})
+        spot_df = bq.execute(spot_req)[0].df()
+        if spot_df.empty: raise ValueError("Failed to get Spot price.")
+        S = spot_df['S'].iloc[0]
+        
+        base_rate_req = bql.Request(CONFIG['base_rate_ticker'], {'r_base': bq.data.px_last(dates=date_str, fill='prev')})
+        term_rate_req = bql.Request(CONFIG['term_rate_ticker'], {'r_term': bq.data.px_last(dates=date_str, fill='prev')})
+        base_rate_df = bq.execute(base_rate_req)[0].df()
+        term_rate_df = bq.execute(term_rate_req)[0].df()
+        if base_rate_df.empty: raise ValueError("Failed to get Base rate.")
+        if term_rate_df.empty: raise ValueError("Failed to get Term rate.")
+        r_base = base_rate_df['r_base'].iloc[0] / 100
+        r_term = term_rate_df['r_term'].iloc[0] / 100
+        
+        logging.info("-> Fetched common data successfully.")
+
+        # 3. Loop through each tenor and fetch its forward price individually
+        results_list = []
+        logging.info("--- Fetching Forward Prices one-by-one for robustness ---")
+        
+        for tenor in CONFIG['tenors']:
+            try:
+                logging.info(f"Fetching {tenor} forward price...")
+                # Use fwd_px() for a more direct and robust request for a single tenor
+                fwd_req = bql.Request(
+                    CONFIG['pair_ticker'],
+                    {'F': bq.data.fwd_px(tenor=tenor, dates=date_str)}
+                )
+                fwd_df = bq.execute(fwd_req)[0].df()
+                
+                # Check if this specific request returned data
+                if fwd_df.empty or fwd_df['F'].isnull().all():
+                    logging.warning(f"-> No data for tenor {tenor}. Skipping.")
+                    continue  # Go to the next tenor in the loop
+
+                F = fwd_df['F'].iloc[0]
+                
+                # Perform the CIP calculation
+                basis_bps = (np.log(S) - np.log(F) + r_base - r_term) * 10000
+                results_list.append({'Tenor': tenor, 'Forward Price': F, 'Arbitrage (bps)': basis_bps})
+                logging.info(f"-> Success for {tenor}. Basis: {basis_bps:.2f} bps")
+
+            except Exception as e:
+                logging.error(f"-> Failed to fetch or process tenor {tenor}. Error: {e}")
+
+        # 4. Check if we got any results at all
+        if not results_list:
+            raise ValueError("Could not retrieve forward data for ANY of the requested tenors.")
+            
+        results_df = pd.DataFrame(results_list)
+
+        # 5. Print a clean summary report
+        print("\n" + "="*60)
+        print("         ✅✅✅ ROBUST MULTI-TENOR ANALYSIS SUCCESSFUL ✅✅✅")
+        print("="*60)
+        print(f"Analysis for:      {CONFIG['pair_ticker']}")
+        print(f"Date:              {date_str}")
+        print(f"Spot Price:        {S:.5f}")
+        print(f"Interest Rates:    EUR={r_base:.3%}, USD={r_term:.3%}")
+        print("-"*60)
+        print("RESULTS ACROSS TERM STRUCTURE:")
+        print(results_df.to_string(index=False, float_format="{:,.2f}".format))
+        print("="*60)
+
+    except Exception as e:
+        print("\n" + "!"*60)
+        print("           ❌❌❌ TEST FAILED ❌❌❌")
+        print("!"*60)
+        logging.critical(f"A critical error occurred: {e}", exc_info=True)
+        print("\nThis likely means one of the common data points (Spot or Rates) failed to fetch.")
+        print("!"*60)
+
+if __name__ == '__main__':
+    run_robust_multi_tenor_test()
+
