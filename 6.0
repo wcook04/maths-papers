@@ -1,0 +1,59 @@
+import bql
+import pandas as pd
+import logging
+
+# Setup basic logging to see every step
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def run_minimal_test():
+    """
+    The absolute simplest BQL test to verify the connection and a single data fetch.
+    """
+    logging.info("--- Starting Bare-Bones BQL Test ---")
+    try:
+        # 1. Connect to the BQL service
+        logging.info("Connecting to BQL service...")
+        bq = bql.Service()
+        logging.info("✅ SUCCESS: BQL service connected.")
+
+        # 2. Define the simplest possible request
+        # Universe: A single, common currency pair
+        # Data Item: The most common field, last price
+        test_ticker = 'EURUSD Curncy'
+        test_request = bql.Request(test_ticker, {'Last Price': bq.data.px_last()})
+        logging.info(f"Request created for ticker: '{test_ticker}'")
+
+        # 3. Execute the request
+        logging.info("Executing request... (This is the network call to Bloomberg)")
+        response = bq.execute(test_request)
+        logging.info("✅ SUCCESS: Response received from Bloomberg.")
+
+        # 4. Extract and print the result
+        # Get the first (and only) item from the response and convert to a DataFrame
+        result_df = response[0].df()
+
+        if result_df.empty:
+            logging.error("❌ FAILURE: Data request succeeded, but returned an empty result.")
+        else:
+            # If we get here, it worked. Print the result clearly.
+            print("\n" + "="*50)
+            print("           ✅✅✅ TEST SUCCESSFUL ✅✅✅")
+            print("="*50)
+            print("Data fetched successfully. Here is the result:\n")
+            print(result_df)
+            print("\n" + "="*50)
+
+    except Exception as e:
+        # If any part of the process fails, this will catch it and print a clear error.
+        print("\n" + "!"*50)
+        print("           ❌❌❌ TEST FAILED ❌❌❌")
+        print("!"*50)
+        logging.critical(f"A critical error occurred: {e}", exc_info=True)
+        print("\nPossible reasons for failure:")
+        print("- Bloomberg Terminal is not running or you are not logged in.")
+        print("- Network connectivity issue to Bloomberg servers.")
+        print("- Incorrect Python environment or BQL installation.")
+        print("!"*50)
+
+if __name__ == '__main__':
+    run_minimal_test()
