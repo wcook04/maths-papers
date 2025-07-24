@@ -1,0 +1,93 @@
+import bql
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from pandas.tseries.offsets import BDay
+
+# Initialize BQL service
+bq = bql.Service()
+
+# Configuration
+CONFIG = {
+    "pair_ticker": 'EURUSD Curncy',  # EUR/USD currency pair
+    "tenors": ['1M', '3M', '6M', '1Y'],  # Tenors to test
+    "base_rate_ticker": 'ESTRON Index',  # EUR interest rate
+    "term_rate_ticker": 'SOFRRATE Index'  # USD interest rate
+}
+
+# Use a past date with available data
+date_str = '2024-07-23'
+
+# Calculate time intervals (in years) for each tenor
+tenor_to_years = {
+    '1M': 1/12,
+    '3M': 3/12,
+    '6M': 6/12,
+    '1Y': 1.0
+}
+
+# 1. Fetch spot price
+spot_req = bql.Request(CONFIG['pair_ticker'], {'Spot': bq.data.px_last(dates=date_str, fill='prev')})
+spot_resp = bq.execute(spot_req)
+spot_df = spot_resp[0].df()
+if spot_df.empty or spot_df['Spot'].isnull().any():
+    raise ValueError(f"No spot price data for {CONFIG['pair_ticker']} on {date_str}")
+S = spot_df['Spot'].iloc[0]
+log_S = np.log(S)
+
+# 2. Fetch interest rates
+base_rate_req = bql.Request(CONFIG['base_rate_ticker'], {'r_base': bq.data.px_last(dates=date_str, fill='prev')})
+term_rate_req = bql.Request(CONFIG['term_rate_ticker'], {'r_term': bq.data.px_last(dates=date_str, fill='prev')})
+base_rate_resp = bq.execute(base_rate_req)
+term_rate_resp = bq.execute(term_rate_req)
+base_rate_df = base_rate_resp[0].df()
+term_rate_df = term_rate_resp[0].df()
+if base_rate_df.empty or base_rate_df['r_base'].isnull().any():
+    raise ValueError(f"No base rate data for {CONFIG['base_rate_ticker']} on {date_str}")
+if term_rate_df.empty or term_rate_df['r_term'].isnull().any():
+    raise ValueError(f"No term rate data for {CONFIG['term_rate_ticker']} on {date_str}")
+r_base = base_rate_df['r_base'].iloc[0] / 100  # Convert to decimal
+r_term = term_rate_df['r_term'].iloc[0] / 100  # Convert to decimal
+
+# 3. Fetch forward prices for each tenor and calculate basis
+results = []
+for tenor in CONFIG['tenors']:
+    try:
+        fwd_req = bql.Request(
+            CONFIG['pair_ticker'],
+            {'Forward': bq.data.fwd_px(tenor=tenor, dates=date_str, fill='prev')}
+        )
+        fwd_resp = bq.execute(fwd_req)
+        fwd_df = fwd_resp[0].df()
+        if fwd_df.empty or fwd_df['Forward'].isnull().any():
+            print(f"Warning: No forward price data for {tenor}. Skipping.")
+            continue
+        F = fwd_df['Forward'].iloc[0]
+        log_F = np.log(F)
+        delta_t = tenor_to_years[tenor]
+        # Calculate basis: b = s + r_term * Δt - f - r_base * Δt
+        basis = log_S + (r_term * delta_t) - log_F - (r_base * delta_t)
+        basis_bps = basis * 10000  # Convert to basis points
+        results.append({
+            'Tenor': tenor,
+            'Forward Price': F,
+            'Basis (bps)': basis_bps
+        })
+    except Exception as e:
+        print(f"Error fetching forward price for {tenor}: {e}")
+
+# 4. Create results DataFrame
+if not results:
+    raise ValueError("No forward price data retrieved for any tenor.")
+results_df = pd.DataFrame(results)
+
+# 5. Display results
+print("\n=== CIP Test Results ===")
+print(f"Currency Pair: {CONFIG['pair_ticker']}")
+print(f"Date: {date_str}")
+print(f"Spot Price: {S:.5f}")
+print(f"EUR Rate (ESTR): {r_base:.3%}")
+print(f"USD Rate (SOFR): {r_term:.3%}")
+print("\nResults:")
+print(results_df.to_string(index=False, float_format="%.2f"))
+print("\nNote: A non-zero Basis (bps) indicates a potential arbitrage opportunity.")
