@@ -1,0 +1,191 @@
+import numpy as np
+
+# A class to encapsulate the Multi-Currency No-Arbitrage Prism framework.
+class ArbitrageFramework:
+    """
+    Implements the Multi-Currency No-Arbitrage Prism to identify and
+    quantify arbitrage opportunities in FX markets.
+    """
+    def __init__(self, currencies, tenors_in_years):
+        """
+        Initializes the framework with a defined set of currencies and tenors.
+        
+        Args:
+            currencies (list): A list of currency strings, e.g., ['USD', 'GBP', 'JPY'].
+            tenors_in_years (list): A list of tenor durations in years, e.g., [1, 2].
+        """
+        self.currencies = currencies
+        self.tenors_in_years = tenors_in_years
+        self.instrument_map = {}
+        self.arbitrage_descriptions = []
+        self.incidence_matrix_A = None
+        
+        # Build the static components of the framework.
+        self._setup_framework()
+
+    def _setup_framework(self):
+        """
+        Builds the static Incidence Matrix (A) and the instrument mapping.
+        This is the "brain" of the system, encoding the no-arbitrage equations.
+        """
+        # 1. Define all required instruments and create the instrument_map.
+        # This map connects an instrument's name to its index in the Weight Vector.
+        idx = 0
+        # Spot rates
+        for i in range(len(self.currencies)):
+            c1 = self.currencies[i]
+            c2 = self.currencies[(i + 1) % len(self.currencies)]
+            self.instrument_map[f"s_{c1}_{c2}"] = idx
+            idx += 1
+        # Forward rates and Interest rates
+        for tenor in self.tenors_in_years:
+            for i in range(len(self.currencies)):
+                c1 = self.currencies[i]
+                c2 = self.currencies[(i + 1) % len(self.currencies)]
+                # Forward rate
+                self.instrument_map[f"f_{c1}_{c2}_{tenor}Y"] = idx
+                idx += 1
+                # Interest rate
+                self.instrument_map[f"r_{c1}_{tenor}Y"] = idx
+                idx += 1
+        
+        num_instruments = len(self.instrument_map)
+        cycles = []
+
+        # 2. Define the Triangular Arbitrage cycle row.
+        c1, c2, c3 = self.currencies[0], self.currencies[1], self.currencies[2]
+        row = np.zeros(num_instruments)
+        row[self.instrument_map[f"s_{c1}_{c2}"]] = 1
+        row[self.instrument_map[f"s_{c2}_{c3}"]] = 1
+        row[self.instrument_map[f"s_{c3}_{c1}"]] = 1
+        cycles.append(row)
+        self.arbitrage_descriptions.append(f"Triangular Spot: {c1}->{c2}->{c3}->{c1}")
+
+        # 3. Define the Covered Interest Parity (CIP) cycle rows.
+        for tenor in self.tenors_in_years:
+            for i in range(len(self.currencies)):
+                c_base = self.currencies[i]
+                c_quote = self.currencies[(i + 1) % len(self.currencies)]
+                row = np.zeros(num_instruments)
+                
+                # s_base->quote
+                row[self.instrument_map[f"s_{c_base}_{c_quote}"]] = 1
+                # + r_quote * delta_t
+                row[self.instrument_map[f"r_{c_quote}_{tenor}Y"]] = tenor 
+                # - f_base->quote
+                row[self.instrument_map[f"f_{c_base}_{c_quote}_{tenor}Y"]] = -1
+                # - r_base * delta_t
+                row[self.instrument_map[f"r_{c_base}_{tenor}Y"]] = -tenor
+                
+                cycles.append(row)
+                self.arbitrage_descriptions.append(f"CIP {tenor}Y: {c_base}/{c_quote}")
+
+        # 4. Assemble the final Incidence Matrix.
+        self.incidence_matrix_A = np.vstack(cycles)
+
+    def get_market_data_and_build_w(self):
+        """
+        Populates the Weight Vector (W_emp) with log-transformed market values from hardcoded data for July 24, 2025.
+        
+        Returns:
+            np.array: The Weight Vector W_emp.
+        """
+        print("--- Building Weight Vector (W_emp) with hardcoded market data for July 24, 2025 ---")
+        
+        # Hardcoded values from research
+        # Spots
+        s_USD_GBP_val = 0.7383  # GBP per USD (https://tradingeconomics.com/united-kingdom/currency)
+        s_GBP_JPY_val = 198.957  # JPY per GBP (https://www.tradingview.com/symbols/GBPJPY/)
+        s_JPY_USD_val = 0.006824  # USD per JPY (https://tradingeconomics.com/japan/currency)
+        
+        # Interest rates (continuously compounded)
+        r_USD_1Y_val = 0.039  # 3.9% (approximated from yield curve, https://tradingeconomics.com/united-states/2-year-note-yield)
+        r_USD_2Y_val = 0.0387  # 3.87% (https://tradingeconomics.com/united-states/2-year-note-yield)
+        r_GBP_1Y_val = 0.039  # 3.9% (approximated, https://tradingeconomics.com/united-kingdom/2-year-note-yield)
+        r_GBP_2Y_val = 0.0388  # 3.88% (https://tradingeconomics.com/united-kingdom/2-year-note-yield)
+        r_JPY_1Y_val = 0.008  # 0.8% (approximated from 10Y 1.51%, https://tradingeconomics.com/japan/government-bond-yield)
+        r_JPY_2Y_val = 0.010  # 1.0% (approximated from 10Y 1.51%, https://tradingeconomics.com/japan/government-bond-yield)
+        
+        # Forwards (theoretical calculated using CIP, since real data not available in search; basis will be zero)
+        import math
+        f_USD_GBP_1Y_val = s_USD_GBP_val * math.exp((r_GBP_1Y_val - r_USD_1Y_val) * 1)
+        f_USD_GBP_2Y_val = s_USD_GBP_val * math.exp((r_GBP_2Y_val - r_USD_2Y_val) * 2)
+        f_GBP_JPY_1Y_val = s_GBP_JPY_val * math.exp((r_JPY_1Y_val - r_GBP_1Y_val) * 1)
+        f_GBP_JPY_2Y_val = s_GBP_JPY_val * math.exp((r_JPY_2Y_val - r_GBP_2Y_val) * 2)
+        f_JPY_USD_1Y_val = s_JPY_USD_val * math.exp((r_USD_1Y_val - r_JPY_1Y_val) * 1)
+        f_JPY_USD_2Y_val = s_JPY_USD_val * math.exp((r_USD_2Y_val - r_JPY_2Y_val) * 2)
+
+        # Populate W_emp
+        W_emp = np.zeros(len(self.instrument_map))
+
+        W_emp[self.instrument_map["s_USD_GBP"]] = np.log(s_USD_GBP_val)
+        W_emp[self.instrument_map["s_GBP_JPY"]] = np.log(s_GBP_JPY_val)
+        W_emp[self.instrument_map["s_JPY_USD"]] = np.log(s_JPY_USD_val)
+
+        W_emp[self.instrument_map["f_USD_GBP_1Y"]] = np.log(f_USD_GBP_1Y_val)
+        W_emp[self.instrument_map["f_USD_GBP_2Y"]] = np.log(f_USD_GBP_2Y_val)
+        W_emp[self.instrument_map["f_GBP_JPY_1Y"]] = np.log(f_GBP_JPY_1Y_val)
+        W_emp[self.instrument_map["f_GBP_JPY_2Y"]] = np.log(f_GBP_JPY_2Y_val)
+        W_emp[self.instrument_map["f_JPY_USD_1Y"]] = np.log(f_JPY_USD_1Y_val)
+        W_emp[self.instrument_map["f_JPY_USD_2Y"]] = np.log(f_JPY_USD_2Y_val)
+
+        W_emp[self.instrument_map["r_USD_1Y"]] = r_USD_1Y_val
+        W_emp[self.instrument_map["r_USD_2Y"]] = r_USD_2Y_val
+        W_emp[self.instrument_map["r_GBP_1Y"]] = r_GBP_1Y_val
+        W_emp[self.instrument_map["r_GBP_2Y"]] = r_GBP_2Y_val
+        W_emp[self.instrument_map["r_JPY_1Y"]] = r_JPY_1Y_val
+        W_emp[self.instrument_map["r_JPY_2Y"]] = r_JPY_2Y_val
+
+        print("W_emp vector populated with hardcoded values.")
+        return W_emp
+
+    def calculate_arbitrage_basis(self, W_emp):
+        """
+        Calculates the Arbitrage Basis Vector (B) by multiplying the
+        Incidence Matrix (A) with the Weight Vector (W_emp).
+        
+        Args:
+            W_emp (np.array): The vector of log-transformed market data.
+            
+        Returns:
+            np.array: The Arbitrage Basis Vector (B), where each element is the
+                      arbitrage potential for a cycle.
+        """
+        print("\n--- Calculating Arbitrage Basis Vector (B = A * W_emp)... ---")
+        # This single matrix-vector multiplication calculates all arbitrage
+        # opportunities at once.
+        B = self.incidence_matrix_A.dot(W_emp)
+        return B
+
+def main():
+    """
+    Main execution function to demonstrate the framework logic.
+    """
+    # 1. Define the parameters for the analysis.
+    currencies = ['USD', 'GBP', 'JPY']
+    tenors = [1, 2] # 1-Year and 2-Year tenors
+
+    # 2. Initialize the framework. This builds the Incidence Matrix 'A'.
+    framework = ArbitrageFramework(currencies, tenors)
+    print("--- Framework Initialized ---")
+    print(f"Currencies: {framework.currencies}")
+    print(f"Tenors: {framework.tenors_in_years} years")
+    print(f"Number of instruments to monitor: {framework.incidence_matrix_A.shape[1]}")
+    print(f"Number of arbitrage cycles defined: {framework.incidence_matrix_A.shape[0]}")
+    
+    # 3. Get market data and construct the Weight Vector 'W_emp'.
+    W_emp = framework.get_market_data_and_build_w()
+
+    # 4. Calculate the arbitrage basis for all cycles.
+    arbitrage_basis_vector_B = framework.calculate_arbitrage_basis(W_emp)
+
+    # 5. Display the results.
+    print("\n--- Arbitrage Analysis Results ---")
+    # A basis is often quoted in basis points (bps). A log-value of 0.0001 is 1 bp.
+    arbitrage_bps = arbitrage_basis_vector_B * 10000 
+    
+    for i, description in enumerate(framework.arbitrage_descriptions):
+        print(f"{description:<35} | Basis: {arbitrage_bps[i]:.4f} bps")
+
+if __name__ == "__main__":
+    main()
