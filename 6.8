@@ -1,0 +1,96 @@
+import bql
+import pandas as pd
+import numpy as np
+import logging
+import time
+
+# Setup basic logging to see every step
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def run_multi_tenor_test():
+    """
+    An expanded test to fetch a curve of forward prices and calculate
+    the CIP basis for multiple tenors.
+    """
+    logging.info("--- Starting Multi-Tenor CIP Test ---")
+    try:
+        # 1. Connect to the BQL service and define our targets
+        logging.info("Connecting to BQL service...")
+        bq = bql.Service()
+        logging.info("✅ SUCCESS: BQL service connected.")
+
+        # --- Configuration for our test ---
+        CONFIG = {
+            "pair_ticker": 'EURUSD Curncy',
+            "tenors": ['1M', '3M', '6M', '1Y'], # We are now testing multiple tenors
+            "base_rate_ticker": 'ESTRON Index',
+            "term_rate_ticker": 'SOFRRATE Index'
+        }
+        date_str = (pd.Timestamp.now() - pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        
+        logging.info(f"Fetching data for {CONFIG['pair_ticker']} on {date_str}...")
+
+        # 2. Sequentially fetch each piece of data with robust checks
+        
+        # Fetch Spot (S) - this is a single value
+        spot_req = bql.Request(CONFIG['pair_ticker'], {'S': bq.data.px_last(dates=date_str, fill='prev')})
+        spot_df = bq.execute(spot_req)[0].df()
+        if spot_df.empty: raise ValueError(f"Spot price for {CONFIG['pair_ticker']} returned no data.")
+        S = spot_df['S'].iloc[0]
+        logging.info(f"-> Fetched Spot (S): {S:.5f}")
+
+        # Fetch Interest Rates - also single values
+        base_rate_req = bql.Request(CONFIG['base_rate_ticker'], {'r_base': bq.data.px_last(dates=date_str, fill='prev')})
+        term_rate_req = bql.Request(CONFIG['term_rate_ticker'], {'r_term': bq.data.px_last(dates=date_str, fill='prev')})
+        base_rate_df = bq.execute(base_rate_req)[0].df()
+        term_rate_df = bq.execute(term_rate_req)[0].df()
+        if base_rate_df.empty: raise ValueError(f"Base rate for {CONFIG['base_rate_ticker']} returned no data.")
+        if term_rate_df.empty: raise ValueError(f"Term rate for {CONFIG['term_rate_ticker']} returned no data.")
+        r_base = base_rate_df['r_base'].iloc[0] / 100
+        r_term = term_rate_df['r_term'].iloc[0] / 100
+        logging.info(f"-> Fetched Base Rate (EUR): {r_base:.3%}")
+        logging.info(f"-> Fetched Term Rate (USD): {r_term:.3%}")
+
+        # Fetch Forward Curve (F) - this is a multi-point request
+        fwd_univ = bq.univ.curvemembers(CONFIG['pair_ticker'], tenors=CONFIG['tenors'], curve_type='FX', quote_type='outright')
+        fwd_req = bql.Request(fwd_univ, {'F': bq.data.curve_rate(side='mid', dates=date_str)})
+        fwd_df = bq.execute(fwd_req)[0].df()
+        if fwd_df.empty: raise ValueError(f"Forward curve for {CONFIG['pair_ticker']} returned no data.")
+        logging.info(f"-> Fetched Forward Curve for tenors: {CONFIG['tenors']}")
+        
+        # 3. Perform the CIP calculation for each tenor
+        results_list = []
+        for tenor in CONFIG['tenors']:
+            try:
+                F = fwd_df.loc[tenor, 'F']
+                # Basis = log(S) - log(F) + r_base - r_term
+                basis_bps = (np.log(S) - np.log(F) + r_base - r_term) * 10000
+                results_list.append({'Tenor': tenor, 'Forward Price': F, 'Arbitrage (bps)': basis_bps})
+            except KeyError:
+                logging.warning(f"Data for tenor {tenor} was not found in the forward curve data. Skipping.")
+        
+        results_df = pd.DataFrame(results_list)
+
+        # 4. Print a clean summary report
+        print("\n" + "="*60)
+        print("         ✅✅✅ MULTI-TENOR CIP ANALYSIS SUCCESSFUL ✅✅✅")
+        print("="*60)
+        print(f"Analysis for:      {CONFIG['pair_ticker']}")
+        print(f"Date:              {date_str}")
+        print(f"Spot Price:        {S:.5f}")
+        print(f"Interest Rates:    EUR={r_base:.3%}, USD={r_term:.3%}")
+        print("-"*60)
+        print("RESULTS ACROSS TERM STRUCTURE:")
+        print(results_df.to_string(index=False, float_format="{:,.2f}".format))
+        print("="*60)
+
+    except Exception as e:
+        print("\n" + "!"*60)
+        print("           ❌❌❌ TEST FAILED ❌❌❌")
+        print("!"*60)
+        logging.critical(f"A critical error occurred: {e}", exc_info=True)
+        print("\nThis likely means one of the requested tickers returned no data.")
+        print("!"*60)
+
+if __name__ == '__main__':
+    run_multi_tenor_test()
