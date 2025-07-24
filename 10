@@ -1,0 +1,327 @@
+import bql
+import pandas as pd
+import numpy as np
+from datetime import datetime
+
+# Initialize BQL service
+bq = bql.Service()
+
+# Configuration
+CONFIG = {
+    "pair_ticker": 'EURUSD Curncy',  # EUR/USD currency pair
+    "tenors": ['1M', '3M', '6M', '1Y'],  # Tenors to test
+}
+
+# Mapping for forward rate fields
+tenor_to_field = {
+    '1M': 'fwd_rt_1mo',
+    '3M': 'fwd_rt_3mo',
+    '6M': 'fwd_rt_6mo',
+    '1Y': 'fwd_rt_12mo',
+}
+
+# Mapping for base (EUR) and term (USD) rate tickers
+tenor_to_base_rate = {
+    '1M': 'EUR001M Index',
+    '3M': 'EUR003M Index',
+    '6M': 'EUR006M Index',
+    '1Y': 'EUR012M Index',
+}
+tenor_to_term_rate = {
+    '1M': 'TSFR1M Index',
+    '3M': 'TSFR3M Index',
+    '6M': 'TSFR6M Index',
+    '1Y': 'TSFR12M Index',
+}
+
+# Calculate time intervals (in years) for each tenor
+tenor_to_years = {
+    '1M': 1/12,
+    '3M': 3/12,
+    '6M': 6/12,
+    '1Y': 1.0
+}
+
+# Use today's date for display
+date_str = datetime.now().strftime('%Y-%m-%d')
+
+# 1. Fetch spot price (current)
+spot_req = bql.Request(CONFIG['pair_ticker'], {'Spot': bq.data.px_last(fill='prev')})
+spot_resp = bq.execute(spot_req)
+spot_df = spot_resp[0].df()
+if spot_df.empty or spot_df['Spot'].isnull().any():
+    raise ValueError(f"No spot price data for {CONFIG['pair_ticker']}")
+S = spot_df['Spot'].iloc[0]
+log_S = np.log(S)
+
+# 3. Fetch forward prices, rates, and calculate basis for each tenor
+results = []
+for tenor in CONFIG['tenors']:
+    try:
+        # Fetch forward rate using the specific field (current)
+        field_name = tenor_to_field[tenor]
+        fwd_field = getattr(bq.data, field_name)
+        fwd_req = bql.Request(
+            CONFIG['pair_ticker'],
+            {'Forward': fwd_field(fill='prev')}
+        )
+        fwd_resp = bq.execute(fwd_req)
+        fwd_df = fwd_resp[0].df()
+        if fwd_df.empty or fwd_df['Forward'].isnull().any():
+            print(f"Warning: No forward price data for {tenor}. Skipping.")
+            continue
+        F = fwd_df['Forward'].iloc[0]
+        log_F = np.log(F)
+
+        # Fetch base rate (EURIBOR for tenor, current)
+        base_ticker = tenor_to_base_rate[tenor]
+        base_rate_req = bql.Request(base_ticker, {'r_base': bq.data.px_last(fill='prev')})
+        base_rate_resp = bq.execute(base_rate_req)
+        base_rate_df = base_rate_resp[0].df()
+        if base_rate_df.empty or base_rate_df['r_base'].isnull().any():
+            print(f"Warning: No base rate data for {tenor}. Skipping.")
+            continue
+        r_base = base_rate_df['r_base'].iloc[0] / 100
+
+        # Fetch term rate (Term SOFR for tenor, current)
+        term_ticker = tenor_to_term_rate[tenor]
+        term_rate_req = bql.Request(term_ticker, {'r_term': bq.data.px_last(fill='prev')})
+        term_rate_resp = bq.execute(term_rate_req)
+        term_rate_df = term_rate_resp[0].df()
+        if term_rate_df.empty or term_rate_df['r_term'].isnull().any():
+            print(f"Warning: No term rate data for {tenor}. Skipping.")
+            continue
+        r_term = term_rate_df['r_term'].iloc[0] / 100
+
+        delta_t = tenor_to_years[tenor]
+        # Calculate basis: b = log(S) + r_term * Δt - log(F) - r_base * Δt
+        basis = log_S + (r_term * delta_t) - log_F - (r_base * delta_t)
+        basis_bps = basis * 10000  # Convert to basis points
+        results.append({
+            'Tenor': tenor,
+            'Forward Price': F,
+            'Basis (bps)': basis_bps,
+            'EUR Rate (%)': r_base * 100,
+            'USD Rate (%)': r_term * 100
+        })
+    except Exception as e:
+        print(f"Error processing {tenor}: {e}")
+
+# 4. Create results DataFrame
+if not results:
+    raise ValueError("No data retrieved for any tenor.")
+results_df = pd.DataFrame(results)
+
+# 5. Display results
+print("\n=== CIP Test Results ===")
+print(f"Currency Pair: {CONFIG['pair_ticker']}")
+print(f"Date: {date_str}")
+print(f"Spot Price: {S:.5f}")
+print("\nResults:")
+print(results_df.to_string(index=False, float_format="%.2f"))
+print("\nNote: A non-zero Basis (bps) indicates a potential arbitrage opportunity.")
+
+
+--------
+import bql
+import pandas as pd
+import numpy as np
+from datetime import datetime
+
+# Initialize BQL service
+bq = bql.Service()
+
+# --- Configuration ---
+CONFIG = {
+    "pair_ticker": 'EURUSD Curncy',  # EUR/USD currency pair
+    "tenors": ['1M', '3M', '6M', '1Y'],  # Tenors to test
+}
+
+# Mapping for base (EUR) and term (USD) interest rate tickers
+tenor_to_base_rate = {
+    '1M': 'EUR001M Index',
+    '3M': 'EUR003M Index',
+    '6M': 'EUR006M Index',
+    '1Y': 'EUR012M Index',
+}
+tenor_to_term_rate = {
+    '1M': 'SOFR1M Index', # Using SOFR as the standard benchmark for USD
+    '3M': 'SOFR3M Index',
+    '6M': 'SOFR6M Index',
+    '1Y': 'SOFR1Y Index',
+}
+
+# Calculate time intervals (in years) for each tenor
+tenor_to_years = {
+    '1M': 1/12,
+    '3M': 3/12,
+    '6M': 6/12,
+    '1Y': 1.0,
+}
+
+# Use today's date for display
+date_str = datetime.now().strftime('%Y-%m-%d')
+
+# --- 1. Fetch Spot Price ---
+spot_req = bql.Request(CONFIG['pair_ticker'], {'Spot': bq.data.px_last(fill='prev')})
+spot_resp = bq.execute(spot_req)
+spot_df = spot_resp[0].df()
+if spot_df.empty or spot_df['Spot'].isnull().any():
+    raise ValueError(f"No spot price data for {CONFIG['pair_ticker']}")
+S = spot_df['Spot'].iloc[0]
+
+# --- 2. Fetch Forward Prices, Interest Rates, and Calculate Basis ---
+results = []
+
+# Define the universe for the FX forward curve for all tenors at once
+universe = bq.univ.curvemembers(
+    CONFIG['pair_ticker'],
+    curve_type='FX',
+    quote_type='outright',
+    tenors=CONFIG['tenors']
+)
+# Define the data item for the forward rates
+data_item = {'Forward': bq.data.curve_rate(side='mid')}
+fwd_req = bql.Request(universe, data_item)
+fwd_resp = bq.execute(fwd_req)
+fwd_df = fwd_resp[0].df()
+if fwd_df.empty:
+    raise ValueError("Could not retrieve any forward prices.")
+
+# Fetch all required interest rates in a single request
+all_rate_tickers = list(tenor_to_base_rate.values()) + list(tenor_to_term_rate.values())
+ir_req = bql.Request(all_rate_tickers, {'Rate': bq.data.px_last(fill='prev')})
+ir_resp = bq.execute(ir_req)
+ir_df = ir_resp[0].df()
+ir_df = ir_df.set_index('ID') # Set ticker as index for easy lookup
+
+for tenor in CONFIG['tenors']:
+    try:
+        # Get the forward price for the tenor
+        F = fwd_df[fwd_df['TENOR'] == tenor]['Forward'].iloc[0]
+
+        # Get the base rate (EUR)
+        base_ticker = tenor_to_base_rate[tenor]
+        r_base = ir_df.loc[base_ticker, 'Rate'] / 100
+
+        # Get the term rate (USD)
+        term_ticker = tenor_to_term_rate[tenor]
+        r_term = ir_df.loc[term_ticker, 'Rate'] / 100
+
+        delta_t = tenor_to_years[tenor]
+        
+        # Calculate the forward price implied by CIP
+        F_implied = S * ((1 + r_term * delta_t) / (1 + r_base * delta_t))
+
+        # Calculate basis in basis points
+        basis_bps = (F - F_implied) * 100
+
+        results.append({
+            'Tenor': tenor,
+            'Market Forward': F,
+            'Implied Forward': F_implied,
+            'Basis (bps)': basis_bps,
+            'EUR Rate (%)': r_base * 100,
+            'USD Rate (%)': r_term * 100,
+        })
+    except (IndexError, KeyError) as e:
+        print(f"Warning: Could not process {tenor}. Data might be missing. Error: {e}")
+
+# --- 3. Create and Display Results DataFrame ---
+if not results:
+    raise ValueError("No data retrieved for any tenor.")
+results_df = pd.DataFrame(results)
+
+print("\n=== Covered Interest Rate Parity (CIP) Test Results ===")
+print(f"Currency Pair: {CONFIG['pair_ticker']}")
+print(f"Date: {date_str}")
+print(f"Spot Price: {S:.5f}")
+print("\n--- Results ---")
+print(results_df.to_string(index=False, float_format="%.5f"))
+print("\nNote: A non-zero 'Basis (bps)' indicates a deviation from CIP and a potential arbitrage opportunity.")
+
+
+-----
+import bql
+import pandas as pd
+import numpy as np
+
+# Initialize BQL service
+bq = bql.Service()
+
+# --- Configuration for a Single Test Case ---
+PAIR = 'EURUSD Curncy'
+TENOR = '3M'
+BASE_CURRENCY_RATE_TICKER = 'EUR003M Index'  # r_i (EUR)
+TERM_CURRENCY_RATE_TICKER = 'SOFR3M Index'    # r_k (USD)
+[span_0](start_span)DELTA_T = 3/12  # Time interval in years for a 3M tenor[span_0](end_span)
+
+# --- 1. Fetch Required Market Data ---
+# Define instruments needed for the single CIP cycle
+instruments = {
+    'spot': PAIR,
+    'forward': PAIR,
+    'base_rate': BASE_CURRENCY_RATE_TICKER,
+    'term_rate': TERM_CURRENCY_RATE_TICKER
+}
+
+# Build the request
+fwd_universe = bq.univ.curvemembers(instruments['forward'], curve_type='FX', quote_type='outright', tenors=TENOR)
+data_items = {
+    'Spot': bq.data.px_last(for_security=instruments['spot']),
+    'Forward': bq.data.curve_rate(side='mid', for_universe=fwd_universe),
+    'Base_Rate': bq.data.px_last(for_security=instruments['base_rate']),
+    'Term_Rate': bq.data.px_last(for_security=instruments['term_rate'])
+}
+
+request = bql.Request(list(instruments.values()), data_items)
+response = bq.execute(request)
+
+# Extract data into a simple dictionary
+data = {item.name: item.df().set_index('ID') for item in response}
+market_values = {
+    'S': data['Spot'].loc[PAIR, 'value'],
+    'F': data['Forward'].loc[fwd_universe.members[0], 'value'],
+    'r_base': data['Base_Rate'].loc[BASE_CURRENCY_RATE_TICKER, 'value'] / 100,
+    'r_term': data['Term_Rate'].loc[TERM_CURRENCY_RATE_TICKER, 'value'] / 100,
+}
+
+# --- 2. Perform the Log-Space CIP Calculation ---
+# [span_1](start_span)Convert spot and forward to log-space[span_1](end_span)
+s = np.log(market_values['S'])
+f = np.log(market_values['F'])
+
+# [span_2](start_span)Use continuously compounded rates directly as additive terms[span_2](end_span)
+r_base_leg = market_values['r_base'] * DELTA_T
+r_term_leg = market_values['r_term'] * DELTA_T
+
+# [span_3](start_span)Calculate the log cross-currency basis 'b'[span_3](end_span)
+log_basis = s + r_term_leg - f - r_base_leg
+
+# [span_4](start_span)For intuition, convert the log basis to basis points[span_4](end_span)
+basis_in_bps = log_basis * 10000
+
+# --- 3. Display Results ---
+print("--- Covered Interest Parity (CIP) Principle Test ---")
+print(f"Cycle: {PAIR} at {TENOR} Tenor")
+print("-" * 50)
+print("Market Inputs:")
+print(f"  Spot Rate (S):              {market_values['S']:.5f}")
+print(f"  Forward Rate (F):           {market_values['F']:.5f}")
+print(f"  Base Rate (EUR) r_i:        {market_values['r_base']*100:.4f}%")
+print(f"  Term Rate (USD) r_k:        {market_values['r_term']*100:.4f}%")
+print("-" * 50)
+print("Log-Space Calculation:")
+print(f"  Log Spot (s):               {s:.7f}")
+print(f"  Log Forward (f):            {f:.7f}")
+print(f"  Term Rate Leg (+r_k * Δt):  {r_term_leg:.7f}")
+print(f"  Base Rate Leg (-r_i * Δt):  {-r_base_leg:.7f}")
+print("-" * 50)
+print(f"RESULT - Log Cross-Currency Basis (b): {log_basis:.7f}")
+print(f"RESULT - Basis in Basis Points (bps):  {basis_in_bps:.2f} bps")
+print("-" * 50)
+[span_5](start_span)[span_6](start_span)print("A non-zero basis quantifies the deviation from CIP, representing a potential arbitrage opportunity[span_5](end_span)[span_6](end_span).")
+
+
+
+
