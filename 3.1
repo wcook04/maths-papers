@@ -1,0 +1,274 @@
+import numpy as np
+import pandas as pd
+import bql
+import logging
+
+# Use the logging module for clear, timestamped diagnostics
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Initialize the BQL service once with robust error handling
+try:
+    bq = bql.Service()
+    logging.info("BQL service started successfully.")
+except Exception as e:
+    logging.critical(f"FATAL: Failed to start BQL service. Check BCOM connection. Error: {e}")
+    # In a real script, you might exit or raise the exception
+    # For interactive notebooks, we'll just log the critical error.
+    bq = None
+
+def generate_arbitrage_tearsheet(engine, result_row, W_emp):
+    """
+    Prints a detailed, human-readable 'tear sheet' for a single arbitrage opportunity.
+    This function contains the CORRECTED and VERIFIED trade logic.
+    """
+    arb_index = result_row.name
+    components = engine.cycle_components[arb_index]
+    description = engine.arbitrage_descriptions[arb_index]
+    basis_bps = result_row['Arbitrage (bps)']
+    
+    print("\n" + "="*80)
+    print(f"|| Arbitrage Tear Sheet: {description}")
+    print("="*80)
+    print(f"|| -> Opportunity: Profitable basis of {basis_bps:+.2f} bps detected (net of {engine.tx_costs_bps} bps cost).")
+
+    if components['type'] == 'cip':
+        pair_str, tenor, base_ccy, term_ccy = components['pair'], components['tenor'], components['base_ccy'], components['term_ccy']
+        
+        log_s = W_emp[engine.w_map[f"s_{pair_str}"]]
+        log_f_emp = W_emp[engine.w_map[f"f_{pair_str}_{tenor}"]]
+        r_base = W_emp[engine.w_map[f"r_{base_ccy}_{tenor}"]]
+        r_term = W_emp[engine.w_map[f"r_{term_ccy}_{tenor}"]]
+        
+        # In continuous time: log(F_synth) = log(S) + r_base - r_term
+        log_f_synth = log_s + r_base - r_term
+        mispricing_bps = (log_f_synth - log_f_emp) * 10000
+        
+        print("|| \n|| --- Pricing Breakdown ---")
+        print(f"|| Market Forward Price (log F_emp)      : {log_f_emp:.6f}")
+        print(f"|| Synthetic Forward Price (log F_synth) : {log_f_synth:.6f}  (from Spot + Rates)")
+        print(f"|| Mispricing (F_synth - F_emp)          : {mispricing_bps:+.2f} bps")
+
+        print("|| \n|| --- Actionable Trade Plan ---")
+        if basis_bps > 0: # F_synth > F_emp -> F_synth is EXPENSIVE, F_emp is CHEAP
+            print(f"|| Diagnosis: Synthetic forward is EXPENSIVE relative to the market forward.")
+            print(f"|| Strategy: SELL the expensive Synthetic Forward, BUY the cheap Market Forward.")
+            print(f"||   Leg 1 (SELL Synthetic): Borrow {base_ccy} for {tenor} at {r_base*100:.2f}%.")
+            print(f"||   Leg 2 (SELL Synthetic): Convert {base_ccy} to {term_ccy} via the Spot market.")
+            print(f"||   Leg 3 (SELL Synthetic): Invest {term_ccy} for {tenor} at {r_term*100:.2f}%.")
+            print(f"||   Leg 4 (BUY Market):     BUY the {pair_str} {tenor} forward contract.")
+        else: # F_synth < F_emp -> F_synth is CHEAP, F_emp is EXPENSIVE
+            print(f"|| Diagnosis: Synthetic forward is CHEAP relative to the market forward.")
+            print(f"|| Strategy: BUY the cheap Synthetic Forward, SELL the expensive Market Forward.")
+            print(f"||   Leg 1 (BUY Synthetic):  Borrow {term_ccy} for {tenor} at {r_term*100:.2f}%.")
+            print(f"||   Leg 2 (BUY Synthetic):  Convert {term_ccy} to {base_ccy} via the Spot market.")
+            print(f"||   Leg 3 (BUY Synthetic):  Invest {base_ccy} for {tenor} at {r_base*100:.2f}%.")
+            print(f"||   Leg 4 (SELL Market):    SELL the {pair_str} {tenor} forward contract.")
+
+    elif components['type'] == 'tri':
+        p1, p2, p3 = components['pairs']
+        print("|| \n|| --- Actionable Trade Plan ---")
+        if basis_bps > 0:
+            print(f"|| Strategy: Execute spot cycle {p1} -> {p2} -> {p3}.")
+            print(f"||   - Buy {p1}, use proceeds to buy {p2}, use proceeds to buy {p3} to return to original currency.")
+        else:
+            print(f"|| Strategy: Execute reverse spot cycle.")
+            print(f"||   - Execute the opposite of each spot trade ({p3} -> {p2} -> {p1}) to profit.")
+
+class ArbitrageMatrixEngine:
+    def __init__(self, currencies, tenors, ccy_tickers):
+        self.currencies = currencies
+        self.tenors = tenors
+        self.ccy_tickers = ccy_tickers
+        self.tx_costs_bps = 2.0
+        
+        self.w_map = None
+        self.incidence_matrix_A = None
+        self.arbitrage_descriptions = None
+        self.cycle_components = None 
+        self.currency_to_yield_ticker = {}
+        self.w_size = 0
+        
+        self._setup_framework()
+
+    def _setup_framework(self):
+        logging.info("Dynamically setting up the arbitrage matrix framework from CONFIG...")
+        
+        # --- 1. Define all arbitrage cycles based on CONFIG ---
+        all_cycles = []
+        ccy_pairs = list(self.ccy_tickers.keys())
+        
+        # Triangular Cycle
+        all_cycles.append({'type': 'tri', 'pairs': ccy_pairs})
+        
+        # CIP Cycles (dynamically created from config)
+        for pair in ccy_pairs:
+            base_ccy, term_ccy = pair.split('/')
+            for tenor in self.tenors:
+                all_cycles.append({
+                    'type': 'cip', 'pair': pair, 'tenor': tenor, 
+                    'base_ccy': base_ccy, 'term_ccy': term_ccy
+                })
+        
+        # --- 2. Build W_map and the robust yield ticker map ---
+        idx, w_map = 0, {}
+        for pair in ccy_pairs: w_map[f"s_{pair}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for pair in ccy_pairs: w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for ccy in self.currencies: w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        
+        self.w_size, self.w_map = idx, w_map
+        
+        # Build the explicit map for yield lookups.
+        for ccy in self.currencies:
+            found_ticker = next((tkr for pair, tkr in self.ccy_tickers.items() if ccy in pair.split('/')), None)
+            if not found_ticker:
+                raise ValueError(f"Configuration Error: Currency '{ccy}' is not in any defined ccy_tickers pair.")
+            self.currency_to_yield_ticker[ccy] = found_ticker
+
+        # --- 3. Build A, descriptions, and components from the single `all_cycles` list ---
+        A = np.zeros((len(all_cycles), self.w_size))
+        descriptions, components_list = [], []
+        
+        for i, cycle in enumerate(all_cycles):
+            if cycle['type'] == 'tri':
+                p1, p2, p3 = cycle['pairs']
+                A[i, w_map[f's_{p1}']], A[i, w_map[f's_{p2}']], A[i, w_map[f's_{p3}']] = 1, 1, 1
+                descriptions.append(f"Triangular Spot ({p1} -> {p2} -> {p3})")
+            elif cycle['type'] == 'cip':
+                pair, tenor, base, term = cycle['pair'], cycle['tenor'], cycle['base_ccy'], cycle['term_ccy']
+                A[i, w_map[f's_{pair}']] = 1
+                A[i, w_map[f'f_{pair}_{tenor}']] = -1
+                A[i, w_map[f'r_{base}_{tenor}']] = 1
+                A[i, w_map[f'r_{term}_{tenor}']] = -1
+                descriptions.append(f"CIP {tenor}: {pair}")
+            components_list.append(cycle)
+            
+        self.incidence_matrix_A = A
+        self.arbitrage_descriptions = descriptions
+        self.cycle_components = components_list
+        logging.info(f"Framework setup complete. Monitoring {len(descriptions)} conditions.")
+
+    def get_market_data_and_build_w(self, date):
+        logging.info(f"Fetching market data for date: {date}")
+        spot_universe = list(self.ccy_tickers.values())
+        
+        spot_req = bql.Request(spot_universe, {'spot': bq.data.px_last(dates=date, fill='prev')})
+        fwd_universe = bq.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='outright')
+        fwd_req = bql.Request(fwd_universe, {'fwd_outright': bq.data.curve_rate(side='mid', dates=date, fill='prev')})
+        yield_universe = bq.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='implied_yield')
+        yield_req = bql.Request(yield_universe, {'implied_yield': bq.data.curve_rate(side='mid', dates=date, fill='prev') / 100})
+        
+        # =========================================================================
+        # == FIX APPLIED HERE to solve "cannot unpack non-iterable FutureExt"    ==
+        # =========================================================================
+        # 1. Capture the single response object from the execute call
+        response = bq.execute(spot_req, fwd_req, yield_req)
+
+        # 2. Access the individual results from the response object by index
+        spot_res, fwd_res, yield_res = response[0], response[1], response[2]
+        # =========================================================================
+
+        # Parsing logic
+        all_data = []
+        for res, type_name, val_col in [(spot_res, 'SPOT', 'spot'), (fwd_res, 'FWD', 'fwd_outright'), (yield_res, 'YIELD', 'implied_yield')]:
+            if res and res.df is not None and not res.df().empty:
+                df = res.df().reset_index().rename(columns={val_col: 'VALUE'})
+                df['TYPE'] = type_name
+                if 'TENOR' not in df.columns: df['TENOR'] = pd.NaT 
+                all_data.append(df[['ID', 'TYPE', 'TENOR', 'VALUE']])
+            else:
+                logging.warning(f"No data returned for {type_name} fetch.")
+
+        if not all_data:
+            logging.error("CRITICAL: No market data was retrieved. Aborting.")
+            return np.array([]) # Return an empty array to signal failure
+
+        market_data_df = pd.concat(all_data).dropna(subset=['VALUE']).set_index(['ID', 'TYPE', 'TENOR'])
+        W_emp = np.zeros(self.w_size)
+
+        for name, idx in self.w_map.items():
+            parts = name.split('_')
+            try:
+                if parts[0] == 's':
+                    val = market_data_df.loc[(self.ccy_tickers[parts[1]], 'SPOT', pd.NaT), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif parts[0] == 'f':
+                    val = market_data_df.loc[(self.ccy_tickers[parts[1]], 'FWD', parts[2]), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif parts[0] == 'r':
+                    lookup_ticker = self.currency_to_yield_ticker[parts[1]]
+                    val = market_data_df.loc[(lookup_ticker, 'YIELD', parts[2]), 'VALUE']
+                    W_emp[idx] = val 
+            except (KeyError, IndexError):
+                logging.warning(f"Could not find market data for '{name}'. Defaulting to 0.")
+                W_emp[idx] = 0.0
+        return W_emp
+
+    def run_daily_analysis(self, date):
+        W_emp = self.get_market_data_and_build_w(date)
+        if not W_emp.any():
+            return None, None
+
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000
+        trade_signals = np.where(np.abs(arbitrage_bps) > self.tx_costs_bps, np.sign(arbitrage_bps), 0)
+        
+        results_df = pd.DataFrame({
+            'Condition': self.arbitrage_descriptions,
+            'Arbitrage (bps)': arbitrage_bps,
+            'Signal': trade_signals
+        })
+        return results_df, W_emp
+
+if __name__ == '__main__':
+    # Ensure BQL service started before proceeding
+    if bq is None:
+        logging.critical("BQL Service is not available. Halting execution.")
+    else:
+        CONFIG = {
+            "currencies": ['USD', 'EUR', 'JPY'],
+            "tenors": ['1M', '3M', '6M', '1Y'],
+            "ccy_tickers": {
+                # Format: "Base/Term": "Bloomberg Ticker"
+                "USD/EUR": "EURUSD Curncy",
+                "EUR/JPY": "EURJPY Curncy",
+                "JPY/USD": "USDJPY Curncy"
+            }
+        }
+
+        engine = ArbitrageMatrixEngine(
+            currencies=CONFIG["currencies"],
+            tenors=CONFIG["tenors"],
+            ccy_tickers=CONFIG["ccy_tickers"]
+        )
+
+        analysis_date = pd.Timestamp.now().normalize() - pd.offsets.BDay(1)
+        analysis_date_str = analysis_date.strftime('%Y-%m-%d')
+        
+        logging.info(f"--- Running Arbitrage Matrix Engine for {analysis_date_str} ---")
+        
+        results, W_emp_vector = engine.run_daily_analysis(analysis_date_str)
+        
+        if results is not None:
+            opportunities = results[results['Signal'] != 0]
+            
+            print("\n\n" + "="*80)
+            print(f"            --- MASTER ARBITRAGE REPORT FOR: {analysis_date_str} ---")
+            print("="*80)
+
+            if opportunities.empty:
+                print("\n✅ No significant arbitrage opportunities detected after transaction costs.")
+            else:
+                print(f"\n🔥 Detected {len(opportunities)} potential arbitrage opportunities. Generating tear sheets...")
+                for index, row in opportunities.iterrows():
+                    generate_arbitrage_tearsheet(engine, row, W_emp_vector)
+            
+            print("\n" + "="*80)
+            print("|| End of Report")
+            print("="*80)
+        else:
+            print("\n" + "!"*80)
+            print("Execution failed: Could not retrieve valid market data.")
+            print("!"*80)
+
