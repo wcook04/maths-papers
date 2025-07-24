@@ -1,0 +1,211 @@
+import numpy as np
+import pandas as pd
+import bql
+import logging
+
+# Use the logging module for clear, timestamped diagnostics
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# --- Main Functions for Analysis and Reporting ---
+
+def generate_tearsheet(engine, arbitrage_info):
+    """Prints a simplified, human-readable 'tear sheet' for an arbitrage opportunity."""
+    description = arbitrage_info['Condition']
+    basis_bps = arbitrage_info['Arbitrage (bps)']
+    
+    print("\n" + "="*80)
+    print(f"|| Arbitrage Tear Sheet: {description}")
+    print("="*80)
+    print(f"|| -> Opportunity: Net profitable basis of {basis_bps:+.2f} bps detected.")
+
+    # Determine trade direction based on the basis sign
+    if basis_bps > 0:
+        print("|| -> Strategy: SELL the overpriced Synthetic, BUY the cheap Market instrument.")
+        print("||    (e.g., Borrow Base CCY, Swap to Term CCY, Invest Term, Buy Market Fwd)")
+    else:
+        print("|| -> Strategy: BUY the cheap Synthetic, SELL the overpriced Market instrument.")
+        print("||    (e.g., Borrow Term CCY, Swap to Base CCY, Invest Base, Sell Market Fwd)")
+    print("="*80)
+
+# --- The Core Arbitrage Engine Class ---
+
+class ArbitrageEngine:
+    """A class to build the arbitrage matrix and analyze market data."""
+    def __init__(self, config):
+        self.currencies = config["currencies"]
+        self.tenors = config["tenors"]
+        self.ccy_tickers = config["ccy_tickers"]
+        self.tx_costs_bps = 2.0  # Assumed transaction cost
+        
+        self.w_map = None # Maps instrument name to vector index
+        self.incidence_matrix_A = None # The 'brain' of the system
+        self.arbitrage_descriptions = None # Plain-text names for each arbitrage cycle
+        
+        self._setup_framework()
+
+    def _setup_framework(self):
+        """Builds the incidence matrix A based on arbitrage conditions."""
+        logging.info("Setting up arbitrage matrix framework...")
+        
+        # Define all possible arbitrage cycles (1 triangular, and N*M CIPs)
+        ccy_pairs = list(self.ccy_tickers.keys())
+        all_cycles = [{'type': 'tri', 'pairs': ccy_pairs}]
+        for pair in ccy_pairs:
+            base_ccy, term_ccy = pair.split('/')
+            for tenor in self.tenors:
+                all_cycles.append({'type': 'cip', 'pair': pair, 'tenor': tenor, 'base': base_ccy, 'term': term_ccy})
+
+        # Create the map from instrument name to its index in the weight vector W
+        idx, w_map = 0, {}
+        for pair in ccy_pairs: w_map[f"s_{pair}"] = idx; idx += 1
+        for pair in ccy_pairs:
+            for tenor in self.tenors: w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for ccy in self.currencies:
+            for tenor in self.tenors: w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        self.w_map = w_map
+        
+        # Build the incidence matrix A
+        A = np.zeros((len(all_cycles), len(w_map)))
+        descriptions = []
+        for i, cycle in enumerate(all_cycles):
+            if cycle['type'] == 'tri':
+                p1, p2, p3 = cycle['pairs']
+                A[i, w_map[f's_{p1}']], A[i, w_map[f's_{p2}']], A[i, w_map[f's_{p3}']] = 1, 1, 1
+                descriptions.append(f"Triangular Spot ({' -> '.join(p1.split('/'))} -> {' -> '.join(p2.split('/'))})")
+            elif cycle['type'] == 'cip':
+                pair, tenor, base, term = cycle['pair'], cycle['tenor'], cycle['base'], cycle['term']
+                # Basis = log(S) - log(F) + r_base - r_term
+                A[i, w_map[f's_{pair}']] = 1
+                A[i, w_map[f'f_{pair}_{tenor}']] = -1
+                A[i, w_map[f'r_{base}_{tenor}']] = 1
+                A[i, w_map[f'r_{term}_{tenor}']] = -1
+                descriptions.append(f"CIP {tenor}: {pair}")
+        
+        self.incidence_matrix_A = A
+        self.arbitrage_descriptions = descriptions
+        logging.info(f"Framework setup complete. Monitoring {len(descriptions)} conditions.")
+
+    def get_market_data(self, bq_service, date_str):
+        """Fetches all required market data in parallel and returns a single DataFrame."""
+        logging.info(f"Fetching market data for: {date_str}")
+        spot_universe = list(self.ccy_tickers.values())
+        
+        # Define the three separate data requests
+        spot_req = bql.Request(spot_universe, {'value': bq_service.data.px_last(dates=date_str, fill='prev')})
+        fwd_req = bql.Request(bq_service.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='outright'),
+                              {'value': bq_service.data.curve_rate(side='mid', dates=date_str, fill='prev')})
+        yield_req = bql.Request(bq_service.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='implied_yield'),
+                                {'value': bq_service.data.curve_rate(side='mid', dates=date_str, fill='prev')})
+
+        # === THE CRUCIAL FIX: Execute all requests and call .result() to get the data ===
+        future_response = bq_service.execute(spot_req, fwd_req, yield_req)
+        response_list = future_response.result() # This blocks until data is returned
+        spot_res, fwd_res, yield_res = response_list[0], response_list[1], response_list[2]
+        # ==============================================================================
+
+        # Combine all results into one tidy DataFrame
+        spot_df = spot_res.df().assign(TYPE='SPOT')
+        fwd_df = fwd_res.df().assign(TYPE='FWD')
+        yield_df = yield_res.df().assign(TYPE='YIELD', value=lambda x: x['value'] / 100) # Convert yield to decimal
+
+        return pd.concat([spot_df, fwd_df, yield_df]).reset_index()
+
+    def run_analysis(self, bq_service, date_str):
+        """Main method to run the daily analysis: fetch data, build vector, find arbitrage."""
+        market_data_df = self.get_market_data(bq_service, date_str)
+        if market_data_df.empty:
+            logging.error("No market data retrieved. Aborting analysis.")
+            return None
+
+        # Build the weight vector W from the market data
+        W_emp = np.zeros(len(self.w_map))
+        ticker_to_pair = {v: k for k, v in self.ccy_tickers.items()}
+        pair_to_ccys = {p: p.split('/') for p in self.ccy_tickers}
+        
+        for name, idx in self.w_map.items():
+            val = 0.0
+            try:
+                kind, parts = name.split('_', 1)
+                if kind == 's':
+                    ticker = self.ccy_tickers[parts]
+                    val = market_data_df.query("ID == @ticker and TYPE == 'SPOT'")['value'].iloc[0]
+                    W_emp[idx] = np.log(val)
+                elif kind == 'f':
+                    pair, tenor = parts.rsplit('_', 1)
+                    ticker = self.ccy_tickers[pair]
+                    val = market_data_df.query("ID == @ticker and TYPE == 'FWD' and TENOR == @tenor")['value'].iloc[0]
+                    W_emp[idx] = np.log(val)
+                elif kind == 'r':
+                    ccy, tenor = parts.rsplit('_', 1)
+                    # Find a pair containing this currency to look up the yield
+                    lookup_pair = next(p for p in pair_to_ccys if ccy in pair_to_ccys[p])
+                    ticker = self.ccy_tickers[lookup_pair]
+                    val = market_data_df.query("ID == @ticker and TYPE == 'YIELD' and TENOR == @tenor")['value'].iloc[0]
+                    W_emp[idx] = val # Yields are already rates, no log
+            except (KeyError, IndexError):
+                logging.warning(f"Could not find market data for '{name}'. Defaulting to 0.")
+
+        # The core calculation: A * W = B
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000 # Convert to basis points
+        
+        # Generate final results DataFrame
+        results_df = pd.DataFrame({
+            'Condition': self.arbitrage_descriptions,
+            'Arbitrage (bps)': arbitrage_bps
+        })
+        results_df['Signal'] = np.where(np.abs(results_df['Arbitrage (bps)']) > self.tx_costs_bps, 
+                                        np.sign(results_df['Arbitrage (bps)']), 0)
+        return results_df
+
+# --- Main Execution Block ---
+
+if __name__ == '__main__':
+    try:
+        bq = bql.Service()
+        logging.info("BQL service started successfully.")
+        
+        # --- Central Configuration ---
+        CONFIG = {
+            "currencies": ['USD', 'EUR', 'JPY'],
+            "tenors": ['1M', '3M', '6M', '1Y'],
+            "ccy_tickers": {
+                "EUR/USD": "EURUSD Curncy", # Base/Term
+                "USD/JPY": "USDJPY Curncy",
+                "JPY/EUR": "EURJPY Curncy" # Note: JPY/EUR is synthetic, we use EURJPY and invert
+            }
+        }
+        # A simplified config to ensure it runs
+        simplified_config = {
+            "currencies": ['USD', 'EUR', 'JPY'],
+            "tenors": ['3M', '6M'],
+            "ccy_tickers": { "EUR/USD": "EURUSD Curncy", "USD/JPY": "USDJPY Curncy", "JPY/EUR": "EURJPY Curncy"},
+        }
+
+        engine = ArbitrageEngine(simplified_config)
+
+        # Use previous business day for analysis to ensure data availability
+        analysis_date_str = (pd.Timestamp.now() - pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        
+        logging.info(f"--- Running Arbitrage Matrix Engine for {analysis_date_str} ---")
+        results = engine.run_analysis(bq, analysis_date_str)
+        
+        if results is not None:
+            opportunities = results[results['Signal'] != 0]
+            
+            print("\n" + "="*80)
+            print(f"            --- MASTER ARBITRAGE REPORT FOR: {analysis_date_str} ---")
+            print("="*80)
+
+            if opportunities.empty:
+                print("\n✅ No significant arbitrage opportunities detected after transaction costs.")
+            else:
+                print(f"\n🔥 Detected {len(opportunities)} potential arbitrage opportunities:")
+                for _, row in opportunities.iterrows():
+                    generate_tearsheet(engine, row)
+        else:
+            logging.critical("Execution failed: Could not produce results.")
+            
+    except Exception as e:
+        logging.critical(f"A fatal error occurred in the main execution block: {e}", exc_info=True)
+
