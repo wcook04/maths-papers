@@ -1,0 +1,123 @@
+import bql
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from pandas.tseries.offsets import BDay
+
+# Initialize BQL service
+bq = bql.Service()
+
+# Configuration
+CONFIG = {
+    "pair_ticker": 'EURUSD Curncy',  # EUR/USD currency pair
+    "tenors": ['1M', '3M', '6M', '1Y'],  # Tenors to test
+}
+
+# Mapping for forward rate fields
+tenor_to_field = {
+    '1M': 'fwd_rt_1mo',
+    '3M': 'fwd_rt_3mo',
+    '6M': 'fwd_rt_6mo',
+    '1Y': 'fwd_rt_12mo',
+}
+
+# Mapping for base (EUR) and term (USD) rate tickers
+tenor_to_base_rate = {
+    '1M': 'EUR001M Index',
+    '3M': 'EUR003M Index',
+    '6M': 'EUR006M Index',
+    '1Y': 'EUR012M Index',
+}
+tenor_to_term_rate = {
+    '1M': 'TSFR1M Index',
+    '3M': 'TSFR3M Index',
+    '6M': 'TSFR6M Index',
+    '1Y': 'TSFR12M Index',
+}
+
+# Calculate time intervals (in years) for each tenor
+tenor_to_years = {
+    '1M': 1/12,
+    '3M': 3/12,
+    '6M': 6/12,
+    '1Y': 1.0
+}
+
+# Use a past date with available data
+date_str = '2025-07-23'
+
+# 1. Fetch spot price
+spot_req = bql.Request(CONFIG['pair_ticker'], {'Spot': bq.data.px_last(dates=date_str, fill='prev')})
+spot_resp = bq.execute(spot_req)
+spot_df = spot_resp[0].df()
+if spot_df.empty or spot_df['Spot'].isnull().any():
+    raise ValueError(f"No spot price data for {CONFIG['pair_ticker']} on {date_str}")
+S = spot_df['Spot'].iloc[0]
+log_S = np.log(S)
+
+# 3. Fetch forward prices, rates, and calculate basis for each tenor
+results = []
+for tenor in CONFIG['tenors']:
+    try:
+        # Fetch forward rate using the specific field
+        field_name = tenor_to_field[tenor]
+        fwd_field = getattr(bq.data, field_name)
+        fwd_req = bql.Request(
+            CONFIG['pair_ticker'],
+            {'Forward': fwd_field(dates=date_str, fill='prev')}
+        )
+        fwd_resp = bq.execute(fwd_req)
+        fwd_df = fwd_resp[0].df()
+        if fwd_df.empty or fwd_df['Forward'].isnull().any():
+            print(f"Warning: No forward price data for {tenor}. Skipping.")
+            continue
+        F = fwd_df['Forward'].iloc[0]
+        log_F = np.log(F)
+
+        # Fetch base rate (EURIBOR for tenor)
+        base_ticker = tenor_to_base_rate[tenor]
+        base_rate_req = bql.Request(base_ticker, {'r_base': bq.data.px_last(dates=date_str, fill='prev')})
+        base_rate_resp = bq.execute(base_rate_req)
+        base_rate_df = base_rate_resp[0].df()
+        if base_rate_df.empty or base_rate_df['r_base'].isnull().any():
+            print(f"Warning: No base rate data for {tenor}. Skipping.")
+            continue
+        r_base = base_rate_df['r_base'].iloc[0] / 100
+
+        # Fetch term rate (Term SOFR for tenor)
+        term_ticker = tenor_to_term_rate[tenor]
+        term_rate_req = bql.Request(term_ticker, {'r_term': bq.data.px_last(dates=date_str, fill='prev')})
+        term_rate_resp = bq.execute(term_rate_req)
+        term_rate_df = term_rate_resp[0].df()
+        if term_rate_df.empty or term_rate_df['r_term'].isnull().any():
+            print(f"Warning: No term rate data for {tenor}. Skipping.")
+            continue
+        r_term = term_rate_df['r_term'].iloc[0] / 100
+
+        delta_t = tenor_to_years[tenor]
+        # Calculate basis: b = log(S) + r_term * Δt - log(F) - r_base * Δt
+        basis = log_S + (r_term * delta_t) - log_F - (r_base * delta_t)
+        basis_bps = basis * 10000  # Convert to basis points
+        results.append({
+            'Tenor': tenor,
+            'Forward Price': F,
+            'Basis (bps)': basis_bps,
+            'EUR Rate (%)': r_base * 100,
+            'USD Rate (%)': r_term * 100
+        })
+    except Exception as e:
+        print(f"Error processing {tenor}: {e}")
+
+# 4. Create results DataFrame
+if not results:
+    raise ValueError("No data retrieved for any tenor.")
+results_df = pd.DataFrame(results)
+
+# 5. Display results
+print("\n=== CIP Test Results ===")
+print(f"Currency Pair: {CONFIG['pair_ticker']}")
+print(f"Date: {date_str}")
+print(f"Spot Price: {S:.5f}")
+print("\nResults:")
+print(results_df.to_string(index=False, float_format="%.2f"))
+print("\nNote: A non-zero Basis (bps) indicates a potential arbitrage opportunity.")
