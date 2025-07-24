@@ -1,0 +1,147 @@
+import numpy as np
+import pandas as pd
+import bql
+import logging
+
+class ArbitrageMatrixEngine:
+    def __init__(self, currencies, tenors, ccy_tickers):
+        self.currencies = currencies
+        self.tenors = tenors
+        self.ccy_tickers = ccy_tickers
+        self.tx_costs_bps = 2.0
+        
+        self.w_map = None
+        self.incidence_matrix_A = None
+        self.arbitrage_descriptions = None
+        self.cycle_components = None 
+        self.currency_to_yield_ticker = {}
+        self.w_size = 0
+        
+        self._setup_framework()
+
+    def _setup_framework(self):
+        logging.info("Dynamically setting up the arbitrage matrix framework from CONFIG...")
+        
+        all_cycles = []
+        ccy_pairs = list(self.ccy_tickers.keys())
+        
+        all_cycles.append({'type': 'tri', 'pairs': ccy_pairs})
+        
+        for pair in ccy_pairs:
+            base_ccy, term_ccy = pair.split('/')
+            for tenor in self.tenors:
+                all_cycles.append({
+                    'type': 'cip', 'pair': pair, 'tenor': tenor, 
+                    'base_ccy': base_ccy, 'term_ccy': term_ccy
+                })
+        
+        idx, w_map = 0, {}
+        for pair in ccy_pairs: w_map[f"s_{pair}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for pair in ccy_pairs: w_map[f"f_{pair}_{tenor}"] = idx; idx += 1
+        for tenor in self.tenors:
+            for ccy in self.currencies: w_map[f"r_{ccy}_{tenor}"] = idx; idx += 1
+        
+        self.w_size, self.w_map = idx, w_map
+        
+        for ccy in self.currencies:
+            found_ticker = next((tkr for pair, tkr in self.ccy_tickers.items() if ccy in pair.split('/')), None)
+            if not found_ticker:
+                raise ValueError(f"Configuration Error: Currency '{ccy}' is not in any defined ccy_tickers pair.")
+            self.currency_to_yield_ticker[ccy] = found_ticker
+
+        A = np.zeros((len(all_cycles), self.w_size))
+        descriptions, components_list = [], []
+        
+        for i, cycle in enumerate(all_cycles):
+            if cycle['type'] == 'tri':
+                p1, p2, p3 = cycle['pairs']
+                A[i, w_map[f's_{p1}']], A[i, w_map[f's_{p2}']], A[i, w_map[f's_{p3}']] = 1, 1, 1
+                descriptions.append(f"Triangular Spot ({p1} -> {p2} -> {p3})")
+            elif cycle['type'] == 'cip':
+                pair, tenor, base, term = cycle['pair'], cycle['tenor'], cycle['base_ccy'], cycle['term_ccy']
+                A[i, w_map[f's_{pair}']] = 1
+                A[i, w_map[f'f_{pair}_{tenor}']] = -1
+                A[i, w_map[f'r_{base}_{tenor}']] = 1
+                A[i, w_map[f'r_{term}_{tenor}']] = -1
+                descriptions.append(f"CIP {tenor}: {pair}")
+            components_list.append(cycle)
+            
+        self.incidence_matrix_A = A
+        self.arbitrage_descriptions = descriptions
+        self.cycle_components = components_list
+        logging.info(f"Framework setup complete. Monitoring {len(descriptions)} conditions.")
+
+    def get_market_data_and_build_w(self, date):
+        logging.info(f"Fetching market data for date: {date}")
+        spot_universe = list(self.ccy_tickers.values())
+        
+        spot_req = bql.Request(spot_universe, {'spot': bq.data.px_last(dates=date, fill='prev')})
+        fwd_universe = bq.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='outright')
+        fwd_req = bql.Request(fwd_universe, {'fwd_outright': bq.data.curve_rate(side='mid', dates=date, fill='prev')})
+        yield_universe = bq.univ.curvemembers(spot_universe, tenors=self.tenors, curve_type='FX', quote_type='implied_yield')
+        yield_req = bql.Request(yield_universe, {'implied_yield': bq.data.curve_rate(side='mid', dates=date, fill='prev') / 100})
+        
+        # =========================================================================
+        # == FINAL FIX APPLIED HERE to solve "'FutureExt' is not subscriptable"  ==
+        # =========================================================================
+        # 1. bq.execute returns a Future object, a placeholder for the result.
+        future_response = bq.execute(spot_req, fwd_req, yield_req)
+
+        # 2. We MUST call .result() on the Future to get the actual list of responses.
+        response_list = future_response.result()
+        
+        # 3. Now we can safely access the items from the resolved list.
+        spot_res, fwd_res, yield_res = response_list[0], response_list[1], response_list[2]
+        # =========================================================================
+
+        all_data = []
+        for res, type_name, val_col in [(spot_res, 'SPOT', 'spot'), (fwd_res, 'FWD', 'fwd_outright'), (yield_res, 'YIELD', 'implied_yield')]:
+            if res and res.df is not None and not res.df().empty:
+                df = res.df().reset_index().rename(columns={val_col: 'VALUE'})
+                df['TYPE'] = type_name
+                if 'TENOR' not in df.columns: df['TENOR'] = pd.NaT 
+                all_data.append(df[['ID', 'TYPE', 'TENOR', 'VALUE']])
+            else:
+                logging.warning(f"No data returned for {type_name} fetch.")
+
+        if not all_data:
+            logging.error("CRITICAL: No market data was retrieved. Aborting.")
+            return np.array([])
+
+        market_data_df = pd.concat(all_data).dropna(subset=['VALUE']).set_index(['ID', 'TYPE', 'TENOR'])
+        W_emp = np.zeros(self.w_size)
+
+        for name, idx in self.w_map.items():
+            parts = name.split('_')
+            try:
+                if parts[0] == 's':
+                    val = market_data_df.loc[(self.ccy_tickers[parts[1]], 'SPOT', pd.NaT), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif parts[0] == 'f':
+                    val = market_data_df.loc[(self.ccy_tickers[parts[1]], 'FWD', parts[2]), 'VALUE']
+                    W_emp[idx] = np.log(val)
+                elif parts[0] == 'r':
+                    lookup_ticker = self.currency_to_yield_ticker[parts[1]]
+                    val = market_data_df.loc[(lookup_ticker, 'YIELD', parts[2]), 'VALUE']
+                    W_emp[idx] = val 
+            except (KeyError, IndexError):
+                logging.warning(f"Could not find market data for '{name}'. Defaulting to 0.")
+                W_emp[idx] = 0.0
+        return W_emp
+
+    def run_daily_analysis(self, date):
+        W_emp = self.get_market_data_and_build_w(date)
+        if not W_emp.any():
+            return None, None
+
+        arbitrage_vector_B = self.incidence_matrix_A @ W_emp
+        arbitrage_bps = arbitrage_vector_B * 10000
+        trade_signals = np.where(np.abs(arbitrage_bps) > self.tx_costs_bps, np.sign(arbitrage_bps), 0)
+        
+        results_df = pd.DataFrame({
+            'Condition': self.arbitrage_descriptions,
+            'Arbitrage (bps)': arbitrage_bps,
+            'Signal': trade_signals
+        })
+        return results_df, W_emp
