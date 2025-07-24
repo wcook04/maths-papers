@@ -1,0 +1,120 @@
+import bql
+import pandas as pd
+import numpy as np
+import logging
+
+# Setup basic logging to see the steps of the process
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def run_arbitrage_analysis():
+    """
+    Performs a minimal test of fundamental no-arbitrage conditions based on the 
+    provided documentation. It checks for both Triangular Arbitrage and Covered
+    Interest Parity (CIP) deviations.
+    """
+    logging.info("--- Starting Minimal No-Arbitrage Test ---")
+    try:
+        # --- Configuration ---
+        # As per the prompt, we will analyze GBP, USD, and JPY
+        pairs_to_test = ['GBPUSD Curncy', 'USDJPY Curncy', 'GBPJPY Curncy']
+        cip_tenors = ['1Y', '10Y']
+        # The date for the analysis will be the last business day
+        date_str = (pd.Timestamp.now() - pd.offsets.BDay(1)).strftime('%Y-%m-%d')
+        
+        logging.info("Connecting to BQL service...")
+        bq = bql.Service()
+        logging.info("✅ SUCCESS: BQL service connected.")
+
+        #======================================================================
+        # PART 1: Triangular Arbitrage Test (GBP -> USD -> JPY -> GBP)
+        #======================================================================
+        # This tests the condition: s_gbpusd + s_usdjpy + s_jpygbp = 0
+        # [span_0](start_span)Since log(1/X) = -log(X), s_jpygbp is -s_gbpjpy[span_0](end_span).
+        logging.info("--- Commencing Part 1: Triangular Arbitrage Test ---")
+        
+        spot_req = bql.Request(pairs_to_test, {'S': bq.data.px_last(dates=date_str, fill='prev')})
+        spot_response = bq.execute(spot_req)
+        spot_df = pd.concat([res.df() for res in spot_response], axis=1)
+
+        if spot_df.shape[1] < 3:
+            raise ValueError("Failed to retrieve all three spot rates for triangular arbitrage.")
+
+        # [span_1](start_span)Extract log-prices[span_1](end_span)
+        s_gbpusd = np.log(spot_df.loc[spot_df.index[0], ('S', 'GBPUSD Curncy')])
+        s_usdjpy = np.log(spot_df.loc[spot_df.index[0], ('S', 'USDJPY Curncy')])
+        s_gbpjpy = np.log(spot_df.loc[spot_df.index[0], ('S', 'GBPJPY Curncy')])
+        
+        # [span_2](start_span)Calculate the basis: s_gbpusd + s_usdjpy - s_gbpjpy[span_2](end_span)
+        triangular_basis_bps = (s_gbpusd + s_usdjpy - s_gbpjpy) * 10000
+
+        print("\n" + "="*60)
+        print("         📐 TRIANGULAR ARBITRAGE ANALYSIS 📐")
+        print("="*60)
+        print(f"Date: {date_str}")
+        print(f"Cycle: GBP -> USD -> JPY -> GBP")
+        print("-"*60)
+        print("INPUTS (Log-Prices):")
+        print(f"  s_gbpusd:            {s_gbpusd:10.5f}")
+        print(f"  s_usdjpy:            {s_usdjpy:10.5f}")
+        print(f"  s_jpygbp (-s_gbpjpy): {-s_gbpjpy:10.5f}")
+        print("-"*60)
+        print("RESULT:")
+        print(f"  Triangular Basis:    {triangular_basis_bps:10.2f} bps")
+        print("="*60)
+        
+        #======================================================================
+        # PART 2: Covered Interest Parity (CIP) Analysis
+        #======================================================================
+        # [span_3](start_span)This tests the condition: s - f - (r_base - r_term)*dt = 0.[span_3](end_span)
+        # We use the 'implied_yield' as the market's view on the interest
+        # [span_4](start_span)rate differential (r_base - r_term).[span_4](end_span)
+        logging.info("--- Commencing Part 2: Covered Interest Parity (CIP) Analysis ---")
+        
+        for pair in pairs_to_test:
+            logging.info(f"Fetching CIP data for {pair}...")
+            
+            # Fetch Spot (S)
+            spot_val = np.log(spot_df.loc[spot_df.index[0], ('S', pair)])
+
+            # Fetch Forwards (F) and Implied Yields for all tenors at once
+            fwd_univ = bq.univ.curvemembers(pair, tenors=cip_tenors, curve_type='FX', quote_type='outright')
+            yield_univ = bq.univ.curvemembers(pair, tenors=cip_tenors, curve_type='FX', quote_type='implied_yield')
+            
+            fwd_req = bql.Request(fwd_univ, {'F': bq.data.curve_rate(side='mid', dates=date_str)})
+            yield_req = bql.Request(yield_univ, {'Implied_Yield': bq.data.curve_rate(side='mid', dates=date_str)})
+            
+            fwd_df = bq.execute(fwd_req)[0].df()
+            yield_df = bq.execute(yield_req)[0].df()
+
+            print("\n" + "="*60)
+            print(f"         📈 CIP ANALYSIS: {pair} 📈")
+            print("="*60)
+            
+            # Calculate and display results for each tenor
+            for tenor in cip_tenors:
+                fwd_val = np.log(fwd_df[fwd_df['TENOR'] == tenor]['F'].iloc[0])
+                implied_yield = yield_df[yield_df['TENOR'] == tenor]['Implied_Yield'].iloc[0] / 100
+                dt = int(tenor[:-1]) # Extract year from tenor string '1Y' -> 1
+
+                # Basis = log(S) - log(F) - (Implied_Yield * dt)
+                cip_basis_bps = (spot_val - fwd_val - (implied_yield * dt)) * 10000
+
+                print(f"  --- Tenor: {tenor} ---")
+                print(f"  Log-Spot (s):          {spot_val:10.5f}")
+                print(f"  Log-Forward (f):       {fwd_val:10.5f}")
+                print(f"  Implied Yield Diff:    {implied_yield:9.3%}")
+                print(f"  CIP Basis:             {cip_basis_bps:10.2f} bps")
+
+            print("="*60)
+
+        logging.info("✅✅✅ ANALYSIS COMPLETE ✅✅✅")
+
+    except Exception as e:
+        print("\n" + "!"*60)
+        print("           ❌❌❌ TEST FAILED ❌❌❌")
+        print("!"*60)
+        logging.critical(f"A critical error occurred: {e}", exc_info=True)
+        print("!"*60)
+
+if __name__ == '__main__':
+    run_arbitrage_analysis()
