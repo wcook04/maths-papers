@@ -1,0 +1,181 @@
+# 1. IMPORT LIBRARIES
+import bquant as bq
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# 2. CONFIGURATION
+# This section allows you to easily modify the script's parameters.
+# -----------------------------------------------------------------------------
+BOND_TICKERS = {
+    'US 10Y': 'USGG10YR Index',
+    'UK 10Y': 'GUKG10 Index',
+    'Germany 10Y': 'GDBR10 Index', # Key EU Benchmark
+    'Japan 10Y': 'GJGB10 Index',
+    'Australia 10Y': 'GAGB10 Index',
+    'China 10Y': 'GCNY10YR Index'
+}
+DATA_FIELD = 'PX_LAST'
+DATE_RANGE = bq.func.range('-5Y', '0D')
+CSV_FILENAME = '10Y_Govt_Bond_Prices_v2.csv'
+# -----------------------------------------------------------------------------
+
+
+# 3. DATA RETRIEVAL AND PROCESSING
+# -----------------------------------------------------------------------------
+print("Requesting data from Bloomberg...")
+
+# BQL request for the historical prices of all bonds in the universe
+data_item = {DATA_FIELD: bq.data.px_last(dates=DATE_RANGE).dropna()}
+request = bql.Request(list(BOND_TICKERS.values()), data_item)
+response = bq.execute(request)
+raw_data = response[0].df()
+
+# Pivot the table for a clean, plottable format
+price_table = raw_data.pivot(index='DATE', columns='ID', values=DATA_FIELD)
+
+# Rename columns to user-friendly names
+price_table = price_table.rename(columns={v: k for k, v in BOND_TICKERS.items()})
+
+# Robustly handle non-trading days by forward-filling data, then remove any remaining NaNs
+price_table = price_table.fillna(method='ffill').dropna()
+
+print("Data processed successfully.")
+
+
+# 4. CSV EXPORT
+# -----------------------------------------------------------------------------
+# Save the final table to a CSV file
+price_table.to_csv(CSV_FILENAME)
+print(f"Data successfully saved to '{CSV_FILENAME}'")
+
+
+# 5. DYNAMIC PLOTTING
+# -----------------------------------------------------------------------------
+# Use a professional plot style
+plt.style.use('seaborn-v0_8-darkgrid')
+
+# Create a figure and axes object for more control over the plot
+fig, ax = plt.subplots(figsize=(15, 8))
+
+# Plot each bond's price series
+price_table.plot(ax=ax, linewidth=2)
+
+# --- Automatic & Robust Formatting ---
+# Title and labels
+ax.set_title('10-Year Government Bond Prices', fontsize=18, weight='bold', pad=20)
+ax.set_xlabel('Date', fontsize=12)
+ax.set_ylabel('Price (PX_LAST)', fontsize=12)
+
+# Legend formatting
+ax.legend(title='Bonds', fontsize=11)
+
+# Grid and tick formatting
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+plt.setp(ax.get_xticklabels(), rotation=0, ha='center')
+
+# Automatically adjust layout to prevent labels from overlapping
+fig.tight_layout()
+
+print("Generating plot...")
+plt.show()
+
+
+
+
+
+
+
+
+
+
+--------0
+# 1. IMPORT LIBRARIES
+import bquant as bq
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# 2. CONFIGURATION
+# This section defines the key parameters for the analysis.
+# -----------------------------------------------------------------------------
+# Tickers for major Investment Grade (IG) corporate bond indices.
+# These act as a proxy for corporate borrowing costs in each region.
+INDEX_TICKERS = {
+    'EUR IG Corp': 'LECPTREU Index',
+    'USD IG Corp': 'LUACTRUU Index',
+    'JPY IG Corp': 'LJCACPTU Index',
+    'AUD IG Corp': 'LAUACPTU Index',
+    'CNY IG Corp': 'LCBACPTU Index'
+}
+
+# Define the date range for the historical analysis.
+DATE_RANGE = bq.func.range('-5Y', '0D')
+
+# Define the name for the output CSV file.
+CSV_FILENAME = 'global_corp_yields.csv'
+# -----------------------------------------------------------------------------
+
+
+# 3. DATA RETRIEVAL AND PROCESSING
+# -----------------------------------------------------------------------------
+print("Requesting corporate bond index data from Bloomberg...")
+
+# Define the BQL request to get historical yield for the indices.
+# [span_0](start_span)[span_1](start_span)The bq.data.yield_() item is used to retrieve the yield to maturity.[span_0](end_span)[span_1](end_span)
+data_item = {'Yield': bq.data.yield_(dates=DATE_RANGE)}
+request = bql.Request(list(INDEX_TICKERS.values()), data_item)
+response = bq.execute(request)
+
+# Process the response into a clean DataFrame.
+raw_data = response[0].df()
+
+# [span_2](start_span)[span_3](start_span)Pivot the table to create a column for each index's yield.[span_2](end_span)[span_3](end_span)
+yield_table = raw_data.pivot(index='DATE', columns='ID', values='Yield')
+
+# Rename columns to user-friendly names for the plot legend.
+yield_table = yield_table.rename(columns={v: k for k, v in INDEX_TICKERS.items()})
+
+# Clean the data by forward-filling missing values.
+yield_table = yield_table.fillna(method='ffill').dropna()
+
+print("Data processed successfully.")
+
+
+# 4. CSV EXPORT
+# -----------------------------------------------------------------------------
+yield_table.to_csv(CSV_FILENAME)
+print(f"Data successfully saved to '{CSV_FILENAME}'")
+
+
+# 5. PLOTTING THE STORY
+# -----------------------------------------------------------------------------
+# Use a professional plot style.
+plt.style.use('seaborn-v0_8-darkgrid')
+fig, ax = plt.subplots(figsize=(15, 8))
+
+# Plot the yield for each region.
+yield_table.plot(ax=ax, linewidth=2.5, alpha=0.9)
+
+# --- Formatting the Plot for Visual Impact ---
+# The title hints at the economic story without stating it explicitly.
+ax.set_title('The Global Hunt for Cheaper Borrowing Costs', fontsize=18, weight='bold', pad=20)
+ax.set_xlabel('Date', fontsize=12)
+ax.set_ylabel('Average Corporate Bond Yield (%)', fontsize=12)
+
+# Highlight the Eurozone line to draw attention to it.
+for line in ax.get_lines():
+    if line.get_label() == 'EUR IG Corp':
+        line.set_linewidth(4)
+        line.set_alpha(1.0)
+
+# Format the legend, grid, and layout for a clean finish.
+ax.legend(title='Region', fontsize=11)
+ax.grid(True, which='major', linestyle='--', linewidth=0.5)
+fig.tight_layout()
+
+print("Generating plot...")
+plt.show()
+
+
+
