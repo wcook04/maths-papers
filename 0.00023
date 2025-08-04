@@ -1,0 +1,356 @@
+# =============================================================================
+# --- Market Fabric Model (v4.2-BQ): Definitive BQuant Implementation (FIXED) ---
+#
+# This script represents the final, robust version of the Market Fabric Model,
+# fully adapted for the Bloomberg BQuant environment. It replaces external
+# data sources with direct, high-quality BQL queries while retaining the
+# complete analytical and visualization architecture.
+#
+# CORRECTIONS:
+# - Replaced the legacy 'bq' module calls with the modern 'bql.Service()' object pattern.
+# - The BQuant environment is now validated by successfully initializing the BQL Service.
+# - The data acquisition function (`acquire_data_bquant`) is updated to use the BQL service
+#   object, ensuring stable and correct communication with Bloomberg's backend.
+# - Added robust initialization and error handling to the main execution block.
+# =============================================================================
+
+# --- CELL 1: IMPORTS AND BQUANT-READY CONFIGURATION ---
+
+import pandas as pd
+import numpy as np
+import itertools
+import matplotlib.pyplot as plt
+import seaborn as sns
+from tqdm.auto import tqdm
+import warnings
+import sys
+
+# BQuant-specific imports with environment check
+try:
+    import bql
+    BQUANT_AVAILABLE = True
+    print("INFO: Bloomberg BQL module imported successfully. Live data mode is available.")
+except ImportError:
+    BQUANT_AVAILABLE = False
+    print("CRITICAL WARNING: Bloomberg BQL module not found. This script requires a BQuant environment to fetch live data.")
+
+# --- Configuration Dictionary (with Bloomberg Tickers) ---
+CONFIG = {
+    'assets': {
+        'STOCKS':   'SPY US Equity',       # S&P 500 ETF
+        'BONDS':    'TLT US Equity',       # 20+ Year Treasury Bond ETF
+        'GOLD':     'GLD US Equity',       # Gold ETF
+        'CURRENCY': 'AUDJPY Curncy',       # AUD/JPY Carry Trade Proxy
+    },
+    'start_date': '2007-01-01',
+    'end_date': pd.to_datetime('today').strftime('%Y-%m-%d'),
+    'correlation_window_w': 60,   # 3 months of trading days
+    'calibration_window_l': 252,  # 1 year of trading days
+    'min_obs_in_corr_window': 50, # Min required data points for a valid correlation
+    'ridge_lambda': 1e-8,         # Regularization parameter for matrix inversion
+    'condition_number_threshold': 1e12, # Threshold to trigger regularization
+    'crisis_dates': {
+        'GFC Lehman': '2008-09-15',
+        'S&P Downgrade': '2011-08-05',
+        'COVID Crash': '2020-03-09'
+    }
+}
+plt.style.use('seaborn-v0_8-whitegrid')
+warnings.filterwarnings('ignore', category=FutureWarning)
+
+
+# =============================================================================
+# --- CELL 2: DATA CONSTRUCTION (BQUANT ADAPTED) ---
+# =============================================================================
+
+def acquire_data_bquant(config, bql_service):
+    """
+    Fetches price data using a BQuant Service object, validates it, and calculates
+    sanitized log returns.
+    """
+    tickers = list(config['assets'].values())
+    print(f"Requesting data for tickers: {tickers}")
+
+    # 1. Prepare and Execute BQL Request using the provided service object
+    date_range = bql_service.func.range(config['start_date'], config['end_date'])
+    # Use fill='prev' to handle non-trading days, ensuring a continuous time series
+    # Use 'PX_LAST' as the key to align with the response DataFrame's value column
+    data_item = {'PX_LAST': bql_service.data.px_last(dates=date_range, fill='prev')}
+    request = bql.Request(tickers, data_item)
+    
+    print("Executing BQL request... (This may take a moment)")
+    response = bql_service.execute(request)
+    print("BQL request complete.")
+
+    # 2. Process and Validate BQL Response
+    price_df_long = response[0].df()
+    if price_df_long.empty:
+        raise ValueError("BQuant query returned no data. Check tickers, date range, or entitlements.")
+
+    # Pivot from long to wide format (Dates as index, Tickers as columns)
+    price_df_raw = price_df_long.pivot(index='DATE', columns='ID', values='PX_LAST')
+    price_df_raw.index = pd.to_datetime(price_df_raw.index)
+
+    missing_tickers = set(tickers) - set(price_df_raw.columns)
+    if missing_tickers:
+        raise ValueError(f"The following tickers failed to return data from BQuant: {list(missing_tickers)}")
+
+    # 3. Map Tickers to Asset Names and Sanitize
+    ticker_map = {v: k for k, v in config['assets'].items()}
+    price_df = price_df_raw.rename(columns=ticker_map)[list(config['assets'].keys())]
+
+    sanitized_df = price_df.copy()
+    if (sanitized_df <= 0).any().any():
+        warnings.warn("Found non-positive prices. Applying forward-fill.")
+        sanitized_df[sanitized_df <= 0] = np.nan
+    
+    sanitized_df.ffill(inplace=True)
+
+    if sanitized_df.diff().rolling(5).std().eq(0).any().any():
+        warnings.warn("Detected periods of constant prices for >= 5 days in one or more assets.")
+
+    # 4. Calculate Returns and Final Validation
+    returns_df = np.log(sanitized_df / sanitized_df.shift(1))
+    returns_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    
+    min_data_len = config['calibration_window_l'] + config['correlation_window_w']
+    if len(returns_df.dropna()) < min_data_len:
+         raise ValueError(f"Insufficient data. Need at least {min_data_len} days, found {len(returns_df.dropna())}.")
+
+    return returns_df.dropna()
+
+def construct_predictive_dataframe(returns_df, config):
+    """
+    Constructs the final dataframe for the predictive model.
+    (This function is independent of the data source and remains unchanged).
+    """
+    w = config['correlation_window_w']
+
+    forces = pd.DataFrame(index=returns_df.index)
+    forces['F_market'] = returns_df.mean(axis=1)
+    forces['F_dispersion'] = returns_df.std(axis=1)
+    forces['F_flight'] = returns_df[['STOCKS', 'CURRENCY']].mean(axis=1) - returns_df[['BONDS', 'GOLD']].mean(axis=1)
+
+    asset_names = returns_df.columns
+    pairs = list(itertools.combinations(asset_names, 2))
+    dates = returns_df.index[w-1:]
+    
+    corr_values = []
+    date_iterator = tqdm(enumerate(dates), total=len(dates), desc="Calculating Rolling Correlations", leave=False)
+
+    for _, date in date_iterator:
+        window = returns_df.loc[:date].tail(w)
+        if window.count().min() < config['min_obs_in_corr_window']:
+            corr_values.append([np.nan] * len(pairs))
+            continue
+        corrs = window.corr(method='spearman')
+        corr_values.append([corrs.loc[p1, p2] for p1, p2 in pairs])
+
+    corr_df = pd.DataFrame(corr_values, index=dates, columns=[f'corr_{p1}-{p2}' for p1, p2 in pairs]).ffill()
+    z_df = np.arctanh(corr_df.clip(-0.999, 0.999))
+
+    deformations = pd.DataFrame(index=z_df.index)
+    deformations['D_correlation'] = z_df.mean(axis=1)
+    deformations['D_structure'] = z_df.std(axis=1)
+
+    predictors = forces.join(deformations, how='inner')
+    target = returns_df.rename(columns=lambda c: f"R_{c}")
+    return predictors.join(target.shift(-1), how='inner').dropna()
+
+
+# =============================================================================
+# --- CELL 3: DEFINITIVE PREDICTIVE CALCULATION ENGINE ---
+# =============================================================================
+
+def _get_safe_pinv(matrix, ridge_lambda, cond_threshold):
+    """Calculates a regularized pseudo-inverse for numerical stability."""
+    if np.linalg.cond(matrix) > cond_threshold:
+        matrix_reg = matrix + ridge_lambda * np.eye(matrix.shape[0])
+        return np.linalg.pinv(matrix_reg)
+    return np.linalg.pinv(matrix)
+
+def calculate_ksi_predictive(predictive_df, config):
+    """Performs the rolling predictive calculation for all KSI components."""
+    l, ridge_lambda, cond_threshold = config['calibration_window_l'], config['ridge_lambda'], config['condition_number_threshold']
+    force_cols = [c for c in predictive_df.columns if c.startswith('F_')]
+    deform_cols = [c for c in predictive_df.columns if c.startswith('D_')]
+    predictor_cols = force_cols + deform_cols
+    return_cols = [c for c in predictive_df.columns if c.startswith('R_')]
+    ksi_results = []
+    
+    iterator = tqdm(range(l, len(predictive_df)), desc="Calculating Predictive KSI", unit="day")
+    for t in iterator:
+        window = predictive_df.iloc[t - l : t]
+        X_hist, Y_hist = window[predictor_cols].values, window[return_cols].values
+        
+        X_t_minus_1 = predictive_df.iloc[t-1][predictor_cols].values
+        F_t_minus_1 = predictive_df.iloc[t-1][force_cols].values
+        D_t_minus_1 = predictive_df.iloc[t-1][deform_cols].values
+        Y_t_actual = predictive_df.iloc[t][return_cols].values
+
+        X_aug = np.c_[np.ones(l), X_hist]
+        try:
+            beta_hat, _, _, _ = np.linalg.lstsq(X_aug, Y_hist, rcond=None)
+        except np.linalg.LinAlgError: continue
+
+        residual_t = Y_t_actual - (np.hstack([1, X_t_minus_1]) @ beta_hat)
+        residuals_hist = Y_hist - (X_aug @ beta_hat)
+        
+        try:
+            Sigma_eps_inv = _get_safe_pinv(np.cov(residuals_hist, rowvar=False, ddof=1), ridge_lambda, cond_threshold)
+        except (np.linalg.LinAlgError, ValueError): Sigma_eps_inv = np.eye(len(return_cols))
+
+        ksi2_residual = residual_t.T @ Sigma_eps_inv @ residual_t
+        
+        Sigma_F_inv = _get_safe_pinv(np.cov(window[force_cols].values, rowvar=False, ddof=1), ridge_lambda, cond_threshold)
+        ksi2_force = (F_t_minus_1 - window[force_cols].mean().values).T @ Sigma_F_inv @ (F_t_minus_1 - window[force_cols].mean().values)
+        
+        Sigma_D_inv = _get_safe_pinv(np.cov(window[deform_cols].values, rowvar=False, ddof=1), ridge_lambda, cond_threshold)
+        ksi2_deformation = (D_t_minus_1 - window[deform_cols].mean().values).T @ Sigma_D_inv @ (D_t_minus_1 - window[deform_cols].mean().values)
+
+        ksi_results.append({'Date': predictive_df.index[t], 'KSI_Residual': np.sqrt(max(0, ksi2_residual)),
+                            'KSI_Force': np.sqrt(max(0, ksi2_force)), 'KSI_Deformation': np.sqrt(max(0, ksi2_deformation))})
+        
+    return pd.DataFrame(ksi_results).set_index('Date')
+
+
+# =============================================================================
+# --- CELL 4: STANDALONE VISUALIZATION FUNCTIONS ---
+# =============================================================================
+
+def plot_panel_1_input_stress_magnitude(plot_df, config):
+    """Plots the total magnitude of the input stress over time."""
+    if plot_df.empty: print("Skipping Panel 1: No data to plot."); return
+    fig, ax = plt.subplots(figsize=(16, 8))
+    stress_threshold = plot_df['KSI_Input_Total'].quantile(0.95)
+    high_stress_mask = plot_df['KSI_Input_Total'] > stress_threshold
+    ax.plot(plot_df.index, plot_df['KSI_Input_Total'], color='black', lw=1.0, label='Total Input Stress')
+    ax.fill_between(plot_df.index, plot_df['KSI_Input_Total'], 0, where=high_stress_mask, color='crimson', alpha=0.6, label='High-Stress Conditions (>95th percentile)')
+    ax.fill_between(plot_df.index, plot_df['KSI_Input_Total'], 0, where=~high_stress_mask, color='gray', alpha=0.3)
+    for name, date_str in config['crisis_dates'].items():
+        date = pd.to_datetime(date_str)
+        if date in plot_df.index:
+            stress_level = plot_df.loc[date, 'KSI_Input_Total']
+            ax.axvline(date, color='navy', linestyle=':', lw=1.5)
+            ax.annotate(name, xy=(date, stress_level), xytext=(date, stress_level * 1.1 + 1), arrowprops=dict(facecolor='navy', shrink=0.05, width=1, headwidth=8), ha='center', va='bottom', bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="navy", lw=1, alpha=0.9))
+    ax.set_title('1. Total Market Condition Stress: A Measure of Systemic Danger', fontsize=20, weight='bold')
+    ax.set_ylabel('Input Stress Magnitude ($KSI_{Input}$)', fontsize=14); ax.set_xlabel('Date', fontsize=14)
+    ax.set_xlim(plot_df.index.min(), plot_df.index.max()); ax.set_ylim(0)
+    ax.legend(loc='upper left', fontsize=12); ax.grid(True, which='both', linestyle='--', linewidth=0.5); plt.tight_layout(); plt.show()
+
+def plot_panel_2_input_stress_character(plot_df, config):
+    """Plots the distribution of the input stress angle."""
+    if plot_df.empty: print("Skipping Panel 2: No data to plot."); return
+    fig, ax = plt.subplots(figsize=(10, 8))
+    high_stress_mask = plot_df['KSI_Input_Total'] > plot_df['KSI_Input_Total'].quantile(0.95)
+    sns.kdeplot(data=plot_df, x='Angle', fill=True, ax=ax, color='gray', label=f'All Periods (Median: {plot_df.Angle.median():.1f}°)', lw=2)
+    sns.kdeplot(data=plot_df[high_stress_mask], x='Angle', fill=True, ax=ax, color='crimson', label=f'High-Stress Conditions (Median: {plot_df[high_stress_mask].Angle.median():.1f}°)', lw=2, alpha=0.7)
+    ax.axvline(45, color='k', ls='--', label='Balanced (45°)')
+    median_crisis = plot_df[high_stress_mask].Angle.median()
+    ax.annotate(f'Crises are\nDynamics-Dominated', xy=(median_crisis, 0.005), xytext=(median_crisis - 20, 0.015), arrowprops=dict(facecolor='crimson', shrink=0.05, connectionstyle="arc3,rad=-0.2"), ha='center', va='center', fontsize=12, weight='bold', bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="crimson", lw=1))
+    ax.set_title("2. Distribution of Stress Character: The 'Fingerprint' of a Crisis", fontsize=20, weight='bold')
+    ax.set_xlabel('Input Stress Angle (θ)', fontsize=14); ax.set_ylabel('Density', fontsize=14)
+    ax.set_xlim(0, 90); ax.legend(fontsize=12); ax.grid(True, which='both', linestyle='--', linewidth=0.5); plt.tight_layout(); plt.show()
+
+def plot_panel_3_character_evolution(plot_df, config):
+    """Shows the evolution of the input stress angle, colored by surprise."""
+    if plot_df.empty: print("Skipping Panel 3: No data to plot."); return
+    fig, ax = plt.subplots(figsize=(16, 8))
+    vmax = plot_df['KSI_Residual'].quantile(0.99)
+    sc = ax.scatter(plot_df.index, plot_df['Angle'], c=plot_df['KSI_Residual'], cmap='YlOrRd', s=15, alpha=0.8, vmin=0, vmax=vmax)
+    ax.axhspan(0, 30, color='royalblue', alpha=0.1); ax.axhspan(60, 90, color='darkviolet', alpha=0.1)
+    ax.text(0.01, 0.9, 'Structure-Dominated\n(Correlation changes)', transform=ax.transAxes, fontsize=12, va='top', color='darkviolet')
+    ax.text(0.01, 0.1, 'Dynamics-Dominated\n(Volatility & flight-to-safety)', transform=ax.transAxes, fontsize=12, va='bottom', color='royalblue')
+    ax.axhline(45, color='k', ls='--')
+    ax.set_title('3. Character Evolution: Tracking the Nature of Risk (Colored by Surprise)', fontsize=20, weight='bold')
+    ax.set_ylabel('Input Stress Angle (θ)', fontsize=14); ax.set_xlabel('Date', fontsize=14)
+    ax.set_ylim(0, 90); ax.set_yticks([0, 22.5, 45, 67.5, 90]); ax.set_xlim(plot_df.index.min(), plot_df.index.max())
+    cbar = fig.colorbar(sc, ax=ax); cbar.set_label('Resulting Surprise ($KSI_{Residual}$)', fontsize=14)
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5); plt.tight_layout(); plt.show()
+
+def plot_panel_4_phase_portrait(plot_df, config):
+    """A scatter plot of Force vs. Deformation stress, colored by surprise."""
+    if plot_df.empty: print("Skipping Panel 4: No data to plot."); return
+    fig, ax = plt.subplots(figsize=(10, 10))
+    vmax = plot_df['KSI_Residual'].quantile(0.99)
+    top_surprises_mask = plot_df['KSI_Residual'] > plot_df['KSI_Residual'].quantile(0.99)
+    sc = ax.scatter(plot_df['KSI_Force'], plot_df['KSI_Deformation'], c=plot_df['KSI_Residual'], cmap='YlOrRd', s=30, alpha=0.5, vmin=0, vmax=vmax, label='All Days')
+    ax.scatter(plot_df.loc[top_surprises_mask, 'KSI_Force'], plot_df.loc[top_surprises_mask, 'KSI_Deformation'], c=plot_df.loc[top_surprises_mask, 'KSI_Residual'], cmap='YlOrRd', s=100, alpha=1.0, vmin=0, vmax=vmax, edgecolor='black', linewidth=1.5, marker='*', label='Top 1% Surprising Outcomes')
+    ax.set_title('4. Stress Phase Portrait: Where Do Surprises Occur?', fontsize=20, weight='bold')
+    ax.set_xlabel('Dynamics Stress ($KSI_{Force}$)', fontsize=14); ax.set_ylabel('Structure Stress ($KSI_{Deformation}$)', fontsize=14)
+    ax.set_aspect('equal', adjustable='box'); max_lim = max(plot_df['KSI_Force'].max(), plot_df['KSI_Deformation'].max()) * 1.05
+    ax.set_xlim(0, max_lim); ax.set_ylim(0, max_lim)
+    cbar = fig.colorbar(sc, ax=ax); cbar.set_label('Resulting Surprise ($KSI_{Residual}$)', fontsize=14)
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5); ax.legend(fontsize=12); plt.tight_layout(); plt.show()
+
+
+# =============================================================================
+# --- MAIN EXECUTION BLOCK ---
+# =============================================================================
+
+def run_analysis():
+    """Main function to orchestrate the entire analysis pipeline."""
+    # --- BQuant Service Initialization ---
+    if not BQUANT_AVAILABLE:
+        print("\n--- ANALYSIS HALTED ---")
+        print("Error: The 'bql' library is required but not found. Please run this script in a BQuant environment.")
+        return
+
+    try:
+        print("Initializing BQuant service...")
+        bql_service = bql.Service()
+        print("BQuant service initialized successfully.")
+    except Exception as e:
+        print("\n--- ANALYSIS HALTED ---")
+        print("Error: Failed to initialize the BQuant service.")
+        print(f"Details: {e}")
+        return
+
+    # --- Main Analysis Pipeline ---
+    try:
+        print("\n--- 0. CONFIGURATION VALIDATION ---")
+        assert CONFIG['correlation_window_w'] > 20, "Correlation window is too short."
+        assert CONFIG['calibration_window_l'] > 100, "Calibration window is too short."
+        assert CONFIG['min_obs_in_corr_window'] <= CONFIG['correlation_window_w'], "min_obs_in_corr_window cannot exceed correlation_window_w."
+        print("Configuration seems valid.")
+
+        print("\n--- 1. DATA CONSTRUCTION (using BQuant) ---")
+        # Pass the initialized service to the data function
+        raw_returns = acquire_data_bquant(CONFIG, bql_service)
+        predictive_df = construct_predictive_dataframe(raw_returns, CONFIG)
+        print(f"Predictive dataframe constructed with shape: {predictive_df.shape}")
+        
+        print("\n--- 2. KSI CALCULATION ---")
+        ksi_df = calculate_ksi_predictive(predictive_df, CONFIG)
+        print(f"KSI DataFrame constructed with shape: {ksi_df.shape}")
+        
+        print("\n--- 3. DIAGNOSTICS & VISUALIZATION ---")
+        plot_df = ksi_df.copy()
+        if not plot_df.empty:
+            plot_df['KSI_Input_Total'] = np.sqrt(plot_df['KSI_Force']**2 + plot_df['KSI_Deformation']**2)
+            plot_df['Angle'] = np.rad2deg(np.arctan2(plot_df['KSI_Deformation'], plot_df['KSI_Force']))
+            
+            print("\nTop 5 Most Surprising Days (Highest KSI_Residual):")
+            print(plot_df.nlargest(5, 'KSI_Residual')[['KSI_Residual', 'KSI_Force', 'KSI_Deformation', 'Angle']])
+
+            plot_panel_1_input_stress_magnitude(plot_df, CONFIG)
+            plot_panel_2_input_stress_character(plot_df, CONFIG)
+            plot_panel_3_character_evolution(plot_df, CONFIG)
+            plot_panel_4_phase_portrait(plot_df, CONFIG)
+        else:
+            print("KSI calculation resulted in an empty dataframe. Skipping all plots.")
+
+        print("\nAnalysis complete.")
+
+    except (ValueError, AssertionError) as e:
+        print(f"\n--- ANALYSIS HALTED ---")
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"\n--- AN UNEXPECTED ERROR OCCURRED ---")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Details: {e}")
+        import traceback
+        traceback.print_exc()
+
+# --- Execute the Analysis ---
+run_analysis()
