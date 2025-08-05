@@ -1,0 +1,92 @@
+Public Sub RefreshAllPivotsRobustly()
+
+    ' --- Variable Declarations ---
+    ' For looping through workbook objects
+    Dim pc As PivotCache
+    
+    ' For tracking progress and errors
+    Dim cacheCount As Long
+    Dim refreshedCount As Long
+    Dim errorCount As Long
+    Dim errorLog As String
+    
+    ' For performance and state management
+    Dim startTime As Double
+    Dim duration As Double
+    Dim originalCalc As XlCalculation
+    Dim originalEvents As Boolean
+
+    ' --- 1. Initial Setup & State Management ---
+    ' Start a timer to measure execution time
+    startTime = Timer
+    
+    ' Optimize performance and prevent screen flicker/unwanted events
+    Application.ScreenUpdating = False
+    originalEvents = Application.EnableEvents
+    Application.EnableEvents = False
+    
+    ' Store the original calculation mode and set to automatic to avoid refresh issues
+    originalCalc = Application.Calculation
+    Application.Calculation = xlCalculationAutomatic
+    
+    ' --- 2. Pre-Refresh Validation ---
+    ' Check if there are any pivot tables in the workbook at all
+    If ThisWorkbook.PivotCaches.Count = 0 Then
+        ' Restore settings before exiting
+        Application.Calculation = originalCalc
+        Application.EnableEvents = originalEvents
+        Application.ScreenUpdating = True
+        MsgBox "No Pivot Tables were found in this workbook.", vbInformation, "Refresh Aborted"
+        Exit Sub
+    End If
+
+    ' --- 3. Main Refresh Logic (Cache-First Approach) ---
+    ' This is the most efficient method for workbooks with multiple pivots sharing a data source.
+    ' Refreshing the cache refreshes all associated pivot tables in one operation.
+    
+    cacheCount = ThisWorkbook.PivotCaches.Count
+    
+    For Each pc In ThisWorkbook.PivotCaches
+        ' Use strategic error handling for the refresh operation only
+        On Error Resume Next
+        pc.Refresh
+        
+        ' Check if an error occurred during the refresh of this specific cache
+        If Err.Number <> 0 Then
+            ' An error occurred, log it
+            errorCount = errorCount + 1
+            errorLog = errorLog & vbCrLf & "  - Cache " & (refreshedCount + errorCount) & ": " & Err.Description
+        Else
+            ' Success
+            refreshedCount = refreshedCount + 1
+        End If
+        ' IMPORTANT: Clear the error object and turn normal error handling back on
+        Err.Clear
+        On Error GoTo 0
+    Next pc
+    
+    ' --- 4. Restore Application Settings ---
+    ' Restore settings in the reverse order they were changed
+    Application.Calculation = originalCalc
+    Application.EnableEvents = originalEvents
+    Application.ScreenUpdating = True
+    
+    ' --- 5. Final User Feedback & Summary ---
+    duration = Round(Timer - startTime, 2)
+    Dim finalMsg As String
+    
+    If errorCount = 0 Then
+        ' Perfect execution
+        finalMsg = "Successfully refreshed " & refreshedCount & " of " & cacheCount & " Pivot Caches." & vbCrLf & vbCrLf & _
+                   "All Pivot Tables have been updated."
+        MsgBox finalMsg, vbInformation, "Refresh Complete (" & duration & "s)"
+    Else
+        ' Partial or total failure
+        finalMsg = "Refresh process completed with errors." & vbCrLf & vbCrLf & _
+                   "Succeeded: " & refreshedCount & " of " & cacheCount & " Pivot Caches" & vbCrLf & _
+                   "Failed:    " & errorCount & " of " & cacheCount & " Pivot Caches" & vbCrLf & vbCrLf & _
+                   "Error Details:" & errorLog
+        MsgBox finalMsg, vbExclamation, "Refresh Complete with Errors (" & duration & "s)"
+    End If
+
+End Sub
