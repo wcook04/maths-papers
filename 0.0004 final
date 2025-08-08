@@ -1,0 +1,162 @@
+Of course. Here is the updated 10-slide template. All placeholder plots have been replaced with technical descriptions detailing the chart's design, axes, data inputs, and strategic purpose, as requested. The rest of the slide content retains the placeholder data format.
+Slide 1: Transaction & Capital Structure Overview
+Layout Guidance: A clean, data-first format. Top half is a standard Sources & Uses table. Bottom half lays out the core credit problem and the proposed high-level solution.
+Content & Visuals:
+Sources & Uses (€bn)
+| Sources | Amt. | Uses | Amt. |
+|---|---|---|---|
+| Proposed Bridge Facility | [XX.X] | Equity Purchase of DB Schenker | [XX.X] |
+| Proposed Equity (ABB) | [X.X] | Assumed Net Debt | [X.X] |
+| DSV Cash | [X.X] | Working Capital / Buffer | [X.X] |
+|  |  | Fees & Expenses | [X.X] |
+| Total Sources | [XX.X] | Total Uses | [XX.X] |
+Pro-Forma Net Debt: | [XX.X] | PF Combined EBITDA: | [X.X]
+The Core Problem: Unmitigated [X.X]x Leverage Breaches [X.X]x Policy
+ * A simplistic, all-debt financing approach results in ~[X.X]x peak leverage.
+ * This leverage level would likely trigger immediate rating agency action to ‘BBB’, imposing a permanent and significant funding cost penalty.
+Proposed Architecture: A Phased, De-risked Path to <[X.X]x Leverage
+ * Day 1: Underwritten Bridge + ABB to achieve ~[X.X]x leverage, immediately signaling credit discipline.
+ * Take-Out: Investment Grade Bonds + Securitization to lock in permanent capital and reach ~[X.X]x leverage.
+ * Steady State: Free Cash Flow + Synergies drive leverage to the long-term target of <[X.X]x.
+Slide 2: Industrial Logic & Synergy Quantification
+Layout Guidance: Top half is a quantitative comparison table. Bottom half contains a synergy phasing table and a verbal description of the synergy waterfall chart.
+Content & Visuals:
+Key Operating Metrics (LTM)
+| Metric | DSV A/S | DB Schenker | Pro-Forma |
+|---|---|---|---|
+| Revenue (€bn) | [XX.X] | [XX.X] | [XX.X] |
+| EBITDA (€bn) | [X.X] | [X.X] | [X.X] |
+| EBITDA Margin (%) | [XX.X]% | [XX.X]% | [XX.X]% |
+Underlying Justifications & Assumptions
+ * Performance Gap: Our analysis indicates Schenker’s EBIT per employee is approximately [XX]% of DSV’s, and its personnel cost intensity is materially higher. This significant operational gap underpins the high-conviction margin uplift case.
+ * Execution Credibility: DSV has a proven and repeatable playbook for integrating under-optimized assets (UTi - [YYYY], Panalpina - [YYYY], GIL - [YYYY]), historically meeting or exceeding synergy targets within a [Y-Z] year timeframe.
+Synergy Phasing & Realisation (€m)
+| Year Post-Close | % Realised | Annual Synergy | Cumulative EBITDA |
+|---|---|---|---|
+| Year 1 | [XX]% | [XXX] | [XXX] |
+| Year 2 | [XX]% | [XXX] | [XXX] |
+| Year 3 | [XXX]% | [XX] | [XXX] |
+Chart Description: Synergy Waterfall
+ * Chart Type: A standard waterfall chart visually bridging from a starting value to an ending value.
+ * Y-Axis: Monetary value in millions of Euros (€m).
+ * X-Axis: Categorical, representing the components of the EBITDA build-up.
+ * Data Series: The chart will begin with a bar representing Schenker's Standalone LTM EBITDA. It will be followed by a series of positive (green) bars, each representing a key synergy category (e.g., "Margin Uplift," "Network Optimisation," "IT Consolidation," "Overhead Removal"). The chart will conclude with a final bar representing the total Pro-Forma Synergized EBITDA. The value for each bar is derived from the synergy quantification model.
+ * Purpose: To clearly and intuitively illustrate how the identified synergies build upon the target's standalone profitability to arrive at the final, enhanced earnings profile that underpins the deal's value.
+Slide 3: Credit Impact Analysis: ‘A-’ vs. ‘BBB’ Scenarios
+Layout Guidance: A pure credit analysis sheet. It uses a technical description of a credit curve chart to visually prove the quantifiable cost of a credit rating downgrade.
+Content & Visuals:
+The “Fallen Angel” Penalty is Quantifiable and Permanent
+ * Our proposed architecture is explicitly designed to avoid key rating agency downgrade triggers, which we expect would include sustained leverage approaching [X.X]x (Moody’s-adjusted) or FFO/Debt remaining below [XX]% (S&P standard).
+ * On a €[X]bn bond take-out, a ~[XXX] bps spread differential between ‘A-’ and ‘BBB’ ratings results in:
+   * ~€[XXX]m in additional annual interest expense.
+   * ~€[XXX]m in Net Present Value destruction.
+Underlying Justifications & Assumptions
+ * NPV Calculation: The NPV destruction figure is calculated based on the present value of the ~€[XXX]m annual penalty, using an assumed [X.X]% DSV Weighted Average Cost of Capital (WACC) over a [Y]-year period, aligning with the likely average tenor of the new bond issuance.
+Chart Description: Credit Spread Curve Analysis
+ * Chart Type: A scatter plot with two distinct best-fit trend lines (curves).
+ * Y-Axis: Credit Spread over the risk-free benchmark, measured in basis points (bps).
+ * X-Axis: Tenor/Maturity, measured in years (e.g., from 1Y to 10Y).
+ * Data Series: The plot will feature two sets of data points. Each point represents an outstanding bond from a peer company (e.g., Deutsche Post, UPS), sourced from market data. The points will be categorised by their credit rating. A curve will be fitted through the 'A' rated peers, and a separate, higher curve will be fitted through the 'BBB' rated peers.
+ * Purpose & Annotation: To visually demonstrate the material and non-linear increase in funding costs between the two rating categories. The chart will be annotated at the key [Y-Z] year tenor (where new issuance is likely) to explicitly highlight the ~[XXX] bps spread differential, making the cost of a downgrade tangible.
+Slide 4: Phased Deleveraging & Ratings Path
+Layout Guidance: Dominated by a verbal description of a single, clear “Leverage Walk” chart, a standard visualization in leveraged finance pitches.
+Content & Visuals:
+Why <[X.X]x is Critical: The Policy / Capacity Distinction
+ * While DSV’s balance sheet could mechanically support higher leverage, strict adherence to the <[X.X]x Net Debt/EBITDA policy is critical for a strategic reason: it preserves financial and strategic flexibility.
+ * Maintaining this discipline ensures continued access to the commercial paper market at favorable rates and, most importantly, retains balance sheet capacity to pursue the next strategic acquisition without needing a multi-year deleveraging period first.
+Chart Description: Pro-Forma Leverage Walk
+ * Chart Type: A standard waterfall chart, illustrating a step-by-step reduction from a starting point.
+ * Y-Axis: Net Debt / EBITDA leverage multiple, expressed as [X.X]x.
+ * X-Axis: Categorical, representing the sequence of the transaction and deleveraging events.
+ * Data Series: The chart begins with a tall bar showing the high Unmitigated Pro-Forma Leverage. Each subsequent bar is negative (red), representing a reduction in leverage from a specific action: "ABB Equity Injection (-[X.X]x)," "Securitization & FCF (-[X.X]x)," and "Future Synergies & FCF (-[X.X]x)." The chart ends on the final, lower Steady-State Leverage. A horizontal dotted line will be drawn across the chart at the [X.X]x Policy Ceiling.
+ * Purpose & Annotation: To provide a clear, mechanical illustration of how our proposed financing architecture navigates the leverage challenge. The key message is that the company's leverage is immediately brought below the policy ceiling after Day 1 actions, satisfying rating agencies and demonstrating financial discipline.
+Slide 5: Day 1 Capital Structure: Bridge & ABB Execution
+Layout Guidance: A technical slide justifying the bridge economics and equity raise assumptions, using tables for key terms.
+Content & Visuals:
+1. The Certainty Bridge (€[XX]bn): Indicative Economics
+ * Instrument: Fully underwritten senior unsecured bridge facility providing 100% funding certainty.
+ * Indicative Pricing Grid (bps over EURIBOR): This grid is based on recent comparable European investment-grade acquisition financings.
+| Rating | 0-12 Months | 12-18 Months | 18-24 Months |
+|---|---|---|---|
+| A- | [XXX] | [XXX] | [XXX] |
+| BBB+ | [XXX] | [XXX] | [XXX] |
+ * Fees: Assumes a standard structure of ~[XX]bps underwriting fee, a ticking fee at [XX]% of the applicable margin (commencing [XX] days post-signing), and ~[XX]bps for each 6-month extension.
+2. The De-risking Equity (€[X.X]bn ABB): Execution Feasibility
+ * Instrument: Accelerated Bookbuild to raise €[X.X]bn in gross proceeds.
+ * Pricing Assumption: [X.X]% discount to the pre-launch share price, validated by precedent transactions.
+ * Market Capacity Justification:
+   * The raise represents ~[X.X]% of DSV’s current market capitalization, an acceptable dilution level for a transformational transaction.
+   * The deal size equates to ~[XX] days of DSV’s 90-day Average Daily Trading Volume (ADTV), indicating sufficient market liquidity to absorb the placement without undue price impact.
+Slide 6: Permanent Financing: IG Bond & Securitization
+Layout Guidance: A DCM-focused slide. It features a technical description of the peer curve analysis used to price a new bond issue, supplemented by technical assumptions for the securitization.
+Content & Visuals:
+1. DCM: The €[X]bn Eurobond Take-Out
+ * Structure: Multi-tranche (e.g., [A]Y, [B]Y, [C]Y) senior unsecured benchmark bonds to build a smooth maturity ladder.
+ * Pricing Rationale: New issue will be priced relative to secondary market levels of key comps, primarily Deutsche Post (A-), with a standard new issue concession.
+Chart Description: Peer Secondary Curve Analysis
+ * Chart Type: A scatter plot with individual data points for peer bonds and a single indicative point for the proposed new issue.
+ * Y-Axis: Credit Spread over the benchmark, measured in basis points (bps).
+ * X-Axis: Tenor/Maturity, measured in years.
+ * Data Series: The plot will show discrete points, each representing a key secondary bond from close peers (e.g., "Peer Co. 1 'BBB'," "Peer Co. 2 'A-'," "Peer Co. 3 'A'"). A separate, distinct point, labelled "DSV Indicative New Issue," will be placed at the target tenor (e.g., [B]Y) and at a spread slightly above the closest 'A-' peer to reflect a standard new issue premium.
+ * Purpose & Annotation: To provide a clear market-based rationale for our pricing assumptions. It demonstrates to the client how their new debt would be priced relative to their closest publicly-traded competitors, justifying the target spread of ~[XXX] bps.
+2. SFS: The €[X.X]bn “Smart” Deleveraging
+ * Instrument: Off-balance sheet securitization of a select pool of high-quality German trade receivables.
+ * Asset Quality & Structural Assumptions:
+   * The structure is modeled on an assumed pool with a historical net loss rate of <[X.XX]%, average days sales outstanding (DSO) of ~[XX] days, and a highly granular obligor base.
+   * Assumes a standard advance rate of [XX]% against the eligible receivables pool.
+ * Economic Benefit: Provides funding at an estimated EURIBOR + ~[XX]bps, representing a ~[XXX] bps saving vs. unsecured bond debt.
+Slide 7: Risk Mitigation Matrix
+Layout Guidance: A dense, structured 2x2 matrix. Each quadrant contains a risk, its technical mitigation, and the quantifiable outcome.
+Content & Visuals:
+| Risk | Mitigation & Technical Detail |
+|---|---|
+| 1. FX Risk | €[XX.X]bn Deal-Contingent Forward (EUR/DKK): Locks the exchange rate. The cost premium is based on a [Y]-month tenor and an assumed ~[X.X]% implied volatility. The hedge only activates on successful close. |
+| 2. Refinancing Risk | [XX]+[X]+[X] Bridge Tenor: Creates three distinct issuance windows (Q[X]’[YY], Q[X]’[YY], Q[X]’[YY]). This timeline is coordinated to align with post-close results and avoid blackout periods. |
+| 3. Synergy/Execution Risk | Target Leverage <[X.X]x: Creates ~[X.X]x leverage headroom versus the [X.X]x policy ceiling. This equates to a ~€[X.X]bn EBITDA cushion against potential synergy shortfalls. |
+| 4. Equity Market Risk | Pre-negotiated Rights Issue Underwriting: The proposed ABB structure includes a fully documented, pre-agreed pivot to a rights issue supported by a hard underwriting commitment from Mizuho, guaranteeing the €[X]bn proceeds. |
+ * Regulatory Assumption: The financing timeline is predicated on an assumed Q[X] [YYYY] closing, reflecting an expectation of a Phase I regulatory review. The [XX-XX] month total bridge tenor provides ample cushion.
+Slide 8: Fully-Costed Transaction Analysis
+Layout Guidance: A high-level financial model summary. It uses a standard table for costs and describes a simple bar chart comparing this investment to the penalty being avoided.
+Content & Visuals:
+Estimated Fees & Expenses (€m)
+| Item | Rate (%) | Basis (€bn) | Amount (€m) |
+|---|---|---|---|
+| Bridge Underwriting & Arrangement | ~[X.XX]% | [XX.X] | ~[XX] |
+| ABB Gross Spread | ~[X.XX]% | [X.X] | ~[XX] |
+| Bond Take-Out Fees | ~[X.XX]% | [X.X] | ~[XX] |
+| Advisory, Legal, Other | Lump Sum | N/A | ~[XXX] |
+| Total Estimated One-Time Costs |  |  | ~€[XXX]m |
+Chart Description: Value Creation Analysis (NPV of Decision)
+ * Chart Type: A simple, side-by-side vertical bar chart for direct comparison.
+ * Y-Axis: Net Present Value, in millions of Euros (€m).
+ * X-Axis: Categorical, with two labels.
+ * Data Series: The chart will feature two bars.
+   * "Cost of Proposed Architecture": The height of this bar corresponds to the "Total Estimated One-Time Costs" (~€[XXX]m) from the table above.
+   * "NPV of Downgrade Penalty Avoided": The height of this bar corresponds to the "NPV destruction" figure (~€[XXX]m) calculated on Slide 3.
+ * Purpose & Annotation: To deliver a powerful visual argument for the cost/benefit of our strategy. The stark difference in the height of the two bars makes it immediately obvious that the one-time cost is a small price to pay to avoid the much larger permanent value destruction. An annotation will highlight the ~[X.X]x Return on Investment.
+Slide 9: Mizuho Execution Platform & Commitment
+Layout Guidance: A capabilities-focused slide. The core is a detailed table showing Mizuho’s specific, technical roles across the entire transaction.
+Content & Visuals:
+1. Balance Sheet Commitment: Certainty of Funds
+ * Mizuho commits to solely underwrite the full €[XX]bn bridge facility.
+ * Our [XX.X]% CET1 Ratio provides the fortress balance sheet capacity to remove all syndication risk for DSV, delivering absolute funding certainty to the seller.
+2. Integrated Execution Platform: A Single, Accountable Team
+| Product | Mizuho Role |
+|---|---|
+| €[XX]bn Bridge Facility | Sole Underwriter, Bookrunner & Mandated Lead Arranger (BMLA) |
+| €[X]bn ABB / Rights Issue | Sole Global Coordinator (SGC) & Bookrunner |
+| €[X]bn IG Bond Take-Out | Lead-Left Bookrunner & Active Bookrunner |
+| €[X.X]bn Securitization | Sole Structuring Agent & Arranger |
+| €[XX.X]bn FX Hedge | Sole Derivatives Counterparty |
+3. Strategic Advisory: M&A and Financing Integration
+ * The integration of Greenhill means DSV receives world-class M&A advisory and financing execution under one roof. We are a partner for this transaction and the next one.
+Slide 10: Summary of Key Outcomes & Execution Certainty
+Layout Guidance: A stark, conclusive summary. It uses three pillars to recap the key outcomes in non-narrative, factual terms, using the placeholder data from previous slides.
+Content & Visuals:
+| 1. Certainty of Funds | 2. Rating Preservation | 3. Balance Sheet Capacity |
+|---|---|---|
+| • €[XX]bn fully underwritten by Mizuho. | • Peak leverage managed to ~[X.X]x. | • Final leverage of <[X.X]x. |
+| • €[X]bn equity raise is guaranteed. | • ‘A-’ rating and outlook secured. | • ~€[X.X]bn EBITDA cushion created. |
+| • €[XX.X]bn FX exposure is eliminated. | • Permanent ~[XXX] bps penalty avoided. | • Retains M&A firepower for next deal. |
+Final Statement:
+The proposed architecture is a data-driven, fully-costed, and de-risked solution. Mizuho provides the balance sheet, integrated platform, and technical expertise to execute it flawlessly.
