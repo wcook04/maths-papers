@@ -1,0 +1,1463 @@
+
+
+### **Slide 1: Transaction Framing & The Core Problem**
+
+**Headline:** A Transformational Acquisition — but 100% Debt Funding Would Breach Policy and Threaten the Rating
+
+**Deal Snapshot**
+
+| Metric | DSV A/S | DB Schenker | Pro-Forma |
+| :--- | :--- | :--- | :--- |
+| Revenue (€bn) | 22.4 | 19.1 | 41.5 |
+| EBITDA (€bn) | 2.9 | 1.9 | 4.8 |
+| **EBITDA Margin** | **13.0%** | **10.0%** | **11.6%** |
+
+**Financial Policy & Current Standing**
+*   **DSV Target Gearing:** Net Debt / EBITDA consistently below **2.0x** (1.8x as of H1 2024).
+*   **Policy Rationale:** This discipline is a cornerstone of maintaining DSV's strong investment-grade **'A-'** credit rating.
+
+**The Unmitigated Leverage Problem**
+A simplistic, all-debt financing for the €11.3bn equity purchase results in a capital structure that is fundamentally misaligned with DSV's financial strategy.
+
+*   **Pro-Forma Leverage:** Peak leverage would reach **~3.0x**, immediately and severely breaching the **2.0x** policy ceiling.
+*   **Rating Agency Impact:** This breach would almost certainly trigger a downgrade to 'BBB', creating a "fallen angel" scenario.
+*   **The Downgrade Penalty:**
+    *   **+145 bps** wider credit spread.
+    *   **~€130m** in additional annual interest expense.
+    *   **~€600m** in Net Present Value (NPV) destruction.
+
+**Key Insight**
+> "This is not just about funding a €14.3bn acquisition — it is about architecting a capital structure that preserves the 'A-' rating, protects the cost of capital, and retains DSV’s future **M&A firepower**."
+
+---
+got it — here’s a precise, IB-style build for Slide 1 so you can crank it out fast and have it look properly “banky”.
+
+# Slide objective
+
+Make the audience instantly see: “Great deal, but all-debt breaches policy and threatens the A- rating.” The slide should feel calm, numeric, and decisive.
+
+# Layout grid (PowerPoint)
+
+* Canvas: 16:9. Margins: 0.6" all sides.
+* 12-column grid. Gutter: 0.25".
+* Regions:
+
+  1. Title bar (full width, 0.9"): headline only.
+  2. Left column (cols 1–6): Deal Snapshot table.
+  3. Right column (cols 7–12): two stacked cards
+     – Policy & Standing (top, \~55% of right column height)
+     – Leverage “breach” graphic (bottom, \~45%).
+  4. Bottom banner (full width, 0.9"): Key Insight quote.
+
+# Typography & colours
+
+* Font: Calibri (fallback Arial). Numerals tabular if available.
+* Sizes: Title 30pt; section headings 14pt ALL CAPS with 120% letter-spacing; body 12pt; footnotes 9pt.
+* Palette (safe IB look):
+
+  * Navy #0B2447 (titles, dividers)
+  * Steel Grey #4A4A4A (body text)
+  * Accent Blue #1B5DBF (section labels)
+  * Compliance Green #1E9E62 (good/compliant)
+  * Breach Red #C0392B (breach/penalty)
+  * Light Grey #F2F4F7 (table row fill)
+* Rules: 0.5pt lines in #D9DCE1. No drop shadows.
+
+# Build it step-by-step
+
+1. Title bar
+
+   * Text: “A Transformational Acquisition — but 100% Debt Funding Would Breach Policy and Threaten the Rating”.
+   * Left-aligned. Title 30pt, bold, Navy.
+   * Add a thin 0.5pt Navy underline rule across the slide.
+
+2. Section label chips (optional but crisp)
+
+   * Place small ALL-CAPS labels above each region: “DEAL SNAPSHOT”, “POLICY & STANDING”, “LEVERAGE IMPACT”.
+   * 10pt, semi-bold, white text on Accent Blue rounded rectangle (height \~16pt, 8pt border-radius).
+
+3. Left column — Deal Snapshot table
+
+   * 4 columns (Metric / DSV / DB Schenker / Pro-Forma), exact widths to fill the left column.
+   * Header row fill: #EEF1F6; header text 11pt bold, Steel Grey.
+   * Body rows: white; alternate the EBITDA Margin row with Light Grey fill to highlight.
+   * Alignment: Metric left; numbers right; use thin 0.5pt row rules only (no vertical rules).
+   * Number format: one decimal place for €bn; margins as percents with one decimal (e.g., 13.0%).
+   * Make the “EBITDA Margin” row bold text in all 3 columns; margin numbers in Compliance Green.
+
+4. Right column (top) — Policy & Standing card
+
+   * Rounded rectangle container (6–8pt radius), white fill, subtle 0.5pt outline #E6E8EC, 12pt internal padding.
+   * Small shield icon on the left (use built-in shape), filled Compliance Green with white “A-” text overlay.
+   * Copy:
+
+     * “DSV Target Gearing: Net Debt / EBITDA < 2.0x (1.8x as of H1 2024).”
+     * “Policy Rationale: Discipline underpins A- rating.”
+   * Two bullets max per sub-section; keep to 2–3 lines each.
+   * Emphasise “< 2.0x” and “A-” in bold.
+
+5. Right column (bottom) — The “breach” mini-graphic (visual punch)
+
+   * Title (12pt bold): “All-debt financing misaligns with policy”.
+   * Build a simple horizontal comparator:
+
+     * Draw a 100%-width baseline bar (height 10pt) in Light Grey.
+     * Overlay a green segment from 0 to 2.0 (“Policy ceiling 2.0×”) in Compliance Green.
+     * Overlay a red segment from 2.0 to 3.0 (“Pro-forma \~3.0×”) in Breach Red.
+     * Add a thin vertical tick at 2.0× with label “Policy 2.0×” (10pt, Steel Grey).
+     * Add a red callout tag above the red area: “BREACH → Rating pressure to BBB”.
+   * Beneath the bar, 2 concise bullets (12pt):
+
+     * “Peak leverage \~3.0× day-1.”
+     * “All-debt path likely triggers outlook/upgrade reversal.”
+   * Keep this compact; it’s a glanceable visual, not a chart.
+
+6. Bottom full-width Key Insight banner
+
+   * 0.9” tall, Accent Blue fill, white text 12pt italic or semibold.
+   * Place the quote exactly:
+     “This is not just about funding a €14.3bn acquisition — it is about architecting a capital structure that preserves the ‘A-’ rating, protects the cost of capital, and retains DSV’s future M\&A firepower.”
+   * Add a left-edge vertical highlight bar in Navy (4pt wide) for polish.
+
+7. Footer hygiene
+
+   * Left: “Confidential — For discussion purposes only” (9pt #70737A).
+   * Centre: Client/Project name.
+   * Right: Page “1” and date “10 Aug 2025”.
+   * If you place a logo, make it small (max 22px height), monochrome.
+
+# Micro-details that sell the slide
+
+* Line length: bullets ≤ 90 characters; no more than 4 bullets in the right column.
+* Consistent hyphens/en dashes: use en dash “–” for ranges.
+* Numerals: keep decimals aligned in the table; use thin spaces for thousands if needed.
+* No widows/orphans: adjust line breaks manually in the title so key words don’t dangle.
+* Zero animations (export to PDF). If you must: a single “appear” for the breach tag.
+
+# What to literally click/do in PowerPoint (quick recipe)
+
+1. View → Slide Master → set fonts to Calibri; set colour theme with the hexes above.
+2. Insert → Shapes → Rounded Rectangle → draw your right-hand cards and bottom banner; set outline to #E6E8EC (cards) or none (banner).
+3. Insert → Table → 4×4 → paste your numbers; set header fill; turn off vertical borders; right-align numbers; bold the Margin row.
+4. Insert → Shapes → Rectangle for the leverage bar; duplicate and recolour segments; add a narrow line for the 2.0× tick; add text boxes for labels.
+5. Add the shield icon: Insert → Icons → search “shield”. Colour green, place “A-” text over it.
+6. Add section label chips (rounded rectangles, blue fill, white ALL-CAPS).
+7. Add footer text boxes; align with guides; group elements per region.
+
+# Optional variants (if you need to compress)
+
+* If space is tight, convert “Financial Policy & Current Standing” bullets into a two-row mini table with a green “A-” badge in the corner.
+* If you want a hero stat, add a small red pill in the title bar’s right end: “All-debt ⇒ \~3.0× > 2.0×”.
+
+If you want, I can mock this in a canvas with exact pixel sizes and spacing for a copy-pasteable template.
+
+
+
+
+### **Slide 2: Strategic Fit & Corporate Finance Rationale**
+
+**Headline:** Industrial Logic: Margin Uplift, Network Fit, and a Proven Integration Playbook
+
+**The Pillars of Value Creation**
+
+1.  **#1 Scale & Market Leadership** ��
+    *   Creates the undisputed Global Freight Forwarder with **€41.5bn** in revenue.
+    *   Commands a **~7% share** of the fragmented 3PL market, enhancing procurement and pricing power.
+2.  **Network Complementarity** ��
+    *   **DSV Strength:** Global Air & Sea (58% of 2024 revenue).
+    *   **Schenker Strength:** Unmatched European Land/Road transport density.
+    *   **Result:** A true end-to-end multimodal offering, managing **2.4m tonnes** of air freight and **4.3m TEUs** of sea freight annually.
+3.  **Significant Margin Uplift Potential** ��
+    *   **The Gap:** DSV's EBIT margin of **10.6%** is nearly double Schenker's **5.5%**.
+    *   **The Levers:** IT platform consolidation, network optimisation, and applying DSV's efficient operating model are the primary synergy drivers.
+    *   **The Prize:** Consensus run-rate synergy of **€1bn+**, with a 3-year realisation timeframe.
+4.  **Proven Execution Credibility** ✅
+    *   **The Playbook:** A repeatable integration model has been proven through the successful acquisitions of **UTi (2016)**, **Panalpina (2019)**, and **Agility GIL (2021)**.
+    *   **The Result:** A track record of meeting or exceeding synergy targets provides high conviction on delivering the projected uplift.
+
+**Synergy Waterfall (€bn)**
+*(Placeholder for a visual Synergy Waterfall chart)*
+
+**Key Insight**
+> "The strategic case justifies the deal. However, it only creates shareholder value if the financing architecture protects the rating and preserves the flexibility for the *next* acquisition."
+perfect — here’s an IB-grade build for Slide 2 that matches the look/feel of Slide 1 and makes the “industrial logic” pop in 60 seconds.
+
+# Slide objective
+
+Prove the *strategic* fit in a crisp, de-risked way: scale, network fit, margin uplift, execution credibility — with a clean synergy waterfall.
+
+# Layout grid
+
+* 16:9, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. Title bar (full width, 0.9")
+  2. Top row (cols 1–12, \~40% height): “Scale & Market Leadership” + mini margin gap
+  3. Middle row (cols 1–6): “Network Complementarity” card
+  4. Middle row (cols 7–12): “Proven Execution Credibility” card
+  5. Bottom row (cols 1–12, \~28% height): Synergy Waterfall
+  6. Bottom banner (full width, 0.9"): Key Insight
+
+# Typography & colours (same system as Slide 1)
+
+* Calibri; Title 30pt; section labels 14pt ALL CAPS; body 12pt; footnotes 9pt.
+* Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Green #1E9E62, Red #C0392B, Light Grey #F2F4F7.
+* 0.5pt rules in #D9DCE1. No shadows.
+
+# Build it step-by-step
+
+1. Title bar
+
+   * Headline (30pt, Navy): “Industrial Logic: Margin Uplift, Network Fit, and a Proven Integration Playbook”.
+   * Thin Navy underline rule across the slide.
+
+2. Top row — Scale & Market Leadership (hero card, cols 1–12)
+
+   * Left (cols 1–6): Metric chip + big number
+
+     * Label chip: “#1 SCALE” (white on Accent Blue rounded pill).
+     * Big stat: “€41.5bn Pro-Forma Revenue” (22pt bold).
+     * Sub-bullets (12pt): “\~7% 3PL share • Procurement & pricing power”.
+   * Right (cols 7–12): Mini “Margin Gap” graphic
+
+     * Title 12pt bold: “Margin Uplift Potential”.
+     * Side-by-side vertical bars: DSV EBIT **10.6%** (Green), Schenker **5.5%** (Grey), target *Converge* marker at \~8–10% (dashed outline).
+     * Underneath, single line: “Levers: IT consolidation, network optimisation, operating model”.
+
+3. Middle left — Network Complementarity card (cols 1–6)
+
+   * Card container: white, 6–8pt radius, subtle outline #E6E8EC, 12pt padding.
+   * Label chip: “NETWORK FIT”.
+   * Two-column micro layout inside the card:
+
+     * Left: “DSV Strength: Air & Sea (58% of 2024 revenue)” + tiny plane/ship icons.
+     * Right: “Schenker Strength: Dense European Land/Road” + tiny road/lorry icons.
+   * Add a slim connector arrow across the bottom: “End-to-end multimodal”.
+   * Small line with volumes (10pt, grey): “2.4m tonnes air • 4.3m TEUs sea”.
+
+4. Middle right — Proven Execution Credibility card (cols 7–12)
+
+   * Card container as above. Label chip: “EXECUTION PLAYBOOK”.
+   * Three “proof chips” in a row (rounded rectangles, very light grey fill):
+
+     * “UTi (2016) ✓” “Panalpina (2019) ✓” “Agility GIL (2021) ✓”.
+   * Two bullets (keep tight, 12pt):
+
+     * “Repeatable integration model; synergy delivery on/above plan.”
+     * “High conviction on uplift from prior transformations.”
+
+5. Bottom row — Synergy Waterfall (€bn) (cols 1–12)
+
+   * Title (12pt bold): “Run-rate synergy €1bn+ over \~3 years”.
+   * Waterfall spec (clean, minimalist):
+
+     * Bars: Start = “Schenker standalone EBIT”, then 3 drivers: “IT & platform”, “Network & procurement”, “Ops model uplift”, End = “Combined EBIT”.
+     * Each driver bar in Green; Start/End in Steel Grey; add value labels above each bar (e.g., “+0.3”, “+0.4”, “+0.3” placeholders).
+     * Thin baseline; no gridlines; 0.5pt connectors.
+     * Footnote (9pt): “Illustrative. Consensus indicates €1bn+ run-rate.”
+
+6. Key Insight banner (full width)
+
+   * Accent Blue fill, white text 12pt italic:
+     “The strategic case creates value **only** if the financing preserves the rating and the flexibility for the next acquisition.”
+
+7. Footer hygiene
+
+   * Left: “Confidential — For discussion purposes only”; centre: client/project; right: page “2” and date.
+
+# Icons & visual language
+
+* Use simple, monochrome icons: trophy (scale), network/link (complementarity), trend-up (margin), shield-check (execution). Keep them \~16–18px, Steel Grey.
+* Keep emoji out; rely on icons for an IB look.
+
+# Copy discipline (tighten bullets)
+
+* Scale: 2 bullets max.
+* Network: 2 lines per strength + one “Result” line.
+* Execution: 2 bullets + chips.
+* Waterfall: labels only; no paragraphs.
+
+# What to literally click/do (PowerPoint quick recipe)
+
+1. Master: inherit Slide 1 theme (fonts/colours).
+2. Insert → Shapes → Rounded Rectangles for the two middle cards + bottom banner; outline #E6E8EC (cards), none (banner).
+3. Insert → Icons → trophy/link/trending-up/shield-check. Recolour to Steel Grey.
+4. Margin mini-chart: Insert → Shapes → Rectangles for bars; dashed outline for target; text boxes for % labels.
+5. Waterfall: Insert → Chart → Stacked Column; delete legend/gridlines; format series as waterfall by setting negative/positive fills manually (or build with shapes if faster).
+6. Add label chips (small rounded rectangles, Accent Blue, white ALL-CAPS) above each section.
+7. Align to grid, distribute evenly, snap text to 12pt leading. Group elements per card.
+
+# Optional variants
+
+* If space tight: move the mini margin chart into the Network card footer.
+* If more proof needed: add a tiny “Case study” ribbon with one-liner under Execution (e.g., “Panalpina: €xxm synergies in 24m”).
+
+Want me to drop a ready-to-edit slide template (with placeholders and shapes) into a canvas so you can copy-paste into your deck?
+
+
+
+---
+
+### **Slide 3: The Cost of Doing It Wrong**
+
+**Headline:** “A downgrade to ‘BBB’ costs ~€130m p.a. — ~€600m NPV — permanently”
+
+**(Left Half of Slide) – Rating Agency Trigger Table**
+
+| Agency | Downgrade Trigger | All-Debt Funding | Our Phased Plan |
+| :--- | :--- | :--- | :--- |
+| **S&P** | FFO/Debt < **45%** (sustained) | ~38% → breach | ≥ 45% within 12 m → outlook stabilises |
+| **Moody’s** | Debt/EBITDA ≥ **2.5x** (sustained) | 2.7x in 2025 → breach | 2.4x Day-1 → ≤ 2.2x by 2026 |
+
+*Note: S&P gives an 18-month cure window; Moody’s tolerance relies on credible rapid deleveraging.*
+
+**(Right Half of Slide) – Spread Chart & Penalty Calculation**
+*   **(Visual: Mini credit curve):** Two dots labelled **A- (~95bps)** and **BBB (~240bps)**, connected by an arrow labelled “+145bps”.
+*   **(Visual: Cost call-out box):**
+    *   €9.0bn affected × 145bps = **€130m annual penalty**
+    *   NPV over 7y @7.5% WACC = **~€600m value loss**
+
+**(Bottom Strip) – Strategic Consequence**
+> *"Breaching these thresholds not only destroys ~€600m in value, it locks DSV out of its serial-acquirer playbook for years."*
+
+**Notes for Presentation**
+*   **Design Cues:** Use bold **red** for “breach” numbers and green for “compliant”. Keep the curve chart ultra-simple — 2 rating points, no clutter. Put the €130m and €600m in **large font**; they’re the take-home.
+*   **Talk-track (45–60 seconds):** “Both S&P and Moody’s have hard triggers — 45% FFO/Debt and 2.5x leverage. All-debt funding breaches them on Day-1. The market prices that breach at 145bps — about €130m a year, ~€600m NPV — permanently. That’s before you factor in the strategic cost: a multi-year pause on DSV’s M&A playbook. Our plan avoids the breach and cures within the agencies’ tolerance windows.”
+
+nailed — here’s a clean, “bank-grade” build for Slide 3 that screams “don’t get downgraded” in one glance.
+
+# Slide objective
+
+Make the cost of a downgrade obvious and painful: red breach, simple curve, big € numbers.
+
+# Layout grid
+
+* 16:9, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. Title bar (full width, 0.9")
+  2. Left half (cols 1–6): Rating Agency Trigger Table
+  3. Right half (cols 7–12): Mini credit curve + penalty box
+  4. Bottom banner (full width, 0.9"): Strategic consequence quote
+
+# Typography & colours (same system as Slides 1–2)
+
+* Calibri; Title 30pt; section labels 14pt ALL CAPS; table 11–12pt; footnotes 9pt.
+* Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Green #1E9E62, Red #C0392B, Light Grey #F2F4F7.
+* Rules: 0.5pt #D9DCE1. No shadows.
+
+# Build it step-by-step
+
+1. Title bar
+
+   * “A downgrade to ‘BBB’ costs \~€130m p.a. — \~€600m NPV — permanently” (30pt, Navy).
+   * Add a thin Navy underline across slide.
+
+2. Left (cols 1–6) — Rating Agency Trigger Table
+
+   * Label chip above: “RATING TRIGGERS” (white text on Accent Blue pill).
+   * 4-column table; header fill #EEF1F6; 11pt bold headers.
+   * Column widths: Agency (18%), Trigger (32%), All-Debt (25%), Phased Plan (25%).
+   * Formatting:
+
+     * Put trigger thresholds in **bold** within the Trigger column.
+     * Colour outcomes: Breaches in **Red** (text + small red dot), compliant/cure in **Green** (text + green tick).
+     * Use arrows and time cues tight: “\~38% → breach”, “≥45% within 12 m → outlook stabilises”.
+   * Footnote (9pt, grey) under table: “S\&P: 18-month cure window; Moody’s tolerance contingent on credible deleveraging.”
+
+3. Right (cols 7–12) — Spread chart & penalty calculation
+
+   * Top sub-region: Mini credit curve (keep ultra-minimal)
+
+     * Title 12pt bold: “Market spread impact”.
+     * Draw a simple x-axis line; plot two dots only:
+
+       * Left dot label: **A- (\~95 bps)**
+       * Right dot label: **BBB (\~240 bps)**
+     * Connect with a thin arrow; place a small tag above the arrow: “+145 bps”.
+     * No grid, no legend, no y-axis.
+   * Bottom sub-region: Cost call-out box (the punch)
+
+     * Rounded rectangle (white, 8pt radius, 12pt padding, 0.5pt outline #E6E8EC).
+     * Two lines, 18–22pt bold numbers:
+
+       * “€9.0bn × 145 bps = **€130m annual penalty**”
+       * “NPV (7y @ 7.5% WACC) = **\~€600m value loss**”
+     * Add a tiny calculator icon at left (Steel Grey) for visual anchor.
+
+4. Bottom banner — Strategic consequence
+
+   * Full-width Accent Blue bar; 12pt white italic:
+     “Breaching these thresholds not only destroys \~€600m in value, it locks DSV out of its serial-acquirer playbook for years.”
+
+5. Footer hygiene
+
+   * Left: “Confidential — For discussion purposes only”; centre: client/project; right: page “3” and date.
+
+# Table content (paste-ready)
+
+* S\&P row: “FFO/Debt < **45%** (sustained)” | “\~38% → breach” (Red) | “≥45% within 12 m → outlook stabilises” (Green)
+* Moody’s row: “Debt/EBITDA ≥ **2.5×** (sustained)” | “2.7× in 2025 → breach” (Red) | “2.4× Day-1 → ≤2.2× by 2026” (Green)
+
+# Visual language & micro-cues
+
+* Use small red/green status dots or ticks before the outcomes for instant scan.
+* Keep the credit curve dots 10–12pt; labels right next to dots (no leader lines).
+* In the penalty box, make “€130m” and “\~€600m” **larger** than surrounding text.
+* Use en dashes (–) and thin spaces for thousands where needed.
+* Consistent arrows “→” for state changes.
+
+# What to literally click/do (PowerPoint quick recipe)
+
+1. Insert → Table 4×3; set header fill #EEF1F6; remove vertical borders; set row height \~0.6".
+2. Conditional colours: format All-Debt cells Red, Phased Plan cells Green (text only); insert 8px circle icons.
+3. Credit curve: Insert → Line for axis; two circle shapes for points; a connector arrow between; text boxes for “A- (\~95bps)” and “BBB (\~240bps)”.
+4. Penalty box: Rounded rectangle; two text lines with bold numbers; small calculator icon from Insert → Icons.
+5. Bottom banner: full-width rounded rectangle, Accent Blue; paste the quote.
+
+# Optional variants
+
+* If you need more proof: add a micro footnote under the curve “Indicative EUR IG i-spreads; source: desk comps (DD/MM/YY)”.
+* If the audience is quant-y: a tiny grey line under the penalty box with the formula “NPV ≈ Annual penalty × annuity factor (r=7.5%, n=7)”.
+
+Want me to drop a ready-to-edit slide skeleton (with shapes and text styles set) into a canvas so you can paste straight into your deck?
+
+
+---
+
+### **Slide 4: Phase 1: Certainty of Funds**
+
+**Headline:** “Day-1 certainty on funding and FX — sole-underwritten bridge + deal-contingent hedge”
+
+**(Left Half of Slide) – €12bn Sole-Underwritten Bridge Loan (LCM)**
+*   **Purpose:**
+    *   Provide 100% cash certainty to seller at signing.
+    *   Remove syndication risk — **Mizuho sole underwriter**.
+*   **Key Terms:**
+    *   **Borrower:** DSV A/S
+    *   **Amount:** €12,000,000,000
+    *   **Type:** Senior Unsecured Bridge-to-Bond
+    *   **Tenor:** 12 + 6 + 6 months
+    *   **Margin (A-):** EURIBOR + [100] / [150] / [200] bps (step-ups)
+    *   **Upfront Fee:** ~[0.75%]
+    *   **Ticking Fee:** [30%] of margin after 60 days
+    *   **Extension Fee:** ~[0.25%] per extension
+*   **Message:**
+    *   Aligns with M&A timetable — ready faster than bond markets.
+    *   24-month max life gives three bond market windows for take-out.
+
+**(Right Half of Slide) – €11.3bn Deal-Contingent EUR/DKK Forward (DR)**
+*   **Purpose:**
+    *   Eliminate FX risk on purchase price.
+    *   No cost to DSV if deal fails.
+*   **Structure:**
+    *   **Notional:** €11.3bn (Sell DKK / Buy EUR)
+    *   **Tenor:** [9 months] (signing → expected close)
+    *   **Embedded premium** in forward rate reflects implied vol (~[4.5%]) + deal-closing probability.
+*   **Why deal-contingent:**
+    *   Standard forward: Breakage cost if deal fails.
+    *   Option: Upfront premium is sunk if deal fails.
+    *   **Deal-contingent:** Binding only at close → zero break cost.
+
+**(Bottom Strip) – Core Message**
+> *"At signing, we deliver absolute certainty on both funding and FX — de-risking closing for seller, Board, and shareholders."*
+
+**Notes for Presentation**
+*   **Design Tips:** Two-column split: LCM left (bridge terms table), DR right (hedge diagram). Use a green shield icon for the “certainty” theme. Keep placeholders in brackets for quick update once you have live pricing and fees.
+
+---
+here’s the IB-style build for Slide 4 so it looks tight, credible, and “execution-ready” on the page.
+
+---
+
+## **Slide objective**
+
+Communicate: “We remove all closing risk on Day-1 — funding *and* FX fully locked.”
+The left side sells the bridge financing certainty, the right side sells the hedge mechanics. The design must scream *control, readiness, and zero surprises*.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* **Regions:**
+
+  1. Title bar (full width, 0.9")
+  2. Left column (cols 1–6): Bridge Loan card + key terms table
+  3. Right column (cols 7–12): Deal-contingent hedge diagram
+  4. Bottom banner (full width, 0.9"): Core message quote
+
+---
+
+## **Typography & colours** (same as previous slides)
+
+* Font: **Calibri** (body 12 pt, section labels 14 pt ALL CAPS, title 30 pt).
+* Palette: Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Compliance Green #1E9E62, Red #C0392B, Light Grey #F2F4F7.
+* Lines: 0.5 pt #D9DCE1.
+* Keep icons monochrome/flat.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* Headline (30 pt, Navy):
+  **“Day-1 certainty on funding and FX — sole-underwritten bridge + deal-contingent hedge”**
+* Thin Navy underline across slide.
+
+---
+
+### 2) Left column — Bridge Loan (LCM) card
+
+* Label chip: “€12BN SOLE-UNDERWRITTEN BRIDGE” (white text on Accent Blue rounded pill).
+* Container: white rounded rectangle (6–8 pt radius, 0.5 pt outline #E6E8EC, 12 pt padding).
+* Sub-section 1 — **Purpose**:
+  Two tight bullets (12 pt):
+
+  * “100% cash certainty to seller at signing”
+  * “Removes syndication risk — *Mizuho sole underwriter*”
+* Sub-section 2 — **Key Terms Table** (3 columns: Term | Value | Notes)
+
+  * Light grey header row (#EEF1F6), 11 pt bold header text.
+  * Right-align numeric values, bold the big ones (€12,000,000,000).
+  * Use bracket placeholders “\[ ]” in Steel Grey italic until live numbers are available.
+  * Step-up margins shown as “+100 / +150 / +200 bps” in stacked format for quick scan.
+* Sub-section 3 — **Message**: one concise bullet block (≤3 lines):
+  “Aligns with M\&A timetable; 24-month max life = 3 bond market windows for take-out.”
+
+---
+
+### 3) Right column — Deal-contingent FX hedge (DR)
+
+* Label chip: “€11.3BN DEAL-CONTINGENT EUR/DKK FORWARD” (white on Compliance Green).
+* Container: white rounded rectangle, same style as left.
+* Sub-section 1 — **Purpose** bullets:
+
+  * “Eliminates FX risk on purchase price”
+  * “Zero cost if deal fails”
+* Sub-section 2 — **Structure mini-table** (Term | Value):
+
+  * Notional: €11.3bn
+  * Tenor: \[9 months]
+  * Premium: “Embedded in forward rate (\~\[4.5%] implied vol + deal probability)”
+* Sub-section 3 — **Why deal-contingent**:
+  Visual comparison: 3 small vertical panels labelled “Standard Forward” (red X), “Option” (amber !), “Deal-Contingent” (green ✓) with 1-line pros/cons each.
+
+  * Standard: Break cost if deal fails.
+  * Option: Premium sunk if fails.
+  * Deal-contingent: Only binds at close → no break cost.
+* Optional diagram: timeline arrow from “Signing” → “Close”, showing “FX locked” bar in green, with “Zero exposure” caption.
+
+---
+
+### 4) Bottom banner — Core message
+
+* Full-width Accent Blue rectangle, 12 pt white italic:
+  *“At signing, we deliver absolute certainty on both funding and FX — de-risking closing for seller, Board, and shareholders.”*
+
+---
+
+### 5) Footer hygiene
+
+* Left: “Confidential — For discussion purposes only”
+* Centre: client/project name
+* Right: page “4” and date.
+
+---
+
+## **Visual language & micro-cues**
+
+* Shield icon (Compliance Green) top-left of each card to reinforce “certainty” theme.
+* Use ticks (✓) in green for positives; X in red for negatives in the “Why deal-contingent” mini-compare.
+* Align both columns so the Purpose, Structure, and Message sections line up horizontally — keeps the banker look.
+* Numbers: always align decimals, use thin spaces for thousands, show “×” not “x” for multiplication.
+
+---
+
+## **What to literally click/do in PowerPoint**
+
+1. Set slide master to prior slides’ theme (fonts/colours).
+2. Insert → Shapes → Rounded Rectangles for two side-by-side cards (cols 1–6, cols 7–12); outline #E6E8EC.
+3. Inside each card, insert a small rounded rectangle for the label chip (Accent Blue left, Green right).
+4. Bridge terms table: Insert → Table 3×N; remove vertical borders; right-align numbers.
+5. Hedge compare: Insert → 3 rectangles, fill red/amber/green; overlay ✓ or ✗ icons; add 1-line captions.
+6. Timeline: Insert → Line Arrow, thick; small green bar for “locked” period.
+7. Bottom banner: full-width rounded rectangle, Accent Blue; paste quote text.
+
+---
+
+If you want, I can also give you a **single-slide wireframe** in a ready-to-edit PPT grid so you can drop in numbers the second you get live pricing. That way your Slide 4 will already match the IB formatting from Slides 1–3.
+
+
+
+
+### **Slide 5: Phase 2: Permanent Capital (Debt)**
+
+**Headline:** “€9bn multi-tranche Eurobond take-out — rating preservation worth ~145bps”
+
+**(Left Half of Slide) – Structure & Tenor Logic**
+*   **Purpose:** Refinance €9bn of bridge loan within 6–9 months of closing.
+*   **Format:** EUR Reg S issuance via MTN programme.
+*   **Rationale:** Deepest EUR IG liquidity, natural currency hedge, investor familiarity, execution speed.
+
+| Tranche | Size (€bn) | Tenor | Rationale |
+| :--- | :--- | :--- | :--- |
+| 1 | 3.0 | 3-year | Bank treasuries, short-duration funds |
+| 2 | 3.0 | 5-year | Core “benchmark” for real money investors |
+| 3 | 3.0 | 7-year | Insurers & pensions, duration match |
+*Maturity ladder: Smooth profile, avoids refinancing cliffs.*
+
+**(Right Half of Slide) – Pricing: A- vs BBB**
+
+| Tranche | Peer (Deutsche Post A-) I-Spread* | NIC | **Indicative A- Pricing** | **Indicative BBB Pricing (+145bps)** |
+| :--- | :--- | :--- | :--- | :--- |
+| **3-year** | +95bps | +10bps | **~105bps** | **~250bps** |
+| **5-year** | +105bps | +10bps | **~115bps** | **~260bps** |
+| **7-year** | +115bps | +10bps | **~125bps** | **~270bps** |
+*Source: [Placeholder — iBoxx EUR Industrials / syndicate desk data as of DD/MM/YY]*
+
+*   **Impact:**
+    *   ‘A-’ structure = c. €X p.a. interest
+    *   ‘BBB’ = +€130m p.a. (~€600m NPV) → matches downgrade cost from Slide 3.
+
+**(Bottom Strip) – Execution Strategy**
+*   **Lead-left:** Mizuho DCM Syndicate to manage bookbuilding, real-time price discovery.
+*   **Target oversubscription:** ≥3x book to tighten final pricing & ensure strong secondary performance.
+*   **Investor mix:** Asset managers, insurers, pensions (core); banks, CBs, PBs (support).
+
+**Notes for Presentation**
+*   **Design Cues:** Use a two-tone table (green = A- pricing, red = BBB pricing) so the visual gap is immediate. Add a small peer curve graphic in the top-right corner with DSV’s proposed issue dots in each scenario. Keep NIC explanation to a single footnote.
+Here’s how to build Slide 5 so it looks like a professional IB “debt execution” page — crisp tables, immediate visual contrast between A- and BBB-pricing, and a smooth maturity ladder.
+
+---
+
+## **Slide objective**
+
+Show that the €9 bn take-out is structured for rating preservation, with pricing proof that A- vs BBB is worth \~145 bps.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. **Title bar** (full width, 0.9")
+  2. **Left half** (cols 1–6): Structure & Tenor Logic + ladder
+  3. **Right half** (cols 7–12): Pricing comparison table + small peer curve
+  4. **Bottom strip** (full width, 0.9"): Execution strategy bullets
+
+---
+
+## **Typography & colours**
+
+* **Fonts:** Calibri, title 30 pt, section labels 14 pt ALL CAPS, tables 11–12 pt.
+* **Colours:** Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Compliance Green #1E9E62, Breach Red #C0392B, Light Grey #F2F4F7.
+* **Rules:** 0.5 pt #D9DCE1. No drop shadows.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* **Text:** “€9 bn multi-tranche Eurobond take-out — rating preservation worth \~145 bps”
+* 30 pt Navy bold; thin Navy underline across slide.
+
+---
+
+### 2) Left half — Structure & Tenor Logic card
+
+* Label chip: “STRUCTURE & TENOR” (white on Accent Blue rounded pill).
+* Container: white, rounded corners, 0.5 pt outline #E6E8EC, 12 pt padding.
+* Purpose / Format / Rationale bullets at top (tight, 12 pt, ≤2 lines each).
+* **Table:**
+
+  * Header row fill #EEF1F6; bold header text.
+  * Column widths: Tranche (15%), Size (15%), Tenor (15%), Rationale (55%).
+  * All currency in “€ bn” format, right-aligned; rationale in concise text.
+* Under table: thin grey line + small italic note “Maturity ladder avoids refinancing cliffs”.
+* Optional micro-graphic: horizontal bars staggered at 3, 5, 7 years showing size per tranche (Green fill).
+
+---
+
+### 3) Right half — Pricing: A- vs BBB
+
+* Label chip: “PRICING IMPACT” (white on Compliance Green).
+* **Table:**
+
+  * Header row fill #EEF1F6.
+  * Columns: Tranche | Peer I-Spread | NIC | Indicative A- Pricing | Indicative BBB Pricing (+145 bps).
+  * Fill A- Pricing cells Compliance Green, BBB Pricing cells Breach Red for instant contrast.
+  * Right-align numeric values; bold key spreads (e.g., **\~105bps**, **\~250bps**).
+  * Footnote in 9 pt grey: “Source: \[Placeholder — iBoxx EUR Industrials / syndicate desk data DD/MM/YY]”.
+* Small peer curve mini-chart in top-right corner of the card:
+
+  * X-axis = tenor; Y-axis = spread.
+  * Plot Deutsche Post A- curve (grey line) and overlay DSV issue dots in Green (A-) vs Red (BBB).
+  * Keep it tiny (≈1.5" wide) and clean — no gridlines.
+
+---
+
+### 4) Bottom strip — Execution Strategy
+
+* Full-width Accent Blue bar, white text, 12 pt.
+* Three concise bullets:
+
+  * “Lead-left Mizuho DCM Syndicate: manage bookbuilding, real-time pricing.”
+  * “Target ≥ 3× oversubscription to tighten final pricing & boost secondary performance.”
+  * “Investor mix: asset managers, insurers, pensions (core) + banks, CBs, PBs (support).”
+
+---
+
+## **Visual cues & micro-details**
+
+* Keep NIC column small; show “+10bps” consistently formatted.
+* Use “×” not “x” for multiplication in any calc references.
+* Align decimals vertically in pricing columns.
+* For the maturity ladder graphic, match Green to A-pricing fill to reinforce the message.
+* Peer curve dots: small, 10 pt; labels directly adjacent (no leader lines).
+
+---
+
+## **PowerPoint click-path**
+
+1. Copy theme from prior slides.
+2. Insert → Shapes → Rounded Rectangles for left/right cards; apply outline and padding.
+3. Insert → Table for both sides; remove vertical borders; header fill #EEF1F6.
+4. Apply fill colours to pricing columns (Green/Red).
+5. Mini-chart: Insert → Scatter chart; format as per above; remove legend, gridlines.
+6. Bottom banner: full-width rectangle, Accent Blue fill, white text.
+
+---
+
+If you want, I can also give you a **wireframe version** with the ladder graphic and pricing table already aligned so you just paste in the live numbers and the peer curve screenshot. That keeps the IB polish consistent from Slide 1 through Slide 5.
+
+
+---
+
+### **Slide 6: Phase 2: Permanent Capital (Equity)**
+
+**Headline:** “€3bn ABB with rights-issue pivot — balancing speed, fairness & certainty”
+
+**(Left Half of Slide) – Strategic Rationale**
+*   **Preserve ‘A-’ rating:** Immediate leverage reduction from ~3.0× → <2.0×.
+*   **Diversify funding:** Protects debt capacity for future M&A.
+*   **Investor confidence:** Large equity raise signals commitment to balance sheet strength.
+*   **Core message:** *Equity is non-negotiable for rating preservation and market signalling.*
+
+**(Middle of Slide) – Hybrid Structure**
+
+| Path | Mechanism | When used | Advantages |
+| :--- | :--- | :--- | :--- |
+| **A – Accelerated Bookbuild (ABB)** | Overnight institutional placement | **Stable** markets | Fastest execution, minimal market exposure |
+| **B – Fully underwritten Rights Issue pivot** | Pre-documented, pro-rata rights offering | **Volatile** markets | Absolute proceeds certainty, shareholder fairness |
+*Execution logic: Pre-mandate both structures; decide at launch based on market conditions.*
+
+**(Right Half of Slide) – Execution Metrics (placeholders)**
+*   **Path A – €3.0bn ABB**
+    *   Size: ~8.9% of market cap (~12× ADTV)
+    *   Discount planning: **2.5–4.0%** vs close
+    *   Cornerstone coverage target: ≥50% pre-launch via wall-crossing
+    *   Allocation bias: long-only, global institutions
+*   **Path B – €3.0bn Rights Issue**
+    *   Fully underwritten by Mizuho
+    *   Pre-emptive: all shareholders maintain stake
+    *   Pricing vs **TERP** (discount TBD)
+    *   Timeline: ~3–4 weeks to completion
+
+**(Bottom Strip) – Differentiation from Reality**
+*   DSV’s actual deal: €5.5bn ABB (largest in a decade) at <1% discount, 56% cornerstone.
+*   **Our strategy:** Smaller (€3bn) raise for lower dilution, with rights-issue pivot for volatility insurance — *maximises flexibility and protects rating under all market conditions.*
+
+**Notes for Presentation**
+*   **Design Cues:** Use a two-path graphic: ABB arrow in green, Rights Issue arrow in blue, meeting at “€3bn equity raised” endpoint. Use iconography for “Speed” (lightning bolt) and “Certainty” (shield). Keep cornerstone investor names in small print under the ABB section as credibility markers.
+
+---Here’s how to structure Slide 6 so it reads like a polished IB execution slide, and the “speed vs certainty” trade-off is instantly clear.
+
+---
+
+## **Slide objective**
+
+Sell the hybrid equity approach as smart, flexible, and rating-preserving — while clearly contrasting ABB and Rights Issue execution.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. **Title bar** (full width, 0.9")
+  2. **Left third** (cols 1–4): Strategic Rationale
+  3. **Middle third** (cols 5–8): Hybrid Structure table
+  4. **Right third** (cols 9–12): Execution Metrics
+  5. **Bottom banner** (full width, 0.9"): Differentiation from reality
+
+---
+
+## **Typography & colours**
+
+* **Font:** Calibri; Title 30 pt; section labels 14 pt ALL CAPS; tables 11–12 pt; footnotes 9 pt.
+* **Colours:** Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Green #1E9E62, Blue #0070C0, Light Grey #F2F4F7.
+* **Rules:** 0.5 pt #D9DCE1.
+* Icons flat/monochrome.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* Headline in 30 pt Navy bold:
+  **“€3 bn ABB with rights-issue pivot — balancing speed, fairness & certainty”**
+* Thin Navy underline.
+
+---
+
+### 2) Left third — Strategic Rationale card
+
+* Label chip: “STRATEGIC RATIONALE” (white on Accent Blue rounded pill).
+* White rounded rectangle container, 0.5 pt outline #E6E8EC, 12 pt padding.
+* Four bullets (12 pt, ≤2 lines each):
+
+  * Preserve A-rating: 3.0× → <2.0×
+  * Diversify funding, protect debt headroom
+  * Signal balance sheet strength
+  * *Equity non-negotiable for rating preservation*
+* Add small shield icon (Green) at top-right for “rating protection” cue.
+
+---
+
+### 3) Middle third — Hybrid Structure table
+
+* Label chip: “HYBRID STRUCTURE” (white on Green).
+* **4-column table**: Path | Mechanism | When Used | Advantages.
+* Header fill #EEF1F6; bold 11 pt headers.
+* Row A in **Green** path label; Row B in **Blue** path label.
+* Keep text tight (≤40 chars per cell).
+* Italic footnote below: “Execution logic: Pre-mandate both; decide at launch.”
+
+---
+
+### 4) Right third — Execution Metrics cards
+
+* Split vertically into two small cards stacked:
+  **Path A – ABB** (Green header) and **Path B – Rights Issue** (Blue header).
+* Each card: 12 pt bullets, key numbers bold.
+
+  * ABB: Size, discount, cornerstone %, allocation bias.
+  * Rights: Underwriting, pre-emptive nature, pricing vs TERP, timeline.
+* Add icons:
+
+  * ABB card: lightning bolt (Speed).
+  * Rights card: shield (Certainty).
+* Small print under ABB bullets: “Cornerstones: \[names]” (for credibility).
+
+---
+
+### 5) Connecting visual (optional but powerful)
+
+* Between Middle and Right thirds, add two arrows:
+
+  * Green arrow from ABB card, Blue arrow from Rights card → merge at a central box “€3 bn Equity Raised” (Navy fill, white text).
+* This reinforces both paths lead to same funding outcome.
+
+---
+
+### 6) Bottom banner — Differentiation from reality
+
+* Full-width Accent Blue rectangle, white text 12 pt:
+  “Actual deal: €5.5 bn ABB (<1% discount, 56% cornerstone). Our plan: €3 bn with rights-issue pivot — lower dilution, volatility insurance.”
+
+---
+
+## **Visual & micro-cues**
+
+* Use colour coding consistently: Green = ABB, Blue = Rights.
+* Keep numbers bold in bullets for scanability.
+* Align table columns perfectly with grid gutters.
+* Keep arrow merges perfectly centred — avoid messy overlaps.
+* Use thin spaces for thousands in %/€ figures.
+
+---
+
+## **PowerPoint click-path**
+
+1. Copy master from prior slides.
+2. Insert → Shapes → Rounded Rectangles for three main columns; outline #E6E8EC.
+3. Hybrid Structure table: Insert table 4×3, colour first-column cells Green/Blue.
+4. Execution Metrics: Two smaller rounded rectangles stacked in right third; fill headers Green/Blue; bullets inside.
+5. Insert → Icons for lightning bolt/shield; recolour white and place in header fills.
+6. Optional central “merge” graphic: Insert → Arrows for path lines, merge into Navy-filled box.
+
+---
+
+Do you want me to also give you a **diagram layout** for the ABB / Rights arrows merge? That’s the bit that usually makes this slide look “top-tier bank” when done cleanly.
+
+
+
+
+### **Slide 7: Phase 3: Deleveraging Path**
+
+**Headline:** “Disciplined capital structure — rating preservation and upgrade potential”
+
+**(Left Half of Slide) – Chart: “Leverage walk”**
+*   **X-axis:** Time (2024 – 2027)
+*   **Y-axis:** Net debt / EBITDA (x)
+*   **(Chart Data Points):**
+    *   **Starting point:** 3.0× (2024 pro-forma peak, Moody’s validated)
+    *   **Day-1 post-financing:** 2.4× (after €9bn debt take-out + €3bn equity)
+    *   **Year 1:** 1.8× (synergies + FCF applied to debt)
+    *   **Steady state:** <1.5× by 2027
+*   **(Chart Features):**
+    *   Solid blue line = projected leverage trajectory.
+    *   Horizontal red dashed line at 2.0× = **policy ceiling** (Moody’s and company commitment).
+    *   Green shaded zone <1.5× = **upgrade potential range** (Moody’s criteria).
+    *   **(Annotations on Chart):**
+        *   “€400m synergies p.a.”
+        *   “~DKK 17bn CFO p.a., capex ~1.5% rev”
+        *   “Debt repayment priority until below 2.0×”
+
+**(Right Half of Slide) – Justification from Moody’s**
+*   **Starting point & policy ceiling**
+    *   Peak 3.0× in 2024 including acquisition debt (Moody’s base case).
+    *   2.0× = stated net debt/EBITDA cap; buybacks only resume below this level.
+*   **Drivers of deleveraging**
+    *   Proven M&A integration record — Schenker EBIT/employee ~½ DSV’s; 25–30% opex gap.
+    *   Conservative synergy assumption €400m vs Moody’s €1bn+ base case.
+    *   Strong cash generation: DKK 17bn CFO in first 12 months, low capex (1.5% revenue).
+    *   Explicit policy to direct surplus cash to debt repayment until below target gearing.
+*   **Steady state target (<1.5×)**
+    *   Aligns with Moody’s upgrade trigger for “sustainably below 1.5×”.
+    *   Agency forecasts 1.4× by 2027 — achievable, supports long-term M&A capacity.
+
+**(Bottom Strip) – Core Message**
+> *"We deliver a rapid, credible reduction in leverage from 3.0× to <1.5× — preserving the ‘A-’ rating and creating headroom for future strategic growth."*
+
+**Notes for Presentation**
+*   **Design Cues:** Use a clean 4-point trajectory with discrete dots for 3.0× → 2.4× → 1.8× → 1.4×. Use a red dashed policy ceiling line and a green shaded upgrade zone. Keep the chart visually dominant — right-side bullets in concise, proof-driven style. Use the Moody’s logo in a corner for credibility.
+
+---
+Here’s how I’d design Slide 7 so it looks like a “rating-agency-ready” IB deliverable — with the leverage chart as the hero visual and Moody’s justification as tight supporting text.
+
+---
+
+## **Slide objective**
+
+Show that the deleveraging path is credible, rapid, and aligned with rating agency triggers — using the chart as the primary takeaway.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* **Regions:**
+
+  1. **Title bar** (full width, 0.9")
+  2. **Left half** (cols 1–6): Leverage walk chart with annotations
+  3. **Right half** (cols 7–12): Moody’s justification bullets
+  4. **Bottom banner** (full width, 0.9"): Core message
+
+---
+
+## **Typography & colours**
+
+* **Font:** Calibri; Title 30 pt; section labels 14 pt ALL CAPS; bullets 12 pt; footnotes 9 pt.
+* **Colours:** Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Green #1E9E62, Red #C0392B, Light Grey #F2F4F7.
+* **Chart palette:** Blue line, Green shaded zone, Red dashed ceiling line.
+* **Lines:** 0.5 pt #D9DCE1 (non-primary chart elements).
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* **Text:** “Disciplined capital structure — rating preservation and upgrade potential”
+* 30 pt Navy bold; thin Navy underline across slide.
+
+---
+
+### 2) Left half — Leverage walk chart
+
+* Chart type: **Line chart with markers** (4 discrete dots).
+* **X-axis:** Years 2024, 2025, 2026, 2027.
+* **Y-axis:** Net debt / EBITDA (0.0× – 3.5× range).
+* **Data points:**
+
+  * 2024 peak: 3.0× (Red label “Pro-forma peak”).
+  * Day-1 post-financing: 2.4× (Blue dot).
+  * Year 1: 1.8× (Blue dot).
+  * Steady state 2027: 1.4× (Green dot).
+* **Elements:**
+
+  * Solid Blue line connecting points.
+  * **Horizontal red dashed line** at 2.0×, labelled “Policy ceiling”.
+  * **Green shaded area** under 1.5×, labelled “Upgrade potential zone”.
+  * Annotation callouts:
+
+    * Near 2025 point: “€400m synergies p.a.”
+    * Between 2025–2026: “\~DKK 17bn CFO p.a., capex \~1.5% rev”
+    * Near 2.0× line: “Debt repayment priority until below 2.0×”.
+* Axis labels in Steel Grey; no gridlines except light Y-axis lines for clarity.
+
+---
+
+### 3) Right half — Moody’s justification
+
+* Label chip: “MOODY’S VIEW” (white on Accent Blue rounded pill).
+
+* White rounded rectangle container, 0.5 pt outline #E6E8EC, 12 pt padding.
+
+* **Bullets (grouped in 3 sub-headings):**
+
+  * **Starting point & policy ceiling**
+
+    * Peak 3.0× (2024 pro-forma, Moody’s base case)
+    * 2.0× cap; buybacks resume only below
+  * **Drivers of deleveraging**
+
+    * Proven M\&A integration record; 25–30% opex gap
+    * €400m conservative synergy assumption
+    * DKK 17bn CFO in year 1; capex 1.5% rev
+    * Surplus cash → debt until <2.0×
+  * **Steady state target (<1.5×)**
+
+    * Aligns with upgrade trigger
+    * Moody’s forecasts 1.4× by 2027
+
+* Small **Moody’s logo** in bottom-right corner of the card for credibility.
+
+---
+
+### 4) Bottom banner — Core message
+
+* Full-width Accent Blue rectangle, white italic 12 pt text:
+  *“We deliver a rapid, credible reduction in leverage from 3.0× to <1.5× — preserving the ‘A-’ rating and creating headroom for future strategic growth.”*
+
+---
+
+## **Visual & micro-cues**
+
+* **Dots:** Use red for 3.0×, blue for mid-points, green for 1.4× to reinforce progress.
+* Keep the red dashed ceiling line thin but noticeable; label above the line.
+* Shaded upgrade zone should be subtle (20% opacity green).
+* Ensure bullets are short; use bold on key ratios and € figures.
+* Align chart and bullet card perfectly to top/bottom guides.
+
+---
+
+## **PowerPoint click-path**
+
+1. Insert → Chart → Line with Markers; enter 4 points; remove legend/gridlines.
+2. Add horizontal line (Insert → Shapes → Line) at 2.0×; format dashed red.
+3. Draw a green rectangle for upgrade zone; send to back; set transparency.
+4. Add callouts: Insert → Shapes → Callout, fill white, outline #E6E8EC.
+5. Insert → Rounded Rectangle for Moody’s bullets; add label chip.
+6. Bottom banner: full-width rectangle, Accent Blue fill, white italic text.
+
+---
+
+If you like, I can sketch a **mock-up of the leverage chart** in the correct colour palette so you can drop it straight into the left half without fiddling with formatting. Would you like me to do that?
+
+
+
+### **Slide 8: Optional Optimisation: SFS (Securitisation)**
+
+**Headline:** “€1.5bn receivables securitisation — low-cost funding to accelerate deleveraging”
+
+**(Left Half of Slide) – Visual: “Leverage impact”**
+*   **(Bar chart or small waterfall visual showing):**
+    *   **Starting leverage:** 2.7× (H1 2025, Moody’s/S&P confirmed)
+    *   **Without SFS:** H1 2027 back to <2.0× (company guidance)
+    *   **With SFS:** <2.0× reached **12 months earlier** → within S&P’s 18-month rating-stability window.
+*   Highlight a €1.5bn SFS proceeds arrow pointing to debt repayment.
+*   Overlay a red dashed **2.0× policy ceiling** and a green zone below the target.
+
+**(Right Half of Slide) – Justification & Benefits**
+1.  **Proven structure, zero execution risk**
+    *   S&P’s 2024 report confirms existing DSV receivables securitisation (~€270m); this proposal simply scales it up post-merger.
+    *   No need for new operational capability — treasury is already familiar with the mechanics.
+2.  **Strong underlying asset base**
+    *   H1 2025 combined trade receivables: **DKK 45.3bn (~€6.1bn)**.
+    *   €1.5bn programme = <25% of pool → highly over-collateralised, attractive to investors.
+3.  **Accelerates deleveraging**
+    *   €1.5bn used to repay acquisition debt reduces peak 2.7× leverage faster.
+    *   Achieves <2.0× within S&P’s 18-month “Negative → Stable” window.
+4.  **Funding cost advantage**
+    *   SFS priced **~150 bps inside** unsecured EUR bonds.
+    *   ≈€22.5m annual interest saving vs. like-for-like bond funding.
+5.  **Supports integration without equity**
+    *   H1 2025: integration & transaction costs **DKK 11.0bn (~€1.48bn)**, €270-335m in 2025 alone.
+    *   SFS provides efficient liquidity for one-off cash outflows without tapping the RCF or issuing expensive debt.
+
+**(Bottom Strip) – Core Message**
+> *"Upsizing a proven securitisation programme unlocks €1.5bn at a lower cost than bonds — accelerating deleveraging, protecting the ‘A-’ rating, and funding integration without further equity dilution."*
+
+---Here’s how I’d design Slide 8 so it reads like a crisp, optional optimisation idea — with the left side giving the *visual punch* of the leverage improvement and the right side selling the “low-risk, high-benefit” case.
+
+---
+
+## **Slide objective**
+
+Show that upsizing securitisation delivers faster leverage reduction, cheaper funding, and avoids extra equity — without operational risk.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. **Title bar** (full width, 0.9")
+  2. **Left half** (cols 1–6): Leverage impact chart + SFS proceeds arrow
+  3. **Right half** (cols 7–12): Justification & Benefits list
+  4. **Bottom banner** (full width, 0.9"): Core message
+
+---
+
+## **Typography & colours**
+
+* Font: Calibri; Title 30 pt; section labels 14 pt ALL CAPS; bullets 12 pt; footnotes 9 pt.
+* Colours: Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Green #1E9E62, Red #C0392B, Light Grey #F2F4F7.
+* Chart: Blue bars for baseline, Green bars for “With SFS”, Red dashed horizontal at 2.0×.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* Text: **“€1.5 bn receivables securitisation — low-cost funding to accelerate deleveraging”**
+* 30 pt Navy bold; thin Navy underline.
+
+---
+
+### 2) Left half — Leverage impact visual
+
+* **Chart type:** Simple clustered column chart or 3-stage waterfall.
+* **X-axis:** H1 2025, H1 2027 “Without SFS”, H1 2027 “With SFS”.
+* **Y-axis:** Net debt / EBITDA (x).
+* **Values:** 2.7× → 2.0× → \~1.9× (example for With SFS).
+* Blue bars for “Starting” & “Without SFS”; Green bar for “With SFS”.
+* Overlay **Red dashed line** at 2.0× with label “Policy ceiling”.
+* Add **Green shaded zone** below 2.0×.
+* Draw **curved arrow** labelled “€1.5 bn SFS proceeds” pointing from “With SFS” bar toward a “Debt repayment” icon (banknote or € symbol).
+* Annotate: “<2.0× achieved 12 months earlier” in Green.
+
+---
+
+### 3) Right half — Justification & Benefits
+
+* Label chip: “WHY IT WORKS” (white on Accent Blue rounded pill).
+* White rounded rectangle container (0.5 pt outline #E6E8EC, 12 pt padding).
+* Numbered list 1–5 (12 pt, ≤2 lines each), with **key numbers in bold**:
+
+  1. Proven structure — S\&P confirms existing \~€270 m; just scaling.
+  2. Strong asset base — DKK 45.3 bn receivables; €1.5 bn = <25% pool.
+  3. Accelerates deleveraging — meets S\&P’s 18-month stability window.
+  4. Cost advantage — \~150 bps inside unsecured; saves ≈€22.5 m p.a.
+  5. Supports integration — funds €1.48 bn integration costs without equity.
+* Add small icons to the left of each point (shield, database, speed arrow, € sign, handshake).
+
+---
+
+### 4) Bottom banner — Core message
+
+* Full-width Accent Blue rectangle; 12 pt white italic text:
+  *“Upsizing a proven securitisation programme unlocks €1.5 bn at a lower cost than bonds — accelerating deleveraging, protecting the ‘A-’ rating, and funding integration without further equity dilution.”*
+
+---
+
+## **Visual & micro-cues**
+
+* Ensure the Red dashed policy ceiling line runs across the full chart, not just the bars.
+* Use consistent bar widths; colour-code “With SFS” Green to match opportunity tone.
+* Keep bullet text tight — 8–10 words before a number, then bold the number.
+* Use alignment so chart baseline aligns with the top of the right-hand card.
+
+---
+
+## **PowerPoint click-path**
+
+1. Insert → Chart → Column; enter 3 data points; format fills (Blue/Green); delete legend/gridlines.
+2. Draw line at 2.0×; format dashed Red; add label above.
+3. Draw rectangle (Green fill, 20% opacity) for <2.0× zone; send to back.
+4. Insert → Shapes → Curved Arrow for SFS proceeds; add label in bold.
+5. Create rounded rectangle for bullets; add label chip at top; insert icons.
+6. Bottom banner: full-width rounded rectangle, Accent Blue fill, white text.
+
+---
+
+Do you want me to also mock up the **exact leverage impact chart** with the bars, arrow, and overlays so you can paste it straight into the left half of the slide? That’s usually the hardest part to make look clean in PPT.
+
+
+
+
+### **Slide 9: Risk Matrix & Mitigation**
+
+**Headline:** “Four key risks — each met with a built-in, technical solution”
+
+**Core Table – One-to-one mapping of risks to mitigants**
+
+| **Risk** | **Pre-embedded Mitigant** | **Quantified Impact of Mitigant** |
+| :--- | :--- | :--- |
+| **FX Risk** | €11.3bn **deal-contingent forward** (EUR/DKK) — activates only if deal closes; nullifies otherwise. | EUR purchase price fixed at signing; **zero breakage cost** if deal fails. |
+| **Refinancing Risk** | **12+6+6 month bridge** — three separate bond market windows to refinance (€9bn Eurobond take-out). | >12 months buffer beyond base case; avoids forced issuance in adverse markets. |
+| **Synergy / Execution Risk** | **Target leverage <1.5×** vs 2.0× policy ceiling → **~0.5× headroom** (~€2.4bn EBITDA equivalent). | Rating protected even with partial synergy delivery or macro slowdown. |
+| **Equity Market Risk** | **Pre-negotiated rights-issue pivot** — fully underwritten by Mizuho if ABB conditions are unstable. | €3.0bn equity is **guaranteed** under all market scenarios. |
+
+**Bottom Annotations – Context & Stress-Test Points**
+*   **Regulatory timing buffer:** Base case assumes Q2 2025 close; 24-month bridge life provides >12 months contingency if clearance is delayed.
+*   **Social undertakings in Germany:** Two-year employee protections may slow synergy capture; **~€2.4bn EBITDA cushion** covers the delay without breaching leverage targets.
+*   **Alignment with rating agencies:** S&P “Negative” outlook is tied to restoring metrics within 18 months — our mitigants ensure this window is met or beaten.
+
+**Notes for Presentation**
+*   **Design Cues:** Use a clean 2×3 table layout with icons per risk (e.g., currency symbol, clock, factory, chart line). Use a green tick overlay in the “Mitigant” column to emphasise each risk is fully addressed. Use subtle red/yellow/green dots in the “Risk” column to indicate severity before mitigation.
+Here’s how to make Slide 9 look like a polished IB “risk control” slide — simple, visual, and confidence-building.
+
+---
+
+## **Slide objective**
+
+Show the committee/Board that every major risk already has a *built-in, specific, and credible* mitigant — with quantified impact.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. **Title bar** (full width, 0.9")
+  2. **Main table** (cols 1–12, \~70% height) — 2×3 layout with icons and colour cues
+  3. **Bottom strip** (full width, 0.9") — Context & stress-test notes
+
+---
+
+## **Typography & colours**
+
+* Font: Calibri; Title 30 pt; section labels 14 pt ALL CAPS; table text 11–12 pt; footnotes 9 pt.
+* Colours: Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Compliance Green #1E9E62, Amber #FFB300, Breach Red #C0392B, Light Grey #F2F4F7.
+* Icons: flat, monochrome, recoloured to match severity status.
+* Lines: 0.5 pt #D9DCE1.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* Text: **“Four key risks — each met with a built-in, technical solution”**
+* 30 pt Navy bold; thin Navy underline.
+
+---
+
+### 2) Main table — 2×3 visual matrix
+
+**Structure:**
+
+* Top row = headings: Risk | Pre-embedded Mitigant | Quantified Impact.
+* Two rows of content in **two “panels” per row** (effectively 4 mini-cards arranged as a grid).
+
+**Formatting:**
+
+* Row header cells (Risk column) get a small severity dot before the text:
+
+  * Red dot for high severity before mitigation (e.g., FX, Synergy).
+  * Amber for moderate (Refinancing, Equity Market).
+* Next to each Risk text, place a relevant flat icon (currency symbol, clock, factory/gear, bar chart/line).
+* Mitigant column: bold the instrument name (**deal-contingent forward**, **12+6+6 month bridge**, etc.) and add a small green tick overlay icon in the top-right corner of the cell to signal “solved”.
+* Impact column: bold the key numbers (**zero breakage cost**, **\~0.5× headroom**, **€3.0bn equity guaranteed**).
+
+**Design details:**
+
+* Header row fill #EEF1F6; bold white text on Navy or dark grey headers.
+* No vertical borders; light horizontal row dividers only.
+* Equal column widths so text wraps evenly; keep each cell to 2–3 lines max.
+
+---
+
+### 3) Bottom strip — Context & stress-test notes
+
+* Accent Blue bar (or white box with blue border if you want lighter look).
+* Three concise bullets (12 pt, no wrap beyond 2 lines):
+
+  * “Regulatory timing buffer: 24-month bridge gives >12 m contingency.”
+  * “Social undertakings may slow synergies; €2.4 bn EBITDA cushion covers delay.”
+  * “Alignment with rating agencies: meets/betters S\&P’s 18-month cure window.”
+
+---
+
+## **Visual & micro-cues**
+
+* Align icons in Risk column to left margin, with text indented to clear icon.
+* Keep Mitigant column in one colour tone (black text + green tick) so it feels “controlled”.
+* In Impact column, highlight headline metric in bold and leave the rest in Steel Grey for scanability.
+* Maintain equal white space above and below text in each cell for balance.
+
+---
+
+## **PowerPoint click-path**
+
+1. Insert → Table → 3×5 (header + 4 risks) → set column widths equal.
+2. Remove vertical borders; set header fill #EEF1F6, bold header text.
+3. Insert → Icons → relevant risk symbols; recolour as per severity; position in Risk cells.
+4. Mitigant cells: Insert → Icons → tick in green; position top-right in each cell.
+5. Format Impact cells: bold numbers, keep other text normal weight.
+6. Draw bottom strip rectangle; Accent Blue fill, white text; place context bullets inside.
+
+---
+
+If you want, I can give you a **ready-to-drop-in table master** with the icons, severity dots, and ticks already formatted — so you just paste in the risk wording and numbers. That keeps this slide looking consistent with your prior ones and avoids fiddly alignment. Would you like me to prep that?
+
+
+
+---
+
+### **Slide 10: Why Mizuho Wins**
+
+**Headline:** “Disciplined, priced, and underwritten — the ‘A-’ plan only Mizuho can deliver”
+
+**1. The Three Pillars**
+*   **Balance sheet commitment:** Sole-underwritten €12bn bridge + rights-issue backstop shows real risk appetite.
+*   **Integrated platform:** LCM → DCM → ECM → DRSE → SFS executed as one choreography.
+*   **Rating preservation:** Architecture built backwards from S&P/Moody’s triggers — the Board’s top priority.
+
+**2. Client Value ↔ Mizuho Gain**
+
+| What We Deliver | Client Value | Mizuho Gain |
+| :--- | :--- | :--- |
+| €12bn sole-underwritten bridge | Day-1 signing certainty | Lead-left control, arranger fees, early documentation primacy |
+| Deal-contingent €11.3bn FX hedge | Fixes purchase FX with zero break cost | FX/derivatives P&L, CFO-level trust |
+| €9bn multi-tranche Eurobond | Smooth refinancing ladder | DCM fees across 3 benchmarks, curve-shaping |
+| €3bn equity path (ABB + rights pivot) | Speed + certainty under all markets | ECM lead-left fees, underwriting credentials |
+| €1.5bn receivables SFS upsize | Cheaper funding, accelerates deleveraging | SFS arrangement + admin fees |
+
+**3. Pipeline This Unlocks**
+*   **Debt:** 3× EUR benchmarks + taps, RCF upsizing, hybrid potential
+*   **Equity / equity-linked:** ABB now, rights if needed, later buybacks/blocks/convertibles
+*   **Derivatives:** XCCY swaps, IRS, forwards, optionality for next M&A
+*   **SFS / working capital:** Receivables programmes, SCF rollouts
+*   **Treasury services:** Pooling, in-house bank, payments optimisation
+
+**4. Economics & Franchise**
+*   **Fees now:** Multi-product pool from bridge, DCM, ECM, SFS
+*   **Run-rate annuity:** FX/IR hedging, SFS admin, cash management
+*   **Risk:** Time-boxed bridge exposure, pre-placed syndication, off-balance-sheet SFS
+*   **Franchise lift:** IG transport/logistics flagship → case study for next acquirer
+
+**Closing Statement**
+> *"We bring a disciplined, priced, and fully underwritten path that preserves ‘A-’ and DSV’s firepower. Multi-product, high-RAROC, and franchise-defining — we must lead this."*
+
+Here’s how I’d turn Slide 10 into a “closing pitch” page that feels like the confident summary of an IB deck — structured, compact, and visually reinforcing that Mizuho is the only shop that can deliver the whole package.
+
+---
+
+## **Slide objective**
+
+Close strong: remind them of the differentiated solution, show tangible client value, demonstrate cross-product integration, and end on a clear “we must lead” call.
+
+---
+
+## **Layout grid**
+
+* **16:9**, 12-column grid, 0.6" margins, 0.25" gutters.
+* Regions:
+
+  1. Title bar (full width, 0.9")
+  2. Top row (cols 1–12): “Three Pillars” horizontal panel
+  3. Mid row (cols 1–12): Client Value ↔ Mizuho Gain table
+  4. Lower row split (cols 1–6): Pipeline list, (cols 7–12): Economics & Franchise list
+  5. Bottom banner (full width, 0.9"): Closing statement
+
+---
+
+## **Typography & colours**
+
+* Font: Calibri; Title 30 pt; section labels 14 pt ALL CAPS; table 11–12 pt; bullets 12 pt.
+* Colours: Navy #0B2447, Steel Grey #4A4A4A, Accent Blue #1B5DBF, Compliance Green #1E9E62, Light Grey #F2F4F7.
+* Accent icons in Green for “delivery” and Navy for “value/gain”.
+
+---
+
+## **Build step-by-step**
+
+### 1) Title bar
+
+* Text: **“Disciplined, priced, and underwritten — the ‘A-’ plan only Mizuho can deliver”**
+* 30 pt Navy bold; thin Navy underline.
+
+---
+
+### 2) Top row — The Three Pillars
+
+* Horizontal 3-panel layout (equal width panels, 8 pt rounded corners, white fill, 0.5 pt outline #E6E8EC, 12 pt padding).
+* Each panel has:
+
+  * Small icon (e.g., balance sheet = bank building, integration = flow arrows, rating = shield with “A-”) in Compliance Green.
+  * Short bold heading (“Balance sheet commitment”, “Integrated platform”, “Rating preservation”).
+  * 1–2 lines of concise explanation (≤80 characters).
+
+---
+
+### 3) Mid row — Client Value ↔ Mizuho Gain table
+
+* Label chip above table: “DELIVERABLES ↔ VALUE”.
+* Table format: 3 columns — “What We Deliver” | “Client Value” | “Mizuho Gain”.
+* Header fill #EEF1F6, bold white text on Navy or dark grey.
+* Left column = product/service; middle column = benefit to DSV; right column = commercial benefit to Mizuho.
+* Bold key transaction amounts (€12bn, €11.3bn, €9bn, €3bn, €1.5bn) for scanability.
+* Keep each cell to 1 line if possible.
+
+---
+
+### 4) Lower row — Split lists
+
+* **Left (Pipeline This Unlocks):**
+
+  * Label chip: “PIPELINE POTENTIAL” (white on Accent Blue).
+  * Bullets grouped by product type (Debt / Equity / Derivatives / SFS / Treasury).
+  * Use subtle icons per category (bond, stock, swap, invoice, cash vault).
+* **Right (Economics & Franchise):**
+
+  * Label chip: “ECONOMICS & FRANCHISE”.
+  * Bullets grouped by Fees now / Run-rate annuity / Risk / Franchise lift.
+  * Bold category names at start of each bullet.
+
+---
+
+### 5) Bottom banner — Closing statement
+
+* Full-width Accent Blue rectangle, white italic text:
+  *“We bring a disciplined, priced, and fully underwritten path that preserves ‘A-’ and DSV’s firepower. Multi-product, high-RAROC, and franchise-defining — we must lead this.”*
+
+---
+
+## **Visual & micro-cues**
+
+* Keep amounts in € and % in bold for immediate visibility.
+* In the “Three Pillars”, align icon + heading consistently; icons \~18–20 px.
+* Table: left-align text in first two columns, right-align fees if you add them in the last.
+* Use consistent vertical rhythm: each section starts at the same height relative to the grid.
+* Avoid overstuffing: white space = confidence.
+
+---
+
+## **PowerPoint click-path**
+
+1. Copy slide master/theme from prior slides.
+2. Insert → Shapes → Rounded Rectangles for Three Pillars; align horizontally.
+3. Insert → Table for Value/Gain; format header fill #EEF1F6.
+4. Create two rounded rectangles for lower split lists; add label chips.
+5. Insert icons from PPT’s library; recolour Green or Navy.
+6. Bottom banner: full-width rounded rectangle, Accent Blue fill, white italic text.
+
+---
+
+If you want, I can also map the *same icon/colour coding* used in prior slides (shield for rating, arrow flow for integration, bank building for funding) so the whole deck has a consistent visual language — that really makes the closing slide feel “tied together.” Would you like me to do that?
+
+
+
