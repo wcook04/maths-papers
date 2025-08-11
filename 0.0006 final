@@ -1,0 +1,745 @@
+
+SLIDE 1:
+
+THIS IS FOR THE 3 PRECEDENT ACQUSITIONS:
+perfect — here’s the **exact two-column Excel input** you asked for (values in **DKKm**). Paste this into A\:B, then build a Waterfall and mark the **first and last rows as Totals**.
+
+```
+Value (DKKm),Label
+8400,Schenker Standalone EBIT (2023A)
++1760,Synergy 1: IT & Platform Consolidation
++1540,Synergy 2: Operations & Facilities Consolidation
++1100,Synergy 3: SG&A & Admin Efficiencies
+12800,Schenker Pro-Forma EBIT (post-synergies)
+```
+
+Tip: after inserting the Waterfall chart, right-click the first and last columns → **Set as Total**.
+
+
+love it—let’s make that bottom-right area a clean, 10-second “proof strip” with a tiny timeline, plus tighten the text styling so it reads fast.
+
+# Mini timeline (bottom-right “execution proof”)
+
+Use a thin horizontal line with 3 milestones (16–18px circles). Title chip above: **EXECUTION PROOF (3×)**
+
+**Milestone copy (2 lines each, paste-ready):**
+
+* **2016 · UTi**
+  *Turnaround delivered* — Group **CR 29.4%** (↑ from 21.9%)
+* **2019 · Panalpina**
+  **DKK 2.2bn** synergies; A\&S **CR 50.0%**
+* **2021 · Agility GIL**
+  Target **DKK 2.8bn**; Group **CR 40.4%** (’23)
+
+**Visual cues**
+
+* Icon above each dot (wrench = ops, network = IT, shield = discipline).
+* Colour: dots Green; line Light Grey; tiny tick over UTi & Panalpina dots.
+* Footnote (8–9pt grey): “Sources: AR’17, Q1’21, AR’23”.
+
+**PPT quick build (60s)**
+Insert → Shapes → Line (0.75pt #D9DCE1). Add 3 circles (fill #1E9E62, no outline). Add text boxes under each, 10–11pt. Group.
+
+# Text box refinement (across the slide)
+
+* **Use chips:** section labels in white on **Accent Blue**; 120% letter-spacing.
+* **Sentence case, 12pt body, 1.15 line spacing.**
+* **Bold only the number** (€, %, x).
+* **Kill filler words.** Max 2 bullets per box, ≤ 80 chars each.
+* **Left border accent (optional):** 3pt **Navy** line on the left of key boxes.
+
+**Example tighten (Network card):**
+
+* *DSV:* Air & Sea **58%** of 2024 revenue
+* *Schenker:* Dense **EU Land/Road** network
+* *Result:* End-to-end multimodal; **2.4m t air**, **4.3m TEUs sea**
+
+# One-liner talk-track (for the pass-note)
+
+“Three cycles, same playbook: UTi proved it, Panalpina scaled it (**DKK 2.2bn**, **CR 50%**), Agility held **40%+** through normalization — the Schenker uplift is executable.”
+
+If you want, I can drop a tiny PNG/SVG of that timeline in our palette so you can paste it straight into PPT.
+
+
+gotcha — I read the slide you screenshotted. Here’s a clean, paste-ready **content pack** for each box so you can drop it straight in without fiddling. I’ve kept it tight enough to fit the layout you’ve got.
+
+# Scale & Market Leadership (left card)
+
+* **€41.5bn** pro-forma revenue; top-tier global forwarder
+* **\~7%** global 3PL share → stronger **procurement & capacity** access
+* Larger wallet share with top-100 clients; **cross-sell** across Air/Sea/Land
+
+# Network Fit (centre card)
+
+**DSV** — Air & Sea engine (**\~58%** of rev)
+**Schenker** — dense **European Land/Road** network
+**Result** — true end-to-end multimodal platform; managed flows of **\~2.4m tonnes air** and **\~4.3m TEUs sea** p.a.; **single IT stack** for yield & routing
+
+# Market Uplift Potential (right card – beside the mini chart)
+
+**EBIT margin (%)**
+
+* DSV: **\~10.6**
+* DB Schenker: **\~5.5**
+* **Target** (Year 3): **\~8–9**
+
+**Levers:** IT consolidation • network & lane optimisation • procurement • SG\&A/ops model discipline
+**Prize:** **€1.0bn+** run-rate synergy in \~3 years; step-up in ROCE
+
+# Synergy Waterfall (big bottom box – labels for the chart)
+
+Use these bar labels (keep numbers as placeholders if you don’t want to show € yet):
+
+1. **Schenker standalone EBIT (2023A)**
+2. **IT & platform consolidation** (+)
+3. **Network & procurement** (+)
+4. **Operating model / SG\&A** (+)
+5. **One-offs / dis-synergies** (–) *(optional, keeps it honest)*
+6. **Combined EBIT (run-rate, Year 3)**
+
+If you want numeric placeholders, use:
+
+* +**€0.3–0.4bn** IT/platform
+* +**€0.4–0.5bn** network/procurement
+* +**€0.3–0.4bn** ops/SG\&A
+  \= **€1.0–1.3bn** gross; net after one-offs still \~**€1.0bn** run-rate
+
+# “Proven Playbook” logos (bottom right)
+
+Add a small caption line under the three logos:
+
+* **UTi (2016)** — foundation of playbook
+* **Panalpina (2019)** — large-scale synergy delivery
+* **Agility GIL (2021)** — model repeatability
+
+# Bottom insight strip (replace the placeholder sentence)
+
+*“The industrial logic is clear; value only accrues if the **financing architecture protects the ‘A-’ rating** and preserves firepower for the **next acquisition**.”*
+
+---
+
+If you want me to **drop exact wording into a PowerPoint-ready mock** (with the mini margin chart and a pre-built waterfall you can just overwrite), say the word and I’ll spin a canvas template. If you’d rather I pull **precise numbers** from the latest AR/investor pack for the waterfall and margins, point me to the source (or upload it) and I’ll slot them in.
+
+
+
+[ TITLE / HEADLINE — single full-width text box ]
+
+┌──────────────────────────── TOP ROW (3 equal cards) ────────────────────────────┐
+│ [Card A: SCALE & MARKET]  [Card B: NETWORK FIT]  [Card C: MARGIN UPLIFT]       │
+│  • Big number block        • Inside split:        • Small chart area (top)      │
+│  • 2–3 bullets               - Left: DSV list       + labels                    │
+│                              - Right: Schenker     • 2–3 “levers” bullets       │
+│                            • Bottom strip: Result                                │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────── BOTTOM BAND (split 75/25) ──────────────────────────┐
+│ [Wide container: SYNERGY WATERFALL CHART spans left ~3/4 of slide]  │ [Sidebar] │
+│  • Chart only (no text)                                             │  PRECEDENTS│
+│                                                                      │  • Mini timeline│
+│                                                                      │  • 3 logos      │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+[ FOOTER INSIGHT — single full-width text box / quote ]
+
+
+-------
+SLIDE 2:
+Here’s a tight, paste-ready block for the grey box.
+
+**Downgrade cost (A- → BBB) – curve-fit method**
+
+* Assumed take-out: **€9.0bn** ( **€3bn 3y / €3bn 5y / €3bn 7y** )
+* Δ i-spread vs A-curve (bps): **+34.1 / +37.6 / +39.9**
+* Annual penalty: **€10.24m + €11.29m + €11.98m = €33.5m p.a.**
+* Model uncertainty (R²\_B = **0.623** → **±61%**): **€12.9m–€54.1m p.a.**
+* PV of extra coupons @ **7.5%** (lives **3/5/7y**): **\~€136m NPV** *(range **€52–€219m**)*
+
+*Method: i-spread $y = m\ln T + c$. A-: $35.185\ln T - 5.974$; B/BBB: $42.06\ln T + 20.591$.*
+
+> Alt “desk comps” view (for a harder stance): assume flat **+145 bps** A-→BBB across tenors ⇒ **\~€130m p.a.**; **\~€520m NPV** (3/5/7y lives @ 7.5%).
+
+
+
+Here’s how I’d tighten this so it lands in **60 seconds** and looks “bank-grade”.
+
+# Headline (make it do the work)
+
+Swap to a single, punchy claim:
+
+> **A downgrade to BBB costs €33–54m p.a. (curve) — or \~€130m p.a. on desk comps**
+
+Small subline under the title: “NPV @7.5%: **\~€136m** (curve) / **\~€520m** (comps)”.
+
+# Top table (clean + scanable)
+
+* Keep four columns but compress copy. Use **red “BREACH”** and **green “CURES/COMPLIANT”** tags.
+* Move the cure-window sentence into a **grey footnote** under the table: “S\&P: 18-month cure; Moody’s: tolerance with credible deleveraging.”
+* Add a tiny chip above the table: **RATING TRIGGERS**.
+
+# Left chart (declutter + show the delta)
+
+* Kill most scatter noise. Keep **only the two log curves** and **three vertical guide lines** at **3/5/7y**.
+* Add **three bracket labels** at 3/5/7y showing **Δ spread** (e.g., “+34bps”, “+38bps”, “+40bps”).
+* Title chip above the plot: **MARKET SPREAD IMPACT**. Footnote bottom-left: “EUR IG i-spreads, dd/mm/yy”.
+* If space: faint dots for 3–4 comps per rating for credibility; everything else goes.
+
+# Right grey box (turn into the “answer”)
+
+Make this a white card with 8pt radius and light outline. Content:
+
+* Big line (22–24pt): **€33.5m p.a.** *(curve)* → **€136m NPV**
+* Small line: **Range (R²=0.623)**: **€12.9–€54.1m p.a.**, **€52–€219m NPV**
+* Divider
+* Second line (bold pill): **Conservative desk comps: €130m p.a. → \~€520m NPV**
+* Mini method line (9pt grey): “Log curves: A- $35.185\ln T-5.974$; BBB $42.06\ln T+20.591$. r=7.5%.”
+
+# Bottom strip (align message with numbers)
+
+Your current box says “\~€600m”. Either:
+
+* **Option A (keep comps stance):** “Conservative market view: **\~€600m NPV** and loss of serial-acquirer flexibility.”
+* **Option B (curve first):** “Curve-based cost **\~€136m NPV**; comps guardrail **\~€520–600m**.”
+
+Pick one to avoid cognitive dissonance.
+
+# Visual hygiene
+
+* Use chips over sections: **RATING TRIGGERS** / **MARKET SPREAD IMPACT** / **COST OF DOWNGRADE**.
+* Keep a strict grid: table width = plot + cost card widths; align top edges.
+* Colours: Red #C0392B (breach), Green #1E9E62 (compliant), Navy for titles. No shadows.
+* Add **date/source** micro-footnote for spread data.
+* Ensure **numbers right-aligned** and units consistent (bps, €m, %).
+
+# 60-second talk track (3 beats)
+
+1. **Triggers:** “All-debt breaches S\&P 45% FFO/Debt and Moody’s 2.5×—that’s immediate rating pressure.”
+2. **Market price:** “The market charges **+34–40bps** at our tenors for BBB vs A-.”
+3. **Cost:** “That’s **€33–54m p.a.**—**\~€136m NPV** on our curve; **\~€130m p.a. / €520–600m NPV** on conservative desk comps. Our plan avoids this.”
+
+# Optional micro-adds (if you have 10–15s extra)
+
+* A tiny **sensitivity pill** under the cost card: “+50bps wider market ⇒ **+€45m p.a.**”.
+* A **green tick icon** next to “Our phased plan” column heading to telegraph “solved”.
+
+If you want, I can mock this as a PPT skeleton with the curves simplified, 3/5/7y brackets, and the cost card styled—so you just paste in your live date stamp.
+
+
+
+----
+PHASE 1:
+love it — here’s a **smarter, banker-tight v2** you can paste into the grey box + a couple of micro-edits to the two cards. Keeps it fast to read, but nails the mechanics.
+
+# Grey box (drop-in)
+
+**T0 — Signing**
+
+* **Lock** FX via **deal-contingent Sell DKK / Buy EUR forward** (no CSA, no MTM; only becomes effective if the deal closes).
+* Bridge **committed but undrawn**.
+* Fees: **upfront** paid at signing; **ticking** starts **D+60**.
+
+**T0→T1 — Pre-close**
+
+* Nothing settles. Only **ticking** (and any **rating step-ups** if delayed).
+
+**T1 — Close (\~9m)**
+
+* **Draw bridge** (pick one):
+
+  * **A)** Draw **DKK** → **settle DCFX** → **receive EUR** → **pay seller**. *(Best match to “fix price in DKK” storyline; refi later into EUR bonds.)*
+  * **B)** Draw **EUR** → pay seller in EUR; **cash-settle DCFX** so overall **EUR cost = locked rate**.
+* Accounting cue: DCFX becomes effective **only at close**; economics captured at the **locked rate**.
+
+**T2/T3 — Take-out (≤12m post-close)**
+
+* **€9bn EUR bonds + €3bn equity** → **repay bridge** in full (12+6+6 life = **3 windows**).
+* Optional: **XCCY swap** if any residual currency mismatch.
+
+**If deal fails**
+
+* **Forward lapses at zero cost**; bridge **never drawn** (only upfront/ticking fees spent).
+
+---
+
+# Tiny cash waterfall at Close (optional mini-graphic)
+
+**Sources:** Bridge draw (DKK or EUR) **±** DCFX settlement **→ EUR**
+**Uses:** **€11.3bn** purchase price **+** accrued fees **=** **0** net cash variance to plan
+
+---
+
+# Card micro-refinements
+
+**Left card — Bridge**
+
+* **Purpose:** **Day-1 funding certainty**; sole-underwritten **bridge-to-bond**.
+* **Economics:** Margin (A-) **+100/+150/+200 bps**; **ticking** from D+60; **extension** \~25 bps per 6m; **max life 24m** (= 3 market windows).
+* **Docs:** Minimal CPs, negative pledge; **pre-aligned** with EUR bond take-out.
+
+**Right card — Deal-contingent EUR/DKK forward**
+
+* **Why this, not a standard fwd/option:** **Zero break cost** if deal breaks; **no upfront premium**; **premium embedded in forward points** vs vanilla.
+* **Tenor:** Signing → expected close (**\~9m**).
+* **Takeaway (insert under box):** *“FX cost of the purchase is fixed at signing; settlement only if the deal completes.”*
+
+---
+
+# PPT tips (so it looks “banky”)
+
+* Draw a **3-dot timeline** (Signing / Close / Take-out). Under each dot, **2 lines max** from the grey-box text.
+* Add two small green shield chips at **Signing**: “**Funding locked**”, “**FX locked**”.
+* If you include the cash waterfall, keep it **four labels** only (Sources/Uses), no numbers.
+
+Want me to drop a **ready-styled PPT shape** with this timeline + cash waterfall so you can paste straight in?
+
+
+
+----
+Phase 2 equity:
+
+gotcha — here’s the call and exactly what to drop into each grey box.
+
+# Execution decision (one line under the slide title)
+
+**Proceed with Path A — €3.0bn ABB day-1; pre-document a fully underwritten Rights pivot.**
+*Pivot only if (Raise/ADTV > **15×**) or (30d vol > **25%**) or (cornerstone < **40%**).*
+
+---
+
+# Top-right grey box: “Execution metrics”
+
+Use two stacked mini-cards (ABB on top, Rights below). Keep copy tight.
+
+**Path A — Accelerated Bookbuild (ABB)**
+
+* **Size:** \~€3.0bn (≈8–9% mkt cap), **\~12× ADTV** *(insert live ADTV)*
+* **Discount plan:** **2.5–4.0%** vs prior close; **tighten on ≥3×** cover
+* **Cornerstones:** **≥50% pre-covered** (wall-crossed long-onlys)
+* **Timing:** Post-close launch • **2–6h** book • **T+1** settle
+* **Gates at launch:** Authorisations ✓ • **30d vol ≤25%** • **quiet tape** • results/blackout clear
+* **Alloc bias:** long-only / index / low churn; HFs only as price support
+* **Message:** *Speed + low market exposure; preserves rating timeline*
+
+**Path B — Fully Underwritten Rights Issue (pivot)**
+
+* **Size:** €3.0bn **pre-emptive**; **proceeds certain** (underwritten)
+* **Pricing anchor:** discount to **TERP** (typ. **20–35%**)
+* **Timing:** **3–4 weeks** (prospectus + rights trading)
+* **Pivot triggers:** **Raise/ADTV >15×**, **30d vol >25%**, unstable tape, need retail inclusion
+* **Message:** *Fairness + certainty if volatility/ADTV block ABB*
+
+(Add a thin one-liner under the cards:)
+
+> **Decision rule:** Start ABB; pivot to Rights if thresholds breach at pre-launch sign-off.
+
+---
+
+# Bottom grey box: “Something interesting” — Liquidity vs Certainty Map
+
+A simple quadrant that tells the choice in one glance.
+
+**Chart spec (axes & thresholds)**
+
+* **X-axis:** 30-day realised **volatility (%)** → (threshold at **25%**)
+* **Y-axis:** **Raise / ADTV (×)** → (threshold at **10–12×** green; **>15×** red)
+* **Zones:**
+
+  * Bottom-left (green): **ABB viable**
+  * Top-right (blue): **Rights pivot zone**
+  * Middle (amber): **Banker judgment** (depends on cornerstones)
+
+**Overlays & callouts**
+
+* **Amber dot:** “**This deal:** *\[12×, 22%]*” *(update with live numbers)*
+* Small tag: “**Cornerstone ≥50%** shifts dot left (effective ADTV ↑)”
+* Footer note: “If dot crosses **either** line → **pivot**. If inside green → **ABB now**.”
+
+**Optional mini-stat strip (below the chart)**
+
+* **ADTV:** *\[€***m]* • **Free float:** \_\[**%]* • **Top-10 holders capacity:** \_\[€\_*bn]*
+* **Upcoming events:** blackout/earnings/div ex-date *(tick/cross icons)*
+
+---
+
+If you want, I’ll slot your live ADTV, vol and authorisation status into the thresholds and give you the final wording for the cards in your house style.
+
+
+Totally doable. Bloomberg won’t spit out that exact quadrant, but you can pull the two inputs in seconds and make the chart in Excel (Bloomberg add-in). Here’s the clean playbook.
+
+# What you need
+
+* **X-axis:** 30-day **realised volatility** (percent).
+* **Y-axis:** **Raise / ADTV (×)**, where ADTV is **average daily value traded** (in money, not shares).
+
+# Fastest terminal route (to read the numbers)
+
+1. **30d realised vol**
+
+   * `TICKER <Equity> HVT <GO>` (Historical Volatility Table) → read **30D**.
+   * or `… HVG <GO>` (Graph) → set **Period = 1M**, display value.
+
+2. **ADTV (value traded)**
+
+   * `TICKER <Equity> DES <GO>` → *Trading Summary* → **Average Daily Value Traded** (pick 1M/3M; use **1M** to match the 30d vol).
+   * If you want it for multiple names at once: `EQS <GO>` → add field **Average Daily Value Traded (1M)**.
+
+3. **Currency alignment**
+
+   * If your raise is in **EUR** but ADTV shows in **DKK/USD**, convert: `EURDKK Curncy HP <GO>` (or pull spot in Excel) and convert the **€3.0bn** to the ADTV currency.
+
+# Excel (Bloomberg add-in) — build the chart in 2 minutes
+
+1. **Pull the two inputs**
+
+   * In a cell for vol:
+     `=BDP("DSV DC Equity","HIST_VOL_30D")`
+   * In a cell for ADTV (value):
+     `=BDP("DSV DC Equity","AVG_DAILY_VALUE_TRD_1M")`
+   * If those mnemonics vary on your terminal, use **`FLDS <GO>`** to search:
+
+     * search **“Historical Volatility 30D”** and **“Average Daily Value Traded 1M”** and insert the exact field names it gives you.
+
+2. **Normalise currencies**
+
+   * If ADTV is in DKK and raise is €3,000,000,000:
+     FX: `=BDP("EURDKK Curncy","PX_LAST")`
+     `Raise_DKK = 3,000,000,000 * FX`
+   * Then: `Raise/ADTV = Raise_DKK / ADTV_DKK`
+
+3. **Make the plot**
+
+   * Insert → **Scatter** (one point).
+   * X = **30d vol (%)**.
+   * Y = **Raise/ADTV (×)**.
+   * Add two **constant lines** (format as thin dashed):
+
+     * X = **25%** (volatility threshold).
+     * Y = **15×** (capacity threshold).
+       (If you prefer gentler gate, add **10–12×** as a green “comfort” line.)
+   * Label the dot: **“This deal: 12×, 22%”** (update live).
+   * Optional note: “Cornerstone ≥50% effectively lowers Raise/ADTV”.
+
+# Alternatives / nice-to-haves
+
+* **Multiple dots (peers or past deals):** use `EQS <GO>` to export **HIST\_VOL\_30D** and **ADTV 1M (value)** for a peer set, compute **raise/ADTV** per name, and scatter them faint grey for context.
+* **Sanity check fields:** In terminal, `FLDS <GO>` is your friend. Search *volatility* and *average daily value traded* to grab the precise field codes your license exposes.
+* **If you must stay in terminal:** you’ll still build the plot in Excel; Bloomberg doesn’t have a canned “Raise/ADTV vs vol” chart.
+
+If you want, give me the ticker you’re using and I’ll write the exact two BDP formulas with the right field mnemonics for your terminal.
+
+
+
+-----
+phase 2 debt:
+
+here’s the **final content** for “Phase 2: Permanent Capital (Debt)”. Paste this straight into your slide (same grid you’ve been using).
+
+---
+
+# Slide title
+
+**Phase 2: Permanent Capital (Debt)**
+
+**Sub-title:** **€12bn day-1 bridge**; take-out within **6–9 months** via **€9bn EUR bonds (3y/5y/7y) + €3bn equity**. RCF remains **undrawn** for liquidity.
+
+Small pill (top-right): **A- vs BBB (curve): +35–40 bps at 3–7y**\*
+*\*Desk-comps view often shows \~+145 bps; curve deltas used for pricing grid below.*
+
+---
+
+## Left card — STRUCTURE & TENOR
+
+* **Purpose:** Refinance the **€12bn** M\&A bridge within **6–9 months** of close.
+* **Format:** **EUR Reg S** via **EMTN**; natural EUR hedge; fastest documentation.
+* **Tenors:** **3y / 5y / 7y** to build curve and serve duration pockets.
+* **Docs readiness:** OC addendum & NCA notifications pre-cleared; execution windows pre-agreed.
+* **Macro (live line):** *EUR IG supply light; i-spreads tightening MTD.*
+
+---
+
+## Right card — SYNDICATION & INVESTORS
+
+* **Lead-left:** Mizuho DCM—**inside-out** price discovery, real-time guidance, investor calls.
+* **Book quality:** target **≥3×** cover; **≥70% long-only** allocation; **tighten 5–10 bps** at pricing.
+* **Investor mix:** Asset managers/insurers/pensions (core); banks/CBs/PBs (support).
+* **Calendar:** Windowed vs supply; **no 144A** needed (EMEA EUR focus).
+
+---
+
+## Pricing grid — comps curve method (NIC = +10 bps)
+
+Formulas used: **A-curve** $y=35.185\ln x-5.9744$; **BBB-curve** $y=42.061\ln x+20.951$.
+$y=$ i-spread (bps), $x=$ tenor (years). Round to the nearest **1 bps**; show **“\~”** on slide or round to **5 bps** for desk look.
+
+| Tranche    | A-curve i-spr (bps) | +NIC | **Indicative A- (bps)** | **Indicative BBB (bps)** | **BBB uplift** | Rationale                        |
+| ---------- | ------------------: | ---: | ----------------------: | -----------------------: | -------------: | -------------------------------- |
+| **3-year** |                32.7 |  +10 |              **\~42.7** |               **\~77.2** |      **+34.5** | Bank treasuries / short duration |
+| **5-year** |                50.7 |  +10 |              **\~60.7** |               **\~98.6** |      **+38.0** | Core real-money benchmark        |
+| **7-year** |                62.5 |  +10 |              **\~72.5** |              **\~112.8** |      **+40.3** | Insurers & pensions              |
+
+Footnote (9pt grey): *Peers fitted to curves; NIC illustrative; update dd/mm/yy. Desk-comps penalty may be larger; curve-based deltas shown here.*
+
+---
+
+## Single comp chart (bottom)
+
+**Title:** *i-Spread vs Tenor — Peers & Indicative Points (curve method)*
+Plot **peer A- dots** + dotted fit; overlay **green hollow dots** at A- indicatives (3/5/7y) and **red hollow dots** **+35–40 bps** above (BBB case). Add a small bracket “**BBB ≈ +35–40 bps** at these tenors”.
+
+**Coordinates (bps) for your dots**
+
+* **A- curve:** (3, **32.7**), (5, **50.7**), (7, **62.5**)
+* **A- indicative (+NIC):** (3, **42.7**), (5, **60.7**), (7, **72.5**)
+* **BBB curve:** (3, **67.2**), (5, **88.6**), (7, **102.8**)
+* **BBB indicative (+NIC):** (3, **77.2**), (5, **98.6**), (7, **112.8**)
+
+---
+
+## Micro-KPI strip (under the table)
+
+**Target ≥3× book** • **≥70% long-only** • **Tighten 5–10 bps at pricing**
+
+---
+
+## 15-second talk track
+
+“Three EUR tranches retire the bridge in 6–9 months. We price off the A- curve with a 10 bps NIC. Curve math implies **+35–40 bps** if downgraded to BBB at our tenors (desk comps can be higher), reinforcing the value of rating preservation. We’ll run for **≥3×** cover and **≥70%** long-only to tighten at pricing.”
+
+
+
+
+---
+phase 3
+got it — here’s exactly what to drop into the **left box** (the visual) and a tighter **right tile** you can paste verbatim.
+
+# Fill the left box (hero visual)
+
+**What to show:** a one-glance *leverage walk* with policy ceiling + upgrade zone.
+
+**Excel data (paste):**
+
+```
+Year,Leverage (x),Note
+2024 Pro-forma peak,3.0,Includes acquisition debt (Moody’s base)
+Day-1 post-financing,2.4,€9bn bonds + €3bn equity
+2025 (12m),1.8,FCF + synergies applied to debt
+2026,1.6,Buybacks paused until <2.0x
+2027 (steady-state),1.4,Upgrade potential zone
+```
+
+**Build (PowerPoint/Excel):**
+
+1. Insert → **Line with markers** (no legend).
+2. Add a **horizontal dashed line at 2.0×** labelled “Policy ceiling”.
+3. Add a **subtle green band** under **1.5×** labelled “Upgrade potential”.
+4. Turn on **data labels** for the four dots only; format as **3.0× • 2.4× • 1.8× • 1.4×**.
+5. Add three small callouts anchored to the line:
+
+   * “\~**DKK 17bn** CFO p.a.; capex **\~1.5%** rev”
+   * “**€400m** synergies p.a. (conservative)”
+   * “**Buybacks resume <2.0×**; surplus cash → debt”
+6. Axis: X = **2024–2027**, Y = **0.5–3.2×** (no grid; light y-ticks only).
+
+**Optional micro-element (fits in the same box):** a tiny **“Day-1 effect”** inset (a 3.0×→2.4× vertical drop with the caption “Financing package effect”), tucked in the top-left of the chart.
+
+---
+
+# Refine the right tile (paste-ready copy)
+
+**1) Starting point & policy ceiling**
+
+* Peak leverage **3.0×** in **2024** (incl. acquisition debt; Moody’s base case).
+* **Policy cap: 2.0×** Net Debt/EBITDA; **buybacks resume only below** this level.
+
+**2) Drivers of deleveraging**
+
+* **Execution track record:** UTi, Panalpina, Agility — repeatable playbook.
+* **Synergies:** **€400m p.a.** (conservative vs Moody’s **€1bn+**).
+* **Cash generation:** **\~DKK 17bn CFO** in year 1; capex **\~1.5%** of revenue.
+* **Capital allocation:** **All surplus cash → debt** until **<2.0×**.
+
+**3) Steady-state target (<1.5×)**
+
+* Aligned with **Moody’s** upgrade trigger (“**sustainably <1.5×**”).
+* **Agency path to \~1.4× by 2027** — restores long-term **M\&A capacity**.
+
+**Footnote (small, grey):** “Illustrative; agency wording/metrics to be confirmed at launch.”
+
+---
+
+## Design hygiene (so it looks “bank-grade”)
+
+* Keep the **chart dominant** (≈60–65% of slide width); right tile in a white card with 6–8 pt radius, 12 pt padding.
+* Use **red dashed** for the 2.0× ceiling; the **2027 dot** in **green** to sell the destination.
+* Bold only **ratios/€ amounts** in the right tile; ≤2 lines per bullet.
+* Add a tiny **Moody’s shield icon** in the right-tile header if you’re using icons elsewhere.
+
+If you want, I can spit out the chart as a clean PNG in the palette so you can drop it straight into PPT.
+
+
+
+-----
+SFS
+
+
+awesome—here’s a tighter, “bank-grade” **Slide 8 (Factoring / SFS)** you can paste straight into the deck. I’ve kept copy short, numbers bold, and aligned with your palette/layout from earlier slides.
+
+# Slide 8: Factoring / SFS — fast, low-cost deleveraging
+
+**Headline:** **€1.5bn** receivables financing — **near-instant** liquidity, **\~150 bps** inside bonds, **<12m** impact
+
+---
+
+## Left half — Visual: Leverage impact (paste-ready)
+
+**Chart spec (clustered columns or mini waterfall):**
+X-axis: **H1’25 Start** • **H1’27 w/o SFS** • **H1’27 w/ SFS**
+Y-axis: **Net Debt / EBITDA (×)**
+
+**Values (illustrative for layout):**
+
+* **2.7×** → **2.0×** → **\~1.9×**
+* Red **dashed line at 2.0×** (“Policy ceiling”)
+* **Green zone <1.5×** (“Upgrade potential”)
+
+**Overlays:**
+
+* Curved arrow “**€1.5bn SFS proceeds → Debt repayment**”
+* Tag: “**<2.0× achieved \~12 months earlier** (within S\&P 18-month window)”
+
+**Excel CSV (drop in):**
+
+```
+Label,Leverage (x)
+H1 2025 (Start),2.7
+H1 2027 (Without SFS),2.0
+H1 2027 (With SFS),1.9
+```
+
+---
+
+## Right half — Why it works (concise, proof-driven)
+
+**1) Proven & quick**
+
+* **DSV** already uses **non-recourse factoring ~~DKK 2.45bn (~~€330m)**.
+* **DB Group** runs factoring (**\~€260m**) to which **Schenker** contributes.
+* **Setup speed:** **Factoring lines in days**; **SFS conduit 6–8 weeks**.
+
+**2) Big, high-quality pool**
+
+* **Pro-forma receivables:** **~~DKK 44.4bn (~~€6.0bn)** (DSV + Schenker est.).
+* **€1.5bn** draw is **<25%** of pool → strong **OC** & investor appeal.
+
+**3) Cheaper than bonds**
+
+* Pricing **\~150 bps inside** unsecured EUR; on **€1.5bn** ≈ **€22.5m p.a.** saving.
+
+**4) Accelerates deleveraging**
+
+* **€1.5bn** straight to acquisition debt; helps **cure windows** at agencies.
+
+**5) Supports integration, preserves RCF**
+
+* Funds **one-off integration cash** without equity or RCF usage.
+
+**Mechanics (one-liners for the box footer):**
+**True sale, revolving** eligibility; **SPV / conduit**, bank liquidity lines, **20–30% OC**, **364-day** renewable tenor; **non-recourse** to originator.
+
+**Tiny disclaimer (grey, 9pt):** Schenker receivables **estimated pro-rata** from DB; update with final audit. Savings & leverage effects **illustrative**.
+
+---
+
+## Bottom banner — Core message (one line)
+
+*“Scale up an existing receivables platform to unlock **€1.5bn** of **near-term, low-cost** liquidity — **faster deleveraging**, **A- rating protection**, **no extra equity**.”*
+
+
+
+----
+final slide 
+
+Got it — for **Slide 10 — Why Mizuho Wins**, we want this to land with **instant clarity for the IC** and **client-facing wow-factor** later.
+Here’s exactly how I’d build it so it’s not just a wall of text, but a clean 2×3 grid visual with icons, plus a tight call-to-action.
+
+---
+
+## **Slide Title**
+
+**Disciplined, priced, and underwritten — the ‘A-’ plan only Mizuho can deliver**
+*(Same navy headline bar as previous slides; bold “A-”)*
+
+---
+
+## **Layout Plan (16:9 grid)**
+
+### **Top Row (3 equal columns) — “Three Pillars”**
+
+Each pillar gets a coloured icon + short label + one crisp line.
+
+| **Pillar**                   | **Icon**                 | **One-liner**                                                                            |
+| ---------------------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
+| **Balance sheet commitment** | Bank building / shield   | Sole-underwritten **€12bn** bridge + rights-issue backstop shows unmatched risk appetite |
+| **Integrated platform**      | 5 interlocking circles   | LCM → DCM → ECM → DRSE → SFS executed in one seamless choreography                       |
+| **Rating preservation**      | Credit rating badge “A-” | Architecture built backwards from S\&P/Moody’s triggers — the Board’s top priority       |
+
+---
+
+### **Middle Row (3 equal columns) — “Client Value ↔ Mizuho Gain”**
+
+Make a simple 2-column mini-table inside each tile (small font, two rows max) so it’s scan-friendly.
+
+**Tile 1 — Certainty**
+Client Value: Day-1 signing certainty
+Mizuho Gain: Lead-left control, arranger fees
+
+**Tile 2 — Market-proof**
+Client Value: Smooth refinancing ladder (bonds) + equity flexibility
+Mizuho Gain: DCM & ECM lead-left fees, underwriting creds
+
+**Tile 3 — Optimisation**
+Client Value: Cheaper funding, faster deleveraging via SFS
+Mizuho Gain: SFS arrangement/admin fees
+
+---
+
+### **Bottom Row — Full-width “Pipeline & Franchise” ribbon**
+
+Dark navy banner (white text, italic headline style):
+
+**Pipeline unlocked:** EUR benchmarks, ABBs/rights, XCCY swaps, SFS rollouts, hybrid issuance, treasury services
+**Franchise lift:** IG transport/logistics flagship → EMEA case study
+
+---
+
+## **Design Notes**
+
+* **Icons:** Use consistent line-weight icon set (Lucide, 2pt weight).
+* **Colours:**
+
+  * Navy (#0B2447) for title & bottom banner
+  * Accent blue (#1B5DBF) for icons
+  * Light grey (#F2F4F7) tile backgrounds
+* **Font hierarchy:**
+
+  * Pillar headings: 18pt bold
+  * One-liners: 12pt regular
+  * Mini-table text: 11pt
+* **Spacing:** 12pt padding inside tiles, equal gutter between columns
+
+---
+
+## **Build Steps in PowerPoint**
+
+1. **Set grid** → 3×3 table layout, remove borders.
+2. **Insert icons** in top row, align centre above headings.
+3. **Fill tiles** (light grey for middle row, white for top row).
+4. **Bottom banner** = full-width rectangle, navy fill, white italic text.
+5. Keep all text **≤ 2 lines per bullet** — if it wraps, cut words.
+
+---
+
+If you want, I can now **mock up this grid with your actual deal numbers and icons** so you can drag-and-drop it into the deck without doing the design grunt work yourself.
+
+Do you want me to produce that mock-up PNG for Slide 10? That way it’s fully visualised before you put it in PPT.
+
+
