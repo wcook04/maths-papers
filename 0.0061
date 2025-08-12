@@ -1,0 +1,69 @@
+love this brief. Here’s a tighter, clearer right-hand vertical that introduces the full financing path (debt + equity) but keeps the nitty-gritty on the left where your bridge + hedge details already live.
+
+Right-side vertical: “Execution timeline & financing path”
+
+Layout (clean + fast to build)
+	•	A single vertical spine (thin line) with 6 milestones (solid circles).
+	•	Two slim swimlanes flanking the spine:
+	•	Left lane (BLUE): Instruments & cash path — rectangles.
+	•	Right lane (GREEN): Assurances & gates — shield chips/diamonds.
+	•	One branch arrow for the fail case (pre-close break).
+	•	Tiny icon set: bridge, bond stack, coins (equity), FX arrows, shield, gate/diamond.
+
+⸻
+
+Paste-ready milestone copy (2 lines each)
+
+T0 — SIGNING (today)
+Blue: Commit bridge (undrawn). Lock FX via deal-contingent DKK→EUR.
+Green: Funding & FX certainty locked; zero MTM / no-break if deal fails.
+
+T0→T1 — PRE-CLOSE (0–9m)
+Blue: Soft-launch €9bn EUR bonds (doc prep / EMTN addendum). Pre-authorise equity.
+Green: Pay ticking only; monitor rating headroom; build investor education.
+
+T1 — CLOSE (~9m)
+Blue (choose path, per left box mechanics): Draw bridge; DCFX settles; pay seller in EUR.
+Green: RCF undrawn; rating preserved; announce take-out plan (Debt + Equity).
+
+T2 — WINDOW 1 (M+1 to M+3)
+Blue: Execute EUR bonds 3y/5y/7y (target €9bn); repay bridge (part).
+Green (diamond gate): Equity gate check → If Raise/ADTV ≤12× & 30d vol ≤25% with cornerstones ≥50% → launch ABB ~€3bn. Else pivot pre-doc to Rights.
+
+T3 — WINDOW 2 (M+4 to M+6)
+Blue: Top-up bonds / second tranche; complete equity if pivoted.
+Green: Maintain ≥A- metrics; keep RCF as liquidity backstop.
+
+T4 — CONTINGENCY (≤12m post-close)
+Blue: Mop-up any residue; optional XCCY on legacy pockets.
+Green: Bridge fully repaid within 12m; rating cure windows protected.
+
+Fail case branch (thin arrow off T0→T1)
+Blue: Deal breaks → forward lapses; bridge never drawn.
+Green: Cost limited to upfront + ticking; no FX loss.
+
+⸻
+
+Tiny labels you can drop under the spine (one line each)
+	•	Debt: “€9bn EUR bonds (3/5/7y) → bridge take-out.”
+	•	Equity: “€3bn primary — ABB first, Rights pre-documented pivot.”
+	•	Liquidity stance: “RCF undrawn; SFS/receivables separate module (see later).”
+
+⸻
+
+Visual build (PowerPoint quick steps)
+	1.	Draw a vertical line (0.75 pt). Add 6 circles (16–18 px). Distribute vertically.
+	2.	On the left of each circle, place a blue rounded rectangle (Instruments). Keep to ≤10 words each — use the paste-ready lines above.
+	3.	On the right, add green shield chips (Assurances) and two diamonds at T2 (the equity gate) and T4 (completion).
+	4.	Add a thin curved arrow from T0→T1 out to the Fail case note.
+	5.	Iconography (tiny, above each blue box): bridge / FX / bond stack / coins / shield / clock.
+	6.	Micro-footer under the column (8–9 pt grey): “Take-out mix detailed on Debt & Equity slides; SFS covered later.”
+
+⸻
+
+What this communicates (in one glance)
+	•	Problem → Plan: “Lock FX + funding now; refinance quickly without losing A-.”
+	•	Full path shown, detail deferred: Debt and equity are introduced here, justified later.
+	•	Control & contingencies: Clear gates, windows, and a fail-safe branch.
+
+If you want, I can turn this into a ready-styled PPT shape pack (spine, chips, icons, gates) so you can paste it straight in.
