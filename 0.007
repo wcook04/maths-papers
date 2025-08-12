@@ -1,0 +1,84 @@
+Got it — here’s the step-by-step spec so you can build the ABB diagram yourself in PowerPoint (or whatever you’re using), cleanly and logically for the bottom-third of your ECM slide.
+
+⸻
+
+1. Overall layout
+	•	Three horizontal swimlanes stacked vertically:
+	1.	Top lane: Issuer (Company)
+	2.	Middle lane: Joint Bookrunners (Banks)
+	3.	Bottom lane: Institutional Investors
+	•	Each lane is a light outlined rectangle spanning the width of the page.
+	•	Left margin: lane labels in bold (no background fill).
+	•	Inside each lane: place process boxes and arrows.
+
+⸻
+
+2. Core process boxes
+
+Inside the Bookrunners lane (middle):
+	1.	Box 1: “Launch (after hours)”
+	2.	Box 2: “Accelerated bookbuild (1–3 hrs)”
+	3.	Box 3: “Price & allocate”
+
+	•	Use rounded rectangles (soft corners), equal size, evenly spaced left-to-right.
+	•	Connect them with thin horizontal arrows (→).
+
+In the Issuer lane (top):
+	•	On the right above “Price & allocate,” place a rounded rectangle: “Allot new shares”.
+
+In the Investors lane (bottom):
+	•	On the right under “Allot new shares,” place: “Settle shares & cash (T+2*)”.
+
+⸻
+
+3. Vertical flows
+	•	Shares down:
+From Issuer “Allot new shares” box → vertical arrow → Investors “Settle shares & cash” box.
+Label on arrow: “New shares issued”.
+	•	Cash up (via Banks):
+From Investors box → diagonal arrow to Bookrunners “Price & allocate” box.
+Label: “Offer price × allocation”.
+	•	Cash up again:
+From Bookrunners box → vertical arrow to Issuer lane.
+Label: “Proceeds (net of fees)”.
+	•	Fees sideways:
+From Issuer lane (left of “Proceeds” arrow) → diagonal arrow to Bookrunners lane (earlier stage).
+Label: “Fees (gross spread)”.
+
+⸻
+
+4. Callouts
+	•	Formula box (small rounded rectangle in bottom-left under swimlanes):
+
+Offer price = Last close × (1 − discount)
+Proceeds (gross) = Offer price × New shares
+Typical ABB discount: 0–10%
+
+
+	•	Use of proceeds bubble (small rounded or cloud shape in bottom-right):
+“Use of proceeds → Partial bridge paydown”
+→ Connect to Issuer lane with a dotted arrow.
+
+⸻
+
+5. Styling
+	•	Arrows:
+	•	Process flow (within a lane): thin, straight, grey/black.
+	•	Cash/share flows (between lanes): slightly thicker, black, with concise labels.
+	•	Shapes: light outline, white fill.
+	•	Fonts: bold for entity labels, regular for process steps, 9–10pt for arrow labels.
+	•	Keep spacing symmetrical so it reads left-to-right like a mini-Gantt.
+
+⸻
+
+6. Reading order when presenting
+	1.	Top to bottom to identify the three parties.
+	2.	Middle lane left to right (Bookrunners’ process steps).
+	3.	Vertical flows: shares down, cash up, fees sideways.
+	4.	End on the Use of proceeds callout to link to the DCM timeline.
+
+⸻
+
+If you follow that, you’ll have a simple but elegant ABB mechanic visual that fits the bottom third, supports your “ABB vs Rights” decision, and connects back to the bridge refinancing plan without clutter.
+
+Do you want me to also give you a minimal text-only arrow-flow version you can paste directly into PowerPoint’s SmartArt so you don’t have to position shapes manually?
