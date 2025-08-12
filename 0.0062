@@ -1,0 +1,38 @@
+Yep — this is exactly where a pricing build table earns its keep. I’ve done the maths and built a clean table that goes: fair i-spread → +NIC → reoffer spread → reoffer yield → coupon → price. I’ve also added a BBB sensitivity using our A vs BBB curve equations.
+
+I’ve dropped both tables to you here for easy copy/paste:
+	•	Download: DCM_phase2_A_curve_pricing.csv
+	•	Download: DCM_phase2_BBB_sensitivity.csv
+
+Slide-ready core table (A-rated case, NIC = +10 bps, EUR annual pay)
+
+Tranche	Mid-swap (MS, %)	Fair i-spread (A-, bps)	NIC (bps)	Reoffer spread (bps)	Reoffer yield (%)	Coupon (%)	Reoffer price (% par)
+3y	2.60	32.7	10	42.7	3.027	3.000	99.924
+5y	2.45	50.7	10	60.7	3.057	3.000	99.741
+7y	2.40	62.5	10	72.5	3.125	3.125	100.000
+
+How I got there (method that mirrors how you’ll talk it through):
+	1.	Fair value i-spread from our curves:
+ A-curve y = 35.185\ln T - 5.9744, BBB-curve y = 42.061\ln T + 20.951; y= i-spread (bps), T= tenor (yrs).  ￼
+	2.	Add NIC (illustrative +10 bps) → reoffer spread.  ￼
+	3.	Reoffer yield = MS + reoffer spread/100.
+	4.	Coupon rounded to nearest 1/8% to keep price ~par (EUR, annual ACT/ACT assumed).
+	5.	Price check: compute clean price off the reoffer yield and chosen coupon → lands inside 99.7–100.0.
+
+BBB sensitivity (spread/yield only)
+
+Tranche	BBB reoffer spread (bps)	BBB uplift vs A- (bps)	BBB reoffer yield (%)
+3y	77.2	+34.5	3.372
+5y	98.6	+38.0	3.436
+7y	112.8	+40.3	3.528
+
+Those uplifts tie out to the +35–40 bps band we’ve been using for A→BBB at 3–7y.  ￼
+
+⸻
+
+Exactly what to put on the slide
+	•	Header: “Phase 2 — EUR bonds: pricing build (A- case; NIC +10 bps)”
+	•	Left note (tiny): “MS placeholder — refresh at launch.”
+	•	Footnote (9pt grey): “Curves: A- 35.185\ln T−5.9744; BBB 42.061\ln T+20.951. NIC illustrative +10 bps. EUR annual ACT/ACT. Coupons to nearest 1/8%. BBB sensitivity +35–40 bps @3–7y.”  ￼
+
+If you want this with your live mid-swaps dropped in a minute before the meeting, ping me the 3y/5y/7y MS prints and I’ll regenerate the table instantly. ￼
