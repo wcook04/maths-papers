@@ -1,0 +1,52 @@
+Yes — your understanding of the sequence is basically correct, but let’s lay it out precisely in DCM terms.
+
+⸻
+
+1. Fair Value
+	•	How it’s derived:
+	•	Look at comparable bonds (“comps”) — same sector, rating, currency, maturity.
+	•	Adjust for differences in tenor by interpolating along the issuer’s or sector’s credit curve.
+	•	Factor in secondary market trading levels on the day of pricing.
+	•	This gives you the issuer’s theoretical spread over the benchmark (e.g., mid-swaps or USTs) if they were issuing right now with no extra concession.
+
+⸻
+
+2. New Issue Concession (NIC)
+	•	A premium paid to investors to ensure demand for the new supply.
+	•	Typically expressed in basis points added to the fair value spread.
+	•	Size of NIC depends on:
+	•	Market conditions (stable vs volatile)
+	•	Size of the deal
+	•	Investor appetite and order book depth
+	•	Rarity of issuer in the market (frequent vs infrequent)
+
+⸻
+
+3. Benchmark Mid-Swaps
+	•	Mid-swaps are the risk-free-ish reference rate used in EUR, GBP and many USD deals (instead of Treasuries for some USD transactions).
+	•	The mid-swaps rate for the tenor of the bond is the base to which we add the spread.
+
+⸻
+
+4. Putting it together – Reoffer Yield
+The rough process is:
+
+\text{Reoffer Spread} = \text{Fair Value Spread} + \text{New Issue Concession}
+
+Then:
+
+\text{Reoffer Yield} = \text{Mid-Swaps (tenor)} + \text{Reoffer Spread}
+
+So in words:
+(Fair value from comps) + (NIC) → Reoffer spread → added to mid-swaps → Reoffer yield.
+
+⸻
+
+If you’d like, I can also draw you a pricing waterfall diagram showing exactly how we get from comps to reoffer. It’s the clearest way to see the logic in one glance.
+
+
+
+
+
+
+
