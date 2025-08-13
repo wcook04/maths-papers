@@ -1,0 +1,158 @@
+Got it — based on your ECM background ￼, the initial criteria for the project ￼, and your pivot to Plan A + optional later equity raise (no formal Plan B), here’s your refined Phase 2 – Permanent Capital (Equity) slide in a DCM-facing style that keeps the ABB focus, builds in an optional later ABB, and explicitly sets out disadvantages of both ABB and Rights without offering Rights as a plan.
+
+I’ve also included a placeholder figure spec so you know exactly how to build it in PowerPoint.
+
+⸻
+
+Slide Title:
+Phase 2 – Permanent Capital (Equity)
+Sub-title: €3.0bn ABB at close + optional €1.5–2.0bn top-up ABB at T+3–4 months — maximising rating headroom in the critical post-close window.
+
+⸻
+
+Execution Path (Plan A)
+	•	Immediate ABB at Close:
+Size: ~€3.0bn (~8–9% mkt cap; ~12× ADTV)
+Timing: Post-close, overnight bookbuild, 2–6h window, T+1 settle
+Discount: 2.5–4.0% vs prior close; target ≥3× cover; ≥50% pre-covered via wall-crossing
+Impact: Immediate ~0.6× leverage relief → visible ‘A-’ headroom from day one
+	•	Optional Top-Up ABB (T+3–4 months):
+Size: €1.5–2.0bn
+Trigger: Opportunistic if leverage trajectory, rating dialogue, and market tape align
+Impact: Drives leverage <1.9× pre-bond issue; reinforces A- narrative before EUR benchmark issuance
+
+⸻
+
+Comparative Disadvantages — ABB vs Rights
+
+Criteria	ABB – Accelerated Bookbuild	Rights Issue – Pre-emptive Offer
+Speed	✅ Hours from launch to pricing	❌ 3–4 weeks; slower leverage relief
+Market Certainty	❌ Market-dependent, volatile windows impact	✅ Underwritten; proceeds certain
+Cost & Discount	✅ Lower fees; 2.5–4.0% discount	❌ Higher fees; 20–35% discount to TERP
+Dilution Control	❌ No pre-emption; all holders diluted equally	✅ Incumbents can maintain proportional holdings
+Execution Risk	❌ Sensitive to intraday sentiment	✅ More resilient to day-to-day market moves
+Signal	✅ Can signal confident balance sheet mgmt	⚠ May signal need for capital under pressure
+
+Note: Rights included here only for contrast; not part of recommended plan.
+
+⸻
+
+Why ABB-first Fits Our Criteria
+	•	Speed: Delivers day-one leverage relief before any rating inflection risk.
+	•	Flexibility: Optional follow-on ABB allows for opportunistic deleveraging without full dilution upfront.
+	•	Signal: Market interprets as confident, controlled balance sheet management.
+	•	Cost: Minimises underwriting & discount cost versus Rights.
+
+⸻
+
+[Placeholder Figure] – “Leverage Path with ABB vs Delayed Equity”
+
+Spec:
+	•	Chart type: Line graph with two lines —
+Blue (Plan A): 3.0× → 2.4× (T0 ABB) → 2.1× (SFS) → 1.8× (Bonds)
+Grey (Delayed Equity): 3.0× → 3.0× (no ABB) → 2.7× (SFS) → 2.4× (Bonds)
+	•	X-axis: Close, T+2m, T+6m, T+12m
+	•	Y-axis: Net Debt / EBITDA (1.5×–3.2×)
+	•	Annotate Plan A’s immediate drop as “–0.6× Day-1 relief”
+	•	Annotate SFS step as “–0.3× within 6–8 weeks”
+	•	Optional top-up ABB point at T+4m labelled “<1.9× pre-bonds”
+
+How to Build:
+	•	In Excel, input leverage values for each path
+	•	Insert into PPT as line chart, format Plan A in corporate blue, comparator in grey dashed
+	•	Add dashed horizontal at 2.0× labelled “Policy ceiling”
+	•	Use callout arrows for each key drop
+
+⸻
+
+If you want, I can now build you the exact leverage path figure with your numbers and styling, so you can paste it straight into PPT without fiddling. That will also let us visually lock in the ABB-first advantage for your internal audience.
+
+Do you want me to prepare that chart next?
+
+
+
+
+
+Here’s the verbal slide construction guide for your refined Phase 2 leverage path visual — laid out so you could recreate it in PowerPoint without looking at the chart file.
+
+⸻
+
+Slide Object Layout – “Leverage Path with and without ABB”
+
+1. Chart Frame (Main Object)
+	•	Type: 2D line chart (Markers + Lines)
+	•	X-axis: Timeline milestones (equally spaced categories)
+	1.	Close (T0)
+	2.	Day-1 (ABB)
+	3.	T+2m (SFS)
+	4.	T+4m (Top-up ABB)
+	5.	T+12m (Bonds)
+	•	Y-axis: Net Debt / EBITDA (numeric, from 1.6 to 3.2, intervals of 0.2)
+
+⸻
+
+2. Data Series
+	•	Series 1: “Plan A — ABB-first”
+	•	Values: 3.0, 2.4, 2.1, 1.9, 1.8
+	•	Colour: Corporate blue (solid line)
+	•	Markers: Filled circle, medium size
+	•	Data labels: Above each point, e.g. “2.4×”
+	•	Series 2: “Delayed Equity (no ABB)”
+	•	Values: 3.0, 3.0, 2.7, 2.7, 2.4
+	•	Colour: Medium grey (dashed line)
+	•	Markers: Hollow circle
+	•	Data labels: Optional, or only annotate key points for space
+
+⸻
+
+3. Reference Objects
+	•	Dashed Horizontal Line: at Y = 2.0, label “Policy ceiling (2.0×)” just above left end.
+	•	Shaded Band (Optional): From Y = 1.5 to Y = 1.6 in pale green or grey, label “Upgrade potential (<1.6×)”.
+
+⸻
+
+4. Annotations (Callouts + Arrows)
+All arrows use thin black or grey connectors with arrowheads; callout text in 9–10pt font.
+
+Plan A Path Annotations:
+	1.	Day-1 (ABB) — Arrow from point at 2.4× to a box beneath chart:
+“−0.6× Day-1 ABB”
+	2.	SFS at T+2m — Arrow from 2.1× to left-side box:
+“SFS −0.3× in 6–8 weeks”
+	3.	Optional Top-up at T+4m — Arrow from 1.9× to right-side box:
+“Optional top-up to <1.9×”
+	4.	Bonds at T+12m — Arrow from 1.8× to box above point:
+“Bonds from strength; price off A- curve”
+
+Delayed Equity Path Annotation:
+	•	Arrow from 2.7× (T+2m) to box right-side:
+“No equity → tighter headroom all year”
+
+⸻
+
+5. Title & Subtitle
+	•	Title: “Leverage Path with and without ABB — Headroom vs 2.0× Policy Ceiling”
+	•	Subtitle (optional): “Immediate ABB creates rating headroom; delayed equity leaves leverage elevated”
+
+⸻
+
+6. Legend & Formatting
+	•	Legend in upper-right:
+	•	Blue solid = Plan A — ABB-first
+	•	Grey dashed = Delayed Equity (no ABB)
+	•	Light gridlines, chart area with minimal borders.
+
+⸻
+
+7. Footnote
+Small text below chart, 7–8pt:
+
+“Illustrative only: assumes ~€5bn EBITDA (≈0.2× per €1bn). Equity & SFS drive deleveraging; bonds refinance the bridge (no turn).”
+
+⸻
+
+If you follow these specs exactly in PowerPoint, you’ll have a clean, board-ready chart that mirrors the refined plot and integrates seamlessly into your Phase 2 slide.
+
+⸻
+
+Do you want me to also draft the exact text for each of those callout boxes so you can just copy-paste them into PowerPoint without rewording? That way it’s a perfect match to the strategy narrative.
