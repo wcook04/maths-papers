@@ -1,0 +1,8 @@
+Here’s the currency cut for bridge + bonds (why not DKK/USD/GBP). ≤4 columns, 3 rows, ≤5 words/cell.
+
+Currency	Liquidity/Pricing	FX/Accounting	Verdict
+DKK	Shallow; €12bn impractical	EUR assets; FX mismatch	Reject for size
+USD	Deep; basis drag	Translation volatility; optics	Reject cost/optics
+GBP	Adequate; smaller books	EUR mismatch; swap leakage	Reject demand/FX
+
+Chosen: EUR — deepest continental liquidity, natural EUR asset match, minimal FX noise, best rating optics.
