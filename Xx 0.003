@@ -1,0 +1,79 @@
+Got it — I’ll remove the securitisation step entirely, update the bonds to reflect your short-tenor floating + remainder fixed structure, and tighten the rationale at each stage so it’s decision vs. alternative rather than just a list of products.
+
+Here’s your refined high-level, one-slide macro timeline with richer justifications.
+
+⸻
+
+Title:
+
+From Signing to Permanent Capital — DSV–Schenker Integrated Funding & Risk Strategy
+
+⸻
+
+Row 1 — Phase 1: Lock Funding & Risk (Signing) (left → right)
+1️⃣ Sign SPA & Lock FX
+	•	Product: Deal-Contingent Forward (EUR/DKK).
+	•	Why: Removes € cost uncertainty from day one, with zero break cost if deal fails.
+	•	Alternatives Rejected:
+	•	Standard Forward → large mark-to-market break cost if deal collapses.
+	•	FX Option → upfront premium unjustified when protection, not upside, is the priority.
+
+➡ Commit €12bn Dual-Tranche Bridge (A-rating margin grid)
+	•	Structure: 2×€6bn bridge-to-bond, 12+6+6 months max.
+	•	Why: Provides absolute funding certainty at signing while minimising pre-close carry cost. Step-up margin forces swift refinancing to protect rating.
+	•	Alternatives Rejected:
+	•	Best-efforts loan → completion risk unacceptable for €12bn cross-border deal.
+	•	RCF draw → ties up working capital lines, inefficient for M&A one-off.
+
+⸻
+
+Row 2 — Pre-Close (~9 months) (right → left)
+⬅ Bridge Undrawn, FX Hedge Active
+	•	Minimal pre-close cost (ticking only from month 3).
+	•	Avoids negative optics of early drawdown on leverage profile before deal closes.
+
+⸻
+
+Row 3 — Phase 1 Completion (Close) (left → right)
+1️⃣ Draw €12bn Bridge → Pay Seller in EUR
+	•	FX hedge settles at locked rate; zero FX drift between signing and close.
+	•	Why not USD + swap? Would add cross-currency basis cost with no liability currency match benefit.
+
+⸻
+
+Row 4 — Phase 2: Permanent Capital (<12 months) (right → left)
+
+⬅ Step 1 — €6.0bn Rights Issue
+	•	Fully underwritten, pre-emptive (~33% disc. to TERP).
+	•	Why: Largest immediate leverage relief to protect A-rating; fair to all holders; sends prudence signal to bond investors.
+	•	Alternatives Rejected:
+	•	ABB at close → faster but smaller size; would leave ND/EBITDA >2.0× for longer, risking rating headroom.
+	•	Convertible bonds → lower coupon but higher execution risk in current vol; not aligned with scale of equity need.
+
+⬅ Step 2 — €4bn EUR Bonds (Year 1)
+	•	Structure: €1.0bn 3y FRN + €3.0bn fixed-rate (split 5y/7y).
+	•	Why:
+	•	FRN tranche taps bank treasuries/MMFs; hedges reinvestment risk in volatile rate environment.
+	•	Fixed tranches lock in current A-rated spreads and extend curve without over-paying for 10y depth.
+	•	Staging to Year 1 ensures issuance from position of integration progress and equity-funded deleveraging.
+	•	Alternatives Rejected:
+	•	Immediate 10y → thin A-industrial demand at premium spreads; inefficient given near-term funding goal.
+	•	USD 144A → unnecessary disclosure/time burden for EUR-centric liability.
+
+⸻
+
+Row 5 — Strategic Outcome (left → right)
+✅ Bridge Fully Repaid, Rating Preserved, Optimal Funding Mix Secured
+	•	A-rating retained → 35–40 bps cheaper debt vs BBB curve.
+	•	Rights issue + bonds deliver balanced equity/debt profile, lowering WACC and preserving headroom for next M&A window.
+
+⸻
+
+Arrow/Visual Rules:
+	•	Solid arrows = committed cash flows.
+	•	Dotted arrows = contingent on completion.
+	•	Snake path: Row 1 L→R, Row 2 R→L, Row 3 L→R, Row 4 R→L, Row 5 L→R.
+
+⸻
+
+If you want, I can now plot this exact snake-flow in a ready-to-draw layout so you can just drop boxes/arrows into PPT without measuring spacing — it’ll read instantly and look perfectly balanced. Would you like me to do that next?
