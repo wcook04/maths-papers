@@ -1,0 +1,66 @@
+Here’s the same table with no em dashes, shorter sentences, and UK spelling:
+
+⸻
+
+Why Daimler Trucks and Deutsche Post DHL are DSV’s Optimal A-Rated Comparables
+
+Selection Criteria	Daimler Trucks	Deutsche Post DHL
+Credit Rating Match	A-/A3 (Stable). Direct match to DSV’s A-/A3 profile	A-/A2 (Stable). Upper bound of logistics A-ratings. Confirms DSV’s target rating
+Recent EUR Benchmarks	Sep 2024: €1.25bn (4y/6y) and May 2025: €1bn (2y/4y). Liquid points across DSV’s target curve	Mar 2025: €900m 7y bond. Ideal 7y comparison. Other recent issues give full curve
+Leverage Tolerance	Accepted 3.3× to 5.1× spike in 2024. Shows A-rating resilience during strategic transitions	Consistent policy of ≤2.5×. Baseline for DSV’s post-integration leverage target
+Business Cyclicality	High GDP sensitivity and industrial exposure. Similar to DSV’s freight cycle risk	Freight and express divisions face the same volume and rate swings. Ensures comparable spreads
+European Investor Base	German industrial leader. Attracts the same core EUR institutional buyers	Leading European logistics network. Appeals to the same ESG-focused mandates
+Proven Market Access	Regular multi-tranche issuer. Strong EUR capital markets relationships	€10bn EMTN with SLB framework. Sophisticated issuance platform DSV aims to replicate
+
+
+⸻
+
+Do you want me to also produce a one-line-per-criteria summary so it fits a single small slide panel? That would make it even punchier for presentation.
+
+Based on your research, here’s the focused comparable bridge loans table for your DSV slide:
+
+-----
+
+## **Comparable Bridge Loan Precedents — Validation of DSV Structure**
+
+|**Transaction**                                                                               |**Bridge Structure**                                                                |**Terms & Pricing**                                                                                    |**Take-Out Execution**                                                                                   |**Rating Outcome**                                                        |**Key Validation for DSV**                                                                                                       |
+|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+|**Schneider Electric / AVEVA** <br>*Sep 2022 / £9.9bn deal* <br>*A3/A- rated acquirer*        |**£4.1bn (~€4.7bn)** <br>Single tranche <br>42% of deal value <br>Citi, SocGen leads|**12m + 2x6m extensions** <br>Upfront: 10bps total <br>Market flex: +15bps <br>*Identical tenor to DSV*|**Success in 12-18m** <br>£1.5bn TL pre-close <br>Remainder via bonds <br>€650m CB in 2023               |**Maintained A3** <br>Leverage 3.2x → <2.5x <br>**Upgraded to A2 in 2024**|✓ Validates 12m+2x6m tenor <br>✓ Phased take-out works in volatile markets <br>✓ Rating agencies tolerate temporary 3.2x leverage|
+|**Siemens Healthineers / Varian** <br>*Aug 2020 / $16.4bn deal* <br>*Via A+ parent Siemens AG*|**€15.2bn** <br>Inter-company bridge <br>110% of deal value <br>From parent company |**“Transitional” tenor** <br>Parent’s A+ pricing <br>Arm’s length on-lending                           |**Complete by close (8m)** <br>50% equity (2 ABBs: €2.7bn + €2.3bn) <br>50% debt ($10bn bonds via parent)|**Parent maintained A+** <br>“Dynamic deleveraging over 24m” per S&P      |✓ Large multi-instrument take-out feasible <br>✓ Splitting equity raises reduces risk <br>✓ 50/50 equity/debt mix precedent      |
+|**CMA CGM / Bolloré Logistics** <br>*Apr 2023 / €4.85bn deal* <br>*Unrated (private)*         |**No bridge needed** <br>100% cash funded <br>Post-COVID shipping profits           |**N/A** <br>Balance sheet funding                                                                      |**Immediate** <br>No refinancing required <br>CEO: “favorable position for further M&A”                  |**N/A** <br>No debt raised                                                |⚠️ Key competitor funded €5bn with cash <br>⚠️ DSV’s leverage approach requires flawless execution to compete                      |
+
+-----
+
+### **DSV Bridge for Reference:**
+
+**€12bn** (€6bn + €6bn dual-tranche) | **84% of €14.3bn deal** | **12m + 2x6m** | Margin: 25bps → 120bps | Upfront: 15bps | **Take-out:** €6bn Rights Issue + €1.5-2bn SFS + €4bn Bonds within 9-12m
+
+### **Bottom Line:**
+
+DSV’s structure is **market-validated** — Schneider proves the tenor/phased approach works; Siemens shows multi-instrument execution is achievable. The key execution risk is the **€6bn Rights Issue** given equity market dependency. CMA CGM’s cash acquisition highlights the competitive pressure for flawless execution.​​​​​​​​​​​​​​​​
+
+Got it — here’s a tight two-column Excel-ready table starting at A1. Hard-code B1–B4; everything from B5 down is dynamic and flows through to the final terms (TERP, Pₛ, rights ratio, dilution, checks). Formulas implement your derivation exactly.  ￼
+
+A1   Pre-raise shares (N0) [shares]                | B1   214000000
+A2   Pre-raise price (P0) [DKK]                    | B2   1415
+A3   Target gross proceeds [DKK]                   | B3   44760000000
+A4   Discount to TERP (d)                          | B4   0.33
+
+A5   New shares (N1) [shares]                      | B5   =B3*B1/(B1*B2*(1-B4)-B3*B4)
+A6   TERP [DKK]                                    | B6   =(B1*B2+B3)/(B1+B5)
+A7   Subscription price (Ps) [DKK]                 | B7   =B6*(1-B4)
+A8   Rights ratio (≈ 1-for-X)                      | B8   =B1/B5
+A9   Pro forma shares [shares]                     | B9   =B1+B5
+A10  Dilution (% of pre)                           | B10  =B5/B1
+A11  Pro forma market cap at TERP [DKK]            | B11  =B1*B2+B3
+A12  Implied discount to TERP (back-check)         | B12  =1-B7/B6
+A13  Gross proceeds check [DKK]                    | B13  =B7*B5
+A14  PF market cap (alt check, TERP×PF shares)     | B14  =B6*B9
+
+Notes / guidance
+	•	With the inputs above, you’ll reproduce your central case: N₁ ≈ 50.92m, TERP ≈ DKK 1,311.98, Pₛ ≈ DKK 879.03, ≈1-for-4.20, PF shares ≈ 264.92m, dilution ≈ 23.8% of pre — exactly as in your doc.  ￼
+	•	Format B10 and B12 as percentages; the rest as numbers/currency.
+	•	Identity checks (A11 vs A14, A3 vs A13) confirm the maths you stated: PF mkt cap at TERP = pre-deal mkt cap + gross proceeds, and Gross = Pₛ×N₁.  ￼
+
+If you want the “clean ratio” (e.g., 5-for-21) you can hard-set that separately; the discount to TERP will follow mechanically from Pₛ that hits the same gross, per your table of “nice ratios.”  ￼
+
