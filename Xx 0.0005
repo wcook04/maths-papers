@@ -1,0 +1,71 @@
+love it—here’s a clean 8-box spine (your 6, plus +2 where it actually helps), with tiny off-boxes and tidy connections. No graphics, just the blueprint.
+
+Spine (8 boxes, left → right)
+	1.	Board Approves; Mandate
+	2.	Sign SPA; Commit Bridge
+	3.	Lock DC FX Hedge
+	4.	Pre-Close: Ticking Accrues
+	5.	Close; Draw €12bn
+	6.	Settle Hedge @ K
+	7.	€6bn Underwritten Rights Issue
+	8.	€6bn EUR Bonds 3/5/7y
+
+Micro off-boxes & connections (4 words max unless noted)
+
+Under 2 — Sign SPA; Commit Bridge
+	•	Dual tranches A/B (solid)
+	•	Undrawn until close (solid)
+	•	Target A- rating (solid)
+
+Between 2 → 3
+	•	Completion-contingent (dotted)
+
+Under 3 — Lock DC FX Hedge
+	•	Sell DKK / Buy EUR (dashed)
+	•	No deal, lapses (dotted)
+
+Under 4 — Pre-Close: Ticking Accrues
+	•	Ticking starts D+60 (solid)
+	•	Upfront 15 bps (solid)
+
+At 5 — Close; Draw €12bn
+	•	Proceeds to seller (solid →)
+	•	Funds at EUR price (solid)
+	•	Mandatory prepay later (thick → back to Bridge)
+
+At 6 — Settle Hedge @ K
+	•	Only if completion (dotted)
+	•	Cash or physical (dashed)
+
+At 7 — €6bn Underwritten Rights Issue
+	•	Pre-emptive; all holders (solid)
+	•	Mandatory prepay bridge (thick ↓)
+	•	Rating headroom ↑ (solid)
+
+At 8 — €6bn EUR Bonds 3/5/7y
+	•	EMTN Reg S (solid)
+	•	Refinance remainder (thick ↓)
+	•	Bridge fully repaid (solid ✓)
+
+Tiny failure branch (off a small “Completion?” tag between 4 and 5)
+	•	Hedge lapses (dotted)
+	•	Bridge undrawn (dotted)
+	•	Sunk fees only (dotted)
+
+Time tags (keep general, under the spine)
+	•	T-X Prep (1)
+	•	T0 Signing (2–3)
+	•	T0→T1 (~9m) (4)
+	•	T1 Close (5–6)
+	•	T+1m Settle (7)
+	•	T+9–12m (8)
+
+Line legend (execution logic the room will read instantly)
+	•	Solid = cash/commitments
+	•	Dashed = hedge/derivative
+	•	Dotted = contingent/if no deal
+	•	Thick solid = mandatory prepayment/refinance
+
+Why this is the “right” increment
+	•	The two extra boxes isolate hedge settlement and bonds, so the equity → debt take-out is unmistakable and rating logic stays crisp.
+	•	All numbers match your direction: no securitisation, €6bn RI + €6bn bonds against the bridge draw, with a deal-contingent FX hedge that only bites on completion.
