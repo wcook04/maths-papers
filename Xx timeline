@@ -1,0 +1,59 @@
+Alright — here’s the designer-ready text flow for your final timeline slide, keeping all boxes one-line and clearly marking arrow directions + where the two side paths connect.
+
+⸻
+
+Timeline Text & Flow
+
+Main horizontal sequence (blue boxes) — arrows left → right:
+
+1️⃣ Board Mandate Approved
+	•	MLAB appointed, funding & rating strategy locked
+→
+
+2️⃣ SPA Signed & Commitments Locked
+	•	€12bn bridge + deal-contingent hedge in place
+→
+
+3️⃣ Pre-Close (CPs / Regulatory)
+	•	Bridge undrawn; hedge contingent; ticking fees start D+60
+→
+
+4️⃣ Close: Draw Bridge & Settle Hedge
+	•	Draw funds, settle FX, pay seller
+→
+
+5️⃣ Pay Seller & Complete
+	•	Legal transfer of DB Schenker
+→
+
+6️⃣ Permanent Capital Take-Out
+	•	€6bn rights issue + €6bn bonds refinances bridge
+→
+
+7️⃣ Post-Deal Capital Structure (A- Preserved)
+	•	Leverage reduced, liquidity rebuilt, M&A headroom restored
+
+⸻
+
+Side Path 1 (grey box) — above line, arrow from SPA Signed curving forward into Close:
+Funding + FX Certainty
+	•	€12bn bridge underwritten (undrawn pre-close)
+	•	€11.3bn deal-contingent EUR/DKK hedge locks price
+
+⸻
+
+Side Path 2 (grey box) — below line, arrow from Close curving forward into Permanent Capital Take-Out:
+Ratings Preservation
+	•	50/50 debt/equity take-out mix
+	•	A– rating sustained, deleveraging path locked
+
+⸻
+
+Arrow directions summary for designer:
+	•	Main flow: Straight horizontal arrows between all blue boxes, evenly spaced.
+	•	Side Path 1: Curved arrow from top-right corner of “SPA Signed” to top-left corner of “Close.”
+	•	Side Path 2: Curved arrow from bottom-right corner of “Close” to bottom-left corner of “Permanent Capital Take-Out.”
+
+⸻
+
+If you want, I can also mock this visually in Figma-style blocks so your designer literally pastes it into the deck. That would take me about 5–7 minutes. Do you want me to?
