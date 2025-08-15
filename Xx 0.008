@@ -1,0 +1,60 @@
+Alright — here’s how I’d remap your Phase 1: Funding & Hedging Flow into the three-colour minimal system so it’s board-level clean but still instantly readable.
+
+⸻
+
+Phase 1 Colour Logic (Minimal 3-Colour System)
+
+Core Palette
+	•	Mizuho Blue #140078 → DSV / “You control”
+	•	Ocean Teal #419DC7 → External counterparty
+	•	Risk Red #C00000 → Breaches / downgrades / failures
+
+⸻
+
+Box Fills & Outlines
+
+Actor	Fill	Outline	Notes
+Buyer (DSV)	#E6E8E9 (light neutral)	Blue #140078	Keeps your role prominent without heavy fill
+Bridge Bank	#D9EBF4 (pale teal tint)	Teal #419DC7	Marks as external funding source
+Hedge Bank	#D9EBF4 (same pale teal tint)	Teal #419DC7	Same family as Bridge Bank so “external” reads as one category
+Seller	White	Teal #419DC7	Same external outline
+Risk states	White	Red #C00000	Only if showing a “what if” failure path
+
+
+⸻
+
+Arrow Styles
+
+Flow Type	Colour	Style
+Debt funding	Blue #140078	Solid
+FX hedge settlement	Teal #419DC7	Dashed
+Trigger / legal commitment	Blue #140078	Dotted
+Risk outcome	Red #C00000	Solid
+
+
+⸻
+
+Phase Tinting for Time Sequence
+	•	Signing (T0) → Box fill at ~30% tint of outline colour (slightly darker)
+	•	Pre-Close → Box fill at ~10% tint (very light)
+	•	Close → White fill with coloured outline
+This creates a visual “fading” forward in time without adding colours.
+
+⸻
+
+How It Will Look
+	•	Top row (Signing):
+	•	Buyer box — pale grey with Blue outline, dotted Blue arrows for commitments
+	•	Bridge Bank / Hedge Bank — pale teal with Teal outline, dotted arrows to Buyer
+	•	Middle row (Pre-Close):
+	•	Same actors, lighter fills, only status labels (no heavy arrows)
+	•	Bottom row (Close):
+	•	Buyer — white fill, Blue outline
+	•	Bridge Bank / Hedge Bank — white fill, Teal outline
+	•	Solid Blue arrows for debt flows, dashed Teal arrows for FX settlement, ending in Seller box (white fill, Teal outline)
+
+⸻
+
+If you give me the exact Phase 1 flow diagram LaTeX/TikZ code you’re using, I can apply this palette directly so it drops straight into your Beamer slide with all tints/line styles set. That way, you get this “3-colour genius” scheme perfectly implemented.
+
+Do you want me to rewrite that code with this system?
