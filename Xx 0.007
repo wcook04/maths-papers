@@ -1,0 +1,633 @@
+Here’s how I’d format and colour your first slide so it looks polished, consistent with your Mizuho palette, and easy to read at board level.
+I’ll break it down by layout, colour, and formatting so you can implement it in PowerPoint, Keynote, or LaTeX beamer.
+
+⸻
+
+1. Layout Structure
+
+Keep the slide in a three-band grid:
+	1.	Top band – Scale & Market Leadership + Network Fit (two columns)
+	2.	Middle band – Levers / Precedent Proof / Strategic Impact (three columns)
+	3.	Bottom band – EBIT uplift chart + acquisition timeline
+
+Use full-width section headers in Mizuho Blue to separate each band.
+
+⸻
+
+2. Colour Assignments (from your palette [7†source])
+
+Element	Colour	Notes
+Section headers	#140078 (Mizuho Blue)	White bold text (24–28pt)
+Subhead titles	Black #000000	Bold, 16–18pt
+Body text	#595959	Regular, 14–16pt
+Bullet icons / accent dividers	#419DC7 (Ocean medium)	Small and consistent
+Risk / loss phrases	#C00000	Bold red for emphasis
+Table/grid lines	#E6E8E9 (Slate lightest)	Thin 0.5–0.75pt
+EBIT chart – DSV bar	#140078	Solid
+EBIT chart – Schenker bar	#B3D7E8	Light blue
+EBIT chart – Target bar	#6A9545 (Fern medium)	Solid
+Timeline bubbles	Fill: #ECCD71 (Mustard light)	Outline: #A07D15
+
+
+⸻
+
+3. Formatting Recommendations
+
+Top Band
+	•	Use two equal-width text boxes:
+	•	Left: “Scale & Market Leadership” – grey bullet points, 0.5 spacing between.
+	•	Right: “Network Fit” – same style.
+	•	Keep bullets left-aligned, with 1pt spacing between bullet and text.
+
+Middle Band
+	•	Use a 3-column table (no visible borders except a thin Slate line between columns).
+	•	Column headers in Mizuho Blue with white bold text.
+	•	Align each column’s text top-left, with consistent line spacing (1.15).
+
+EBIT Uplift Chart
+	•	Use clustered bars with exact colour mapping above.
+	•	Y-axis in black, gridlines in Slate lightest.
+	•	Add data labels directly above each bar in black, bold.
+
+Acquisition Timeline
+	•	Use horizontally spaced rounded rectangles for each deal, in Mustard light with dark outline.
+	•	Company logos centred above or inside the rectangles.
+	•	Timeline line in Slate medium, arrow-ended.
+
+⸻
+
+4. Small Touches
+	•	Footer: Left = Mizuho logo (vector, white background), Right = “Private and Confidential | 2” in #595959.
+	•	Spacing: Minimum 0.3in margin around all content.
+	•	Consistency: Keep all % values in EBIT chart bold.
+
+⸻
+
+If you like, I can mock this exact slide with your data in the correct colours so you have a ready-to-drop-in image or .pptx version. That way your intern can paste it in without manually tweaking colours.
+
+Do you want me to prepare that mock-up next?
+
+Here’s how I’d style and format this “A- Rating Preservation” slide so it looks sharper and cleaner, while staying on-brand with your Mizuho colour spec:
+
+⸻
+
+1. Layout Structure
+
+Split into three clearly defined zones:
+	1.	Top band — Table: Agency / Downgrade Trigger / Baseline / Our Phased Plan
+	2.	Left lower zone — Scatter plot (A- vs BBB+)
+	3.	Right lower zone — Case study table
+	4.	Bottom footer line — Strategic warning statement
+
+⸻
+
+2. Colour Assignments
+
+Element	Colour	Notes
+Section header bar	#140078 (Mizuho Blue)	White bold text (24–26pt)
+Sub-headers inside tables	#140078 background with white bold text	Column headings only
+Table body text	#000000 for key numbers, #595959 for descriptors	Keep numbers bold
+Positive targets in table	#6A9545 (Fern medium)	e.g., “≥ 45%” and “≤ 2.2x”
+Negative risk values	#C00000	e.g., “FFO/Debt breach (30%)”
+Scatter plot – A- series	Fill: #140078	Solid circles
+Scatter plot – BBB+ series	Fill: #C00000	Solid circles
+Scatter plot gridlines	#E6E8E9	Thin, light
+Dotted trendlines	Darker shade of series colour (Ocean dark for blue, Carrot dark for red)	
+Case study table grid	#E6E8E9	0.75pt
+Company names in table	Bold, black	Year in #595959
+Footer warning box	Light Mustard fill #F3DDA0 with dark text	Italic, 11–12pt
+
+
+⸻
+
+3. Formatting Recommendations
+
+Top Table (Agency/Plan)
+	•	Use 4 columns with equal width.
+	•	Row height: enough padding so numbers have white space.
+	•	Shade header row in Mizuho Blue; white bold 14–16pt text.
+	•	Align numbers centre; text left-aligned.
+
+Scatter Plot
+	•	Keep background white.
+	•	Plot points with 100% opacity.
+	•	Add direct data labels if space allows (A- vs BBB+).
+	•	Use 1.25pt dotted trendlines in the same family colour but darker tone.
+	•	Axis labels in black; axis lines in Slate dark #40474A.
+
+Case Study Table
+	•	3 columns: Company | Misstep | Impact.
+	•	Column headers in Mizuho Blue with white bold text.
+	•	Alternate row shading: white and very light Slate #E6E8E9 for readability.
+
+Footer Warning
+	•	Enclose the strategic warning sentence in a rounded rectangle filled with Light Mustard #F3DDA0, 0.75pt outline in Mustard dark #A07D15.
+	•	Italicise the text; keep it concise and central.
+
+⸻
+
+4. Small Touches
+	•	Keep consistent footer: Left = Mizuho logo; Right = “Private and Confidential | 3” in #595959.
+	•	Avoid multiple shades of blue — only Mizuho Blue + Ocean tints for clarity.
+	•	Use consistent text sizes: 14–16pt body, 11–12pt footnote.
+
+⸻
+
+If you want, I can re-draw this exact slide in the correct hex colours and alignment so it’s plug-and-play for your deck, no manual fixing. That would make it instantly presentation-ready.
+
+Do you want me to create that mock-up version next?
+
+
+
+got you — this one just needs tighter hierarchy and cleaner swimlanes. here’s a drop-in recipe you can follow exactly.
+
+Phase 1 — “Certainty of Funds” (board-ready layout)
+
+1) Grid & spacing
+	•	Use a 12-column grid.
+	•	Left 5 cols: two stacked “deal cards” (Bridge, D-C Forward).
+	•	Right 7 cols: timeline chips (T0/T1/T2–T3) on top, swimlane flow below.
+	•	Slide margins: 24 px; gutter between columns: 16 px; vertical spacing between blocks: 20 px.
+
+2) Colour mapping (consistent with your palette)
+	•	Debt / funding: Ocean #419DC7 (fills), outline #1E4F65.
+	•	Hedge / FX: Fern #6A9545 (fills), outline #4F7033.
+	•	Timeline / in-flight: Mustard #ECCD71 (fills), text black.
+	•	Risk / “if deal fails”: pale red fill #F9E0D1, outline/text #C00000.
+	•	Headers bars / chips: Mizuho Blue #140078 with white text.
+	•	Body text: black #000000; secondary #595959; gridlines #E6E8E9.
+
+3) Title & top rule
+	•	Title left-aligned: Phase 1: Certainty of Funds (28–30 pt, bold).
+	•	Thin Slate rule under title: #E6E8E9, 1 pt.
+
+4) Left stack — two deal cards
+
+Use the same component twice so the slide looks engineered.
+
+Card style (both): rounded rectangle 12 px radius, 1 pt outline (#CDD1D4), white fill, 8 px inner padding.
+
+Card header ribbon: full-width rectangle with 8 px top/bottom padding.
+	•	Bridge header fill Ocean #419DC7; text WHITE, 16–18 pt, ALL CAPS:
+€12BN SYNDICATE-UNDERWRITTEN BRIDGE
+	•	D-C Forward header fill Fern #6A9545; text white:
+€11.3BN DEAL-CONTINGENT EUR/DKK FORWARD
+
+Card body layout: a 2-column mini-table (labels 40% / values 60%).
+	•	Labels in #595959, values black + bold numerals.
+	•	Row dividers #E6E8E9, 0.75 pt, 6–8 px vertical padding.
+
+Bridge rows (example wording):
+	•	Borrower: DSV A/S
+	•	Size: €12,000,000,000
+	•	Type: Senior Unsecured (Bridge-to-Bond / Bridge-to-Equity)
+	•	Tenor: 12 + 6 + 6 months (max 24)
+	•	Effective all-in (A- case): +150 bps start; +20 bps per 6m; +250 bps if >window
+	•	Upfront / Underwrite: ~2.0% (one-off)
+
+DCF rows:
+	•	Counterparty: DSV A/S
+	•	Notional: €11.3bn
+	•	Instrument: Deal-Contingent Forward (Sell DKK / Buy EUR)
+	•	Tenor: ~9 months (Signing → Close)
+	•	Settlement: Physical at Close
+	•	Break: Zero-cost if deal fails (text in #6A9545)
+
+Tip: numbers bold; never blue/green text inside these cards — colour lives in headers only.
+
+5) Top-right — timeline chips
+
+Three pills (rounded rect 16 px radius) stacked vertically with 12 px gaps; each has a left icon and body text to the right.
+	•	Chip fill: Mizuho Blue #140078, text white, icon white.
+	•	Connector arrows between chips: Mustard #ECCD71, 3.5 mm arrowheads.
+
+Chip text (keep to 2 lines each, 14–16 pt):
+	•	T0 — SIGNING (today): “Bridge committed; D-C forward executed; upfront paid; ticking from D+60.”
+	•	T1 — CLOSE (~9m): “Draw bridge; settle D-C forward; secure locked EUR purchase price.”
+	•	T2/T3 — REFINANCE: “Multi-step take-out designed to maintain ‘A–’.”
+
+Fail-case callout: rounded rectangle pale red fill #F9E0D1, 1 pt #C00000 outline, black text with the key clause in red:
+“If deal fails: the D-C forward lapses at zero cost; bridge is never drawn. Only sunk costs are upfront/ticking fees.”
+
+6) Bottom-right — swimlane flow
+
+A tidy 3×3 grid (Actors = rows; Phases = columns). Keep boxes identical width and balanced white space.
+
+Headers: top row (Signing / Pre-Close / Close) in Slate #40474A text. Left column actor labels (Buyer / Hedge Bank / Bridge Bank) in #595959.
+
+Boxes:
+	•	Status boxes (e.g., “Facility Undrawn”, “No Settlement”): white fill, Slate outline, Slate text.
+	•	Commitments (Signing): dashed arrows, Ocean for bridge, Fern for hedge.
+	•	Executions (Close): solid arrows — Ocean from Bridge Bank → Buyer (Funding), Fern Buyer ↔ Hedge Bank (Settle DCF @K), Ocean Buyer → Seller (Pay EUR).
+	•	Time (Signing → Close): single Mustard vertical arrow on the Buyer row labelled “~9 months”.
+
+Final box: “Seller Transfers Asset” — Slate box outside the grid at far right; connect from Buyer close box with a solid Ocean arrow labelled “Pay EUR”.
+
+Line weights: 1.25 pt; arrowheads medium; avoid curves — use right-angle connectors.
+
+Microcopy (shorten to verbs):
+	•	Buyer: Sign SPA → (Pre-Close) No Settlement → (Close) Receive EUR
+	•	Hedge Bank: Execute D-C Forward → (contingent) — → Settle @K
+	•	Bridge Bank: Commit €12bn → Facility Undrawn → Draw €12bn
+
+7) Typography
+	•	Title 28–30 pt; card headers 16–18 pt; body 14–16 pt; swimlane labels 12–13 pt.
+	•	Numerals tabular lining if your font supports it (keeps columns crisp).
+	•	Body text always black; avoid coloured body text except the single red emphasis in the fail-case.
+
+8) Finishing touches
+	•	Footer: left Mizuho logo; right “Private and confidential | 4” in #595959, 10–11 pt.
+	•	Shadow: if you need separation, use very soft drop shadow on cards (offset 1 px, blur 6 px, 20% opacity).
+	•	Builds for delivery (if animating):
+	1.	Drop the two deal cards.
+	2.	Reveal timeline chip by chip (T0 → T1 → T2/T3).
+	3.	Fade in the fail-case callout.
+	4.	Draw the swimlane arrows last (commitments dashed first; executions solid second).
+
+that’s it — same content, but the colours carry meaning (blue=funding, green=hedge, mustard=time, red=risk) and the shapes are reusable components so the rest of the deck stays consistent.
+
+Here’s how I’d tighten and style this “Bridge-loan Pricing” slide so it’s cleaner, easier to scan, and fully on-brand.
+
+⸻
+
+1) Layout Structure
+
+Divide into three horizontal bands:
+	1.	Top band — Slide title + thin rule.
+	2.	Middle band — Two side-by-side cards:
+	•	Left card: Bridge loan term sheet (vertical table).
+	•	Right card: Precedent transactions comparison (horizontal table).
+	3.	Bottom band — Currency option evaluation (horizontal flow with three rows).
+
+Keep equal vertical margins and avoid stretching one section more than another.
+
+⸻
+
+2) Colour Assignments (from your Mizuho palette [7†source])
+
+Element	Colour	Notes
+Slide title bar	#140078 (Mizuho Blue)	White bold text, 26–28 pt
+Left table header cells	#140078 background, white bold text	Keep labels consistent
+Left table body	Black text for values, #595959 for descriptors	Row dividers #E6E8E9
+Right table header row	#E6E8E9 fill, bold black text	Creates separation without heavy colour
+Positive/neutral data	Black text	Use green #6A9545 sparingly for strong positives
+Currency flow arrows	Ocean #419DC7 for debt/funding, Mustard #ECCD71 for neutral	Red #C00000 for “Reject”
+Currency boxes	White fill, Slate outline #40474A	Final “Reject” boxes filled in pale red #F9E0D1
+
+
+⸻
+
+3) Formatting Recommendations
+
+Left Card – Bridge Loan Terms
+	•	Use a single column table with two-column rows inside (label / value).
+	•	Column 1 width: 45% (labels), Column 2: 55% (values).
+	•	Label text in #595959, 14–16 pt; value text black and bold for key numbers.
+	•	Header rows (“Margin Grid”, “Commitment/Ticking Fee”) can have a slightly darker grey fill to separate groups.
+
+Example:
+
+Margin Grid (bps over benchmark)
+0–3m:   25
+3–6m:   30
+...
+
+Keep them in one cell but use line breaks for compactness.
+
+⸻
+
+Right Card – Precedent Transactions
+	•	5-column table: Acquisition | Date | Size | Structure | Terms & Pricing.
+	•	Use light grey row fills (#E6E8E9) to alternate rows for legibility.
+	•	Acquisition names in bold; smaller text for secondary details.
+
+⸻
+
+Bottom Band – Currency Options Flow
+	•	Three horizontal flows (DKK / USD / GBP), aligned vertically.
+	•	Each box: rounded rectangle, 1 pt Slate outline, white fill, 12–14 pt text.
+	•	Arrows:
+	•	Between neutral boxes: Ocean blue #419DC7
+	•	To final “Reject” box: #C00000 arrow, bold arrowhead.
+	•	Final “Reject” box: pale red fill #F9E0D1, bold red text.
+
+Example for DKK row:
+
+[DKK] → [Shallow €12bn impractical] → [EUR assets FX mismatch] → [Reject: size]
+
+
+⸻
+
+4) Small Touches
+	•	Keep the Mizuho logo bottom-left; “Private and Confidential | 5” bottom-right in #595959.
+	•	Align the left and right cards’ top edges so the slide feels balanced.
+	•	Avoid overusing bold — reserve it for numbers and key conclusions (“Reject”, “€12bn”, “A- target”).
+
+⸻
+
+If you want, I can redraw this slide with these colours and spacing so it’s ready to drop into your deck without manual tweaks. That would make the term sheet, precedents, and currency flows perfectly consistent.
+
+Do you want me to make that mock-up?
+
+
+
+Here’s how I’d cleanly style and format this “Phase 2: Permanent Capital (Equity)” slide so it’s crisp, readable, and on-brand with the Mizuho palette you’re already using.
+
+⸻
+
+1) Layout Structure
+
+Keep the two-path comparison clear and balanced:
+	•	Top band: Title + thin rule
+	•	Middle band: Two equal-width cards
+	•	Left = Path A – Rights Issue (Primary) (data-heavy term sheet)
+	•	Right = Path B – ABB (Pivot) (pros/cons and conditions)
+	•	Bottom band: Share price chart spanning both columns, but anchored under Path B for logical flow
+
+⸻
+
+2) Colour Assignments ([7†source])
+
+Element	Colour	Notes
+Section title bar	#140078 (Mizuho Blue)	White bold text
+Path headers	Fill: #140078 for Path A, #40474A (Slate darkest) for Path B	White bold text
+Table header cells	#E6E8E9	Bold black text
+Table labels	#595959	Keep text 14–15 pt
+Table values	Black; bold for key figures	
+Highlight numbers in chart	Ocean medium #419DC7	
+Path B “Use only if…” warning	Fill pale mustard #F3DDA0, text black	
+Chart line	Ocean dark #1E4F65, 2 pt weight	
+Chart highlight region	Fern light #C3DAAF fill, 30% opacity	
+Footer	#595959	
+
+
+⸻
+
+3) Formatting Recommendations
+
+Top Band
+	•	Title: Phase 2: Permanent Capital (Equity) in bold black, 26–28 pt.
+	•	Subtitle: smaller, #595959, italic if needed.
+
+⸻
+
+Middle Band — Two Paths
+
+Path A Card
+	•	Card header: full-width Mizuho Blue ribbon, white bold text (16–18 pt).
+	•	Below: single table with two columns (Category | Details).
+	•	Alternate row shading with very light grey (#F9F9F9) to improve legibility.
+	•	Keep % values and currency figures bold.
+	•	Last row “Strategic Message” in italic, black.
+
+Path B Card
+	•	Card header: Slate darkest fill (#40474A), white bold text (16–18 pt).
+	•	Directly below: “Use only if…” condition in a pale mustard rounded rectangle (#F3DDA0, 1 pt outline #A07D15).
+	•	Pros and Cons in two-column mini-table:
+	•	Left: Pros (Fern green bullet points #6A9545)
+	•	Right: Cons (Red bullet points #C00000)
+
+⸻
+
+Bottom Band — Share Price Chart
+	•	Chart title (“DSV”) above chart, centred, black bold.
+	•	Axis labels in black; gridlines in #E6E8E9.
+	•	Data line in Ocean dark (#1E4F65) with 2 pt weight.
+	•	Highlight October 2024 surge region with Fern light fill (#C3DAAF, 30% opacity).
+	•	Add small note in #595959 bottom-left: “Source: Bloomberg, 2024 YTD.”
+
+⸻
+
+4) Small Touches
+	•	Equal visual height for both Path A and Path B cards.
+	•	Footer: left = Mizuho logo; right = “Private and Confidential | 7” in #595959.
+	•	Keep maximum 3–4 font sizes on slide for hierarchy.
+
+⸻
+
+If you want, I can mock up this exact Path A vs Path B layout in Mizuho colours so you can drop it straight in without reformatting every box and table. That way your deck will have consistent header ribbons, tables, and highlight styles.
+
+Do you want me to build that visual?
+
+
+Here’s how I’d restyle “Phase 2: Permanent Capital (Equity continued)” so it’s both cleaner and easier to scan at a glance, while keeping to your Mizuho board-deck palette.
+
+⸻
+
+1) Layout Structure
+
+Two equal halves:
+	•	Left: Precedent table (5 comparables + DSV proposed)
+	•	Right: VSTOXX chart with highlight region
+
+Keep column spacing consistent so numbers line up perfectly across rows.
+
+⸻
+
+2) Colour Assignments ([7†source])
+
+Element	Colour	Notes
+Section header bar	#140078 (Mizuho Blue)	White bold text (26–28 pt)
+Table header row	#E6E8E9 fill, bold black text	Column labels
+First column “Field”	#595959 text	Right-aligned labels for easy scan
+Company names row headers	Bold black text	Year in #595959
+DSV column highlight	Ocean light fill #D9EBF4	1 pt outline #419DC7
+Table body	Black values, % in bold	
+Positive targets	Fern green #6A9545	e.g., “≥90%”
+Chart line	Ocean dark #1E4F65, 2 pt weight	
+Chart highlight region	Fern light #C3DAAF at 30% opacity	
+Footer text	#595959	
+
+
+⸻
+
+3) Formatting Recommendations
+
+Precedent Table
+	•	Freeze left column (“Field”) with light grey background (#F3F3F3) to visually anchor row labels.
+	•	Company columns: keep equal width, align numbers to the right for easy comparison.
+	•	Use thin grey row dividers (#E6E8E9) every row.
+	•	For DSV (last column), shade background Ocean light and add a 1 pt Ocean medium outline so it’s the visual endpoint.
+	•	Keep currency symbols aligned left in each cell (€, £, DKK).
+	•	Bold % and key numbers so the eye lands on metrics.
+
+⸻
+
+VSTOXX Chart
+	•	Title above chart (“VSTOXX Level at Announcement”), centred.
+	•	Y-axis: black labels, gridlines in #E6E8E9.
+	•	Data line: Ocean dark #1E4F65 at 2 pt weight.
+	•	Highlight deal execution window (Oct-24) with Fern light #C3DAAF fill.
+	•	Remove chart border for cleaner look.
+
+⸻
+
+Label Optimisation
+	•	Abbreviate “Transaction Purpose / Target” row: split into two lines in the header cell, smaller font.
+	•	Add “Source: Bloomberg, Company Reports” note under chart in #595959.
+
+⸻
+
+4) Small Touches
+	•	Equal padding top/bottom in table cells (8–10 px).
+	•	Align the top of table with the top of chart for symmetry.
+	•	Footer: left Mizuho logo, right “Private and Confidential | 8” in #595959.
+
+⸻
+
+If you want, I can mock up this table and chart with these colours so DSV’s column pops, the numbers are aligned, and the chart matches the rest of your deck’s style. That way your intern can drop it in instantly.
+
+Do you want me to produce that visual?
+
+
+Here’s how I’d rework your “From Signing to Permanent Capital” slide so it gets the arrow logic you want and the boxes are cleaner, with a clear title + body separation inside each.
+
+⸻
+
+1) Layout & Flow
+	•	Keep main sequence as a horizontal flow of blue boxes (Ocean palette), each connected by solid Ocean arrows.
+	•	Side notes / conditional steps branch off from the main flow with dashed arrows in Slate or Fern depending on type.
+	•	Space the flow so there’s enough gap for arrows to be visibly distinct (≈ 1.5× box height).
+
+⸻
+
+2) Box Structure (Floating Title + Body)
+
+Each box becomes a 2-section card:
+	•	Title strip: darker fill (Ocean dark #1E4F65 for main steps; Slate #40474A or Fern #4F7033 for side/conditional) with white bold text (14–16 pt).
+	•	Body area: lighter fill (Ocean medium #419DC7 for main steps; pale tone for side steps like #C3DAAF or #E6E8E9) with black text (12–14 pt, 1.15 line spacing).
+	•	Border: 1 pt outline in the darker fill colour.
+
+⸻
+
+3) Arrow Logic
+	•	Main flow arrows: solid Ocean dark #1E4F65, 1.5–2 pt weight, medium arrowheads.
+	•	Conditional / “if deal fails” arrows: dashed line, Slate #40474A, arrowheads smaller.
+	•	Optional actions (like “Only if completion”) use dotted Fern green arrows to signal conditional but positive/neutral.
+	•	Arrow labels (if needed) in #595959 small caps above/below the line.
+
+⸻
+
+4) Colour Mapping
+	•	Main sequence steps = Ocean fill + Ocean dark header strip.
+	•	Risk / fail-case box = pale red #F9E0D1 fill, red #C00000 header strip.
+	•	FX-related side box = Fern fill #6A9545 or light variant for neutral.
+	•	Debt/equity raise steps at end = Ocean for bonds, Fern for equity, each with matching header strip.
+
+⸻
+
+5) Content Mapping Example
+
+Main sequence:
+	1.	Title: Board Approval
+Body: Mandate granted; execution governance in place
+	2.	Title: Sign SPA & Commit Bridge
+Body: €12bn bridge committed; dual tranches A/B, undrawn until close
+	3.	Title: Lock DCF Hedge
+Body: Sell DKK / Buy EUR; zero-cost lapse if deal fails
+	4.	Title: Pre-Close Ticking
+Body: D+60 ticking starts; 15 bps upfront fee paid
+	5.	Title: Draw Bridge
+Body: Close; draw €12bn; settle hedge @K
+	6.	Title: Proceeds to Seller
+Body: Funds at locked EUR price; mandatory prepay later
+	7.	Title: Permanent Capital
+Body: €6bn rights issue; €6bn multi-tranche EUR bonds
+
+Side notes:
+	•	From “Lock DCF Hedge” → fail-case box: “If no deal → hedge lapses; no bridge draw” (pale red)
+	•	From “Draw Bridge” → conditional: “Only if completion — cash or physical settlement” (Slate box)
+	•	From “Permanent Capital” → note: “Pre-emptive, all holders; preserves rating” (Fern box)
+
+⸻
+
+6) Small Touches
+	•	Keep box heights equal; title strip about 25–30% of height.
+	•	Align all box titles so they’re consistent horizontally.
+	•	Footer remains Mizuho logo left, “Private and Confidential | 9” right.
+
+⸻
+
+If you want, I can redraw this with the arrow system and floating title/body boxes exactly as described so you can drop it straight into your deck without fiddling with line styles or fills.
+
+Do you want me to produce that ready-to-use diagram?
+
+
+
+Here’s how I’d style your “What Mizuho stands to gain (Cross selling)” slide so it looks more intentional, links the top icons with the table, and keeps the Mizuho palette consistent.
+
+⸻
+
+1) Layout Structure
+
+Two clear sections:
+	1.	Top band: 3–4 “value pillar” cards with icons + captions.
+	2.	Bottom band: Timeline table (0–90 Days / 3–12 Months / 1–3 Years) listing opportunities, client value, and Mizuho value.
+
+Keep enough vertical separation (≈ 20–24 px) so they read as distinct sections.
+
+⸻
+
+2) Colour Assignments ([7†source])
+
+Element	Colour	Notes
+Top card header strip	#140078 (Mizuho Blue)	White bold text
+Top card body	#D9EBF4 (Ocean lightest)	Black text
+Table header row	#140078 fill, white bold text	
+Table labels (Timeframe)	White text in Mizuho Blue column	
+Table body rows	White background, thin #E6E8E9 dividers	
+Timeline separation (0–90d, etc.)	Bold black text	
+Icons	Ocean medium #419DC7 (primary), Fern #6A9545 for ESG / green topics	
+Footer text	#595959	
+
+
+⸻
+
+3) Formatting Recommendations
+
+Top Band – Value Pillars
+	•	Use rounded rectangle cards (12 px radius) for each pillar.
+	•	Title strip: darker fill (#140078), white bold 14–16 pt text, about 25% of card height.
+	•	Body: light Ocean fill (#D9EBF4) with black text, 12–14 pt.
+	•	Icon at top-left of body: keep flat style, Ocean or Fern colour depending on theme.
+	•	Suggested pillars for your content:
+	1.	Strategic Relationship (Lead-left / future M&A)
+	2.	Revenue & Fee Generation (Multi-product)
+	3.	Market Position & Franchise Impact (Flagship transaction)
+	•	If you keep 3 cards, centre them; if 4, align evenly.
+
+⸻
+
+Bottom Band – Timeline Table
+	•	Left column: Timeframe with full-height Mizuho Blue fill, white bold text (14–15 pt), centre-aligned vertically for each group.
+	•	Rest of table: 3 columns — Opportunity, Client Value, Mizuho Value.
+	•	Row padding: 8–10 px top/bottom for easier scan.
+	•	Alternate row shading: white and very light grey #F9F9F9.
+	•	Keep % and currency in bold for quick capture.
+
+⸻
+
+4) Linking Top & Bottom
+	•	Add a thin Ocean line from each top card down to related row(s) in the table (optional if presenting live).
+	•	Or, place small numbered badges in top cards and same numbers in table’s Opportunity column to show link.
+
+⸻
+
+5) Small Touches
+	•	Equal card heights; equal table row heights.
+	•	Limit font styles: title bold, table bold for key metrics, rest regular.
+	•	Footer: left Mizuho logo, right “Private and Confidential | 10” in #595959.
+
+⸻
+
+If you want, I can rebuild this slide with the top 3 “pillar” cards styled in Mizuho colours and the table below perfectly aligned, so it’s immediately board-ready. That would remove the grey placeholder boxes entirely.
+
+Do you want me to create that visual?
+
+
+
+
+
+
+
+
