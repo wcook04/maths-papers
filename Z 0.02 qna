@@ -1,0 +1,232 @@
+Understood — here is a consolidated Q&A master pack with every question across DCM, ECM, DRSE, rationale, and catch-out categories.
+Each question is followed immediately by a short answer. Neutral internal style. No emojis, no em dashes.
+
+⸻
+
+Master Q&A
+
+Strategic and overall
+
+Q: Why do we assume synergies and margin uplift will materialise?
+A: DSV has a track record of integrating UTI, Panalpina, and Agility with margin convergence to peer levels.
+
+Q: What if integration runs slower and leverage stays higher for longer?
+A: Base and downside cases show rating thresholds maintained with ~0.3x leverage headroom and €2bn liquidity buffer.
+
+Q: What if deal closes at different valuation or timing?
+A: Bridge maturity and contingent hedge can be extended or re-struck. Equity and bonds can be resized if required.
+
+⸻
+
+Ratings
+
+Q: Why is preserving A minus non negotiable?
+A: S&P requires FFO/Debt ≥45 percent and Moody’s requires Debt/EBITDA <2.5x. Breach risks BBB plus downgrade and spreads widening 25–35 bps across maturities.
+
+Q: Why not accept BBB plus?
+A: Lifetime funding cost increases by several hundred million and investor demand weakens.
+
+⸻
+
+Debt Capital Markets
+
+Q: Why a €12bn bridge and not smaller?
+A: Full coverage of consideration plus fees with no reliance on markets pre-close.
+
+Q: Why EUR not USD, GBP, or DKK?
+A: EUR matches consideration, provides deepest investor base, and avoids FX mismatch. USD adds basis cost, GBP is too shallow, DKK cannot absorb size.
+
+Q: How confident are we in placing €6bn of EUR bonds?
+A: Benchmarked against peers such as Daimler Truck, Deutsche Post, Siemens Healthineers. Recent multi-billion prints confirm depth across tenors.
+
+Q: Why issue across five tranches instead of one jumbo?
+A: Ladder smooths maturities, reaches different investor pockets, and reduces refinancing risk.
+
+Q: Why stop at 12 year tenor and not go longer?
+A: 12 years balances long-end demand with liquidity. Longer tenors or hybrids would increase execution risk and cost.
+
+Q: What if ECB rates move 100 bps before pricing?
+A: NIC flex is modelled. Spread corridor still consistent with A minus peers.
+
+Q: How liquid is the secondary market for this size?
+A: Secondary turnover in recent large EUR ladders shows strong depth at A category.
+
+⸻
+
+Equity Capital Markets
+
+Q: Why size the rights issue at €6bn?
+A: Restores rating metrics within 12 months. Lower size risks downgrade, higher size creates unnecessary dilution.
+
+Q: Why fully underwritten rights rather than ABB or convert?
+A: Rights are the only structure delivering €6bn primary proceeds. ABB recycles shares, convertibles too dilutive and misaligned with base.
+
+Q: Why a ~33 percent discount to TERP?
+A: Benchmarked to Bayer, Cellnex, National Grid, Telefónica Deutschland which cleared at 30–35 percent discounts.
+
+Q: What is expected dilution?
+A: About 19 percent of enlarged base with a 5 for 21 structure.
+
+Q: Can Copenhagen absorb this size?
+A: Distribution is pan EMEA. Copenhagen listing is not a constraint.
+
+Q: What is expected take up rate?
+A: Above 90 percent at proposed discount corridor. Concentrated long only base supports.
+
+Q: What if volatility spikes above 30 VIX?
+A: Underwriting syndicate flex on discount ensures certainty of funds.
+
+Q: What is timeline to settlement?
+A: Four to six weeks from launch to cash.
+
+Q: What protections exist for underwriters?
+A: Standard flex on discount, allocation rebalancing, and 2–3 percent fee pool.
+
+Q: How do you handle shareholder activism on dilution?
+A: Rights structure is pro rata and treats all equally.
+
+Q: Why equity before bonds?
+A: Equity reduces leverage first, improves rating perception, and supports tighter bond pricing.
+
+⸻
+
+Derivatives and Structured Equity
+
+Q: Why use a deal contingent FX hedge?
+A: Provides certainty on EUR consideration without cash settlement if deal breaks.
+
+Q: What size and tenor is required?
+A: €11.3bn aligned to purchase price with tenor covering signing to close.
+
+Q: Why not vanilla forward?
+A: Requires daily margining and settlement even if deal fails.
+
+Q: Why not options collar?
+A: Premium cost and partial protection.
+
+Q: Why not escrow?
+A: Ties up cash inefficiently.
+
+Q: What are cost implications?
+A: 20–30 bps premium to vanilla forwards, acceptable relative to certainty.
+
+Q: How does hedge accounting work?
+A: Not eligible for cash flow hedge. Contingent so derecognised if deal fails.
+
+Q: How is counterparty risk managed?
+A: Distributed across bridge banks under ISDA.
+
+Q: What if close is delayed?
+A: Re-strike or extend contingent forward.
+
+Q: What is Mizuho’s role?
+A: Structuring and executing the hedge, warehousing and distributing risk, and aligning with bridge.
+
+⸻
+
+Liquidity and RCF
+
+Q: What happens to liquidity post close?
+A: RCF reset provides €2–3bn committed headroom.
+
+Q: Will RCF be upsized?
+A: Yes to reflect enlarged working capital.
+
+⸻
+
+Syndicate and underwriting
+
+Q: How are banks chosen for bridge underwriting?
+A: Core relationships plus FX providers sized to distribution capacity.
+
+Q: How are economics allocated?
+A: Bridge fees, equity underwriting, and bond bookrunner roles proportional to commitments.
+
+Q: What is Mizuho’s maximum bridge hold?
+A: ~€500–700m final hold targeted.
+
+⸻
+
+Legal and documentation
+
+Q: Why Reg S EMTN not 144A?
+A: Faster, simpler, sufficient EUR demand.
+
+Q: How is bridge structured for flexibility?
+A: Extension options, step up grid, accordion capacity.
+
+⸻
+
+Market risk and contingency
+
+Q: What if EUR IG windows shut for three months?
+A: Bridge provides buffer. Equity already settled.
+
+Q: What if windows close entirely?
+A: Bridge extension plus staggered issuance into 2026.
+
+⸻
+
+Integration of phases
+
+Q: How is messaging coordinated?
+A: Consistent deleveraging narrative. Equity first then bonds.
+
+Q: How are roadshows timed?
+A: Rights issue launched post close. Bonds marketed after equity settlement.
+
+⸻
+
+Hedging beyond FX
+
+Q: Why not hedge bridge rates?
+A: Tenor short and step up already priced. Swap cost not justified.
+
+Q: Do we need fuel hedges?
+A: Operating decision, not transaction linked.
+
+⸻
+
+Regulatory and governance
+
+Q: Are there clearance risks?
+A: EU competition review standard. Financing contingent so no pre close cash impact.
+
+Q: What approvals are needed?
+A: Board and shareholder approvals for rights issue.
+
+⸻
+
+Sensitivities and downside
+
+Q: What if EBIT margins are 100 bps lower for 2 years?
+A: Metrics remain within A minus corridors with equity support.
+
+Q: What if EUR weakens 10 percent vs DKK?
+A: Covered fully by contingent hedge.
+
+Q: How much headroom remains?
+A: ~0.3x leverage and €2bn liquidity buffer in stress case.
+
+⸻
+
+Mizuho internal
+
+Q: Why is this deal important for Mizuho?
+A: Flagship European mandate across multiple products strengthens franchise.
+
+Q: What additional revenue streams are realistic?
+A: RCF coordination, working capital, securitisation, and refinancing.
+
+Q: What does success look like beyond league table credit?
+A: Sustained role as strategic partner with recurring income streams.
+
+⸻
+
+Would you like me to format this as a LaTeX appendix with all Q&A in uniform tabular style (so it mirrors your main presentation deck), or keep it as a plain-text crib sheet for live defence?p
+
+
+
+
+
+
