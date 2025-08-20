@@ -1,0 +1,168 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{tikz-cd}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\begin{document}
+
+\section*{Minimal Definitions and Notation}
+
+\begin{itemize}
+\item \textbf{Time and dates.} Fix $t<T$. Coupon dates satisfy $t=T_0<T_1<\dots<T_n=T$.
+\item \textbf{Currencies and units.} $d$ = domestic currency, $f$ = foreign currency. FX is quoted as $S_t$ \emph{units of $d$ per 1 unit of $f$} ($d/f$). Symbols $1_d$ and $1_f$ denote one unit of $d$ or $f$.
+\item \textbf{Discount factors.} $P_d(t,T)$ and $P_f(t,T)$ are the time-$t$ discount factors (present values) of $1_d$ or $1_f$ payable at $T$ under the chosen discounting convention.
+\item \textbf{Spot and forward FX.} $S_t$ is the spot FX at $t$ ($d/f$). $F_t(T)$ is the outright forward FX for delivery at $T$ ($d/f$).
+\item \textbf{Conversion factor.} $C(t,T):=\dfrac{F_t(T)}{S_t}$; it scales a $T$-dated foreign cash flow into domestic units at time $t$.
+\item \textbf{Covered interest parity (CIP).} CIP holds iff $C(t,T)=\dfrac{P_f(t,T)}{P_d(t,T)}$.
+\item \textbf{Basis.} $B(t,T):=\dfrac{C(t,T)}{P_f(t,T)/P_d(t,T)}$; $\phi(t,T):=\log B(t,T)$, with small-basis approximation $B-1\approx\phi$.
+\item \textbf{Domestic PV of foreign flows.} $\mathrm{PV}_d(t)$ denotes domestic present value at $t$; translating foreign flows uses $S_t$ and $C(t,T_i)$.
+\item \textbf{Accrual fractions.} $\Delta_i$ (domestic) and $\delta_i$ (foreign) are day-count accruals over $[T_{i-1},T_i]$.
+\item \textbf{Forward-floating rates.} $L_{d,i}=\dfrac{P_d(t,T_{i-1})-P_d(t,T_i)}{\Delta_i\,P_d(t,T_i)}$, \quad
+$L_{f,i}=\dfrac{P_f(t,T_{i-1})-P_f(t,T_i)}{\delta_i\,P_f(t,T_i)}$.
+\item \textbf{Domestic annuity.} $A_d(t;T):=\sum_{i=1}^n \Delta_i\,P_d(t,T_i)$.
+\item \textbf{CCS notionals.} For a (re-notionalising) float–float CCS, $N_d$ is the domestic notional and $N_f:=N_d/S_t$ is the foreign notional at inception.
+\end{itemize}
+
+\section*{The Commuting Square $\Rightarrow$ $C$ as Primitive}
+
+We want the value today (in domestic currency, USD) of receiving 1 unit of foreign currency (EUR) at time $T$. There are two routes:
+
+\emph{Example: To get €1 in one year, I can either (Path 1) lock in a forward today at, say, 1.12 \$/€, or (Path 2) buy discounted euros today and hold them.}
+
+\begin{center}
+\begin{tikzcd}[row sep=3em, column sep=6em]
+1_f \text{ at } T 
+  \arrow[r, "{\text{Path 1: Lock forward } F_t(T)}"] 
+  \arrow[d, "{\text{Path 2: Discount in } f: P_f(t,T)}"'] 
+& F_t(T)\cdot 1_d \text{ at } T 
+  \arrow[d, "{\text{Discount in } d: P_d(t,T)}"] \\
+P_f(t,T)\cdot 1_f \text{ at } t 
+  \arrow[r, "{\text{Convert at spot } S_t}"'] 
+& S_t\,P_f(t,T)\cdot 1_d \text{ at } t
+\end{tikzcd}
+\end{center}
+
+Following the top–then–right path gives $P_d(t,T)F_t(T)$.  
+Following left–then–bottom gives $S_tP_f(t,T)$.  
+Both must be equal, otherwise arbitrage exists:
+\[
+S_t P_f(t,T) = P_d(t,T) F_t(T).
+\]
+This equality matches discount–then–convert with convert–then–discount for the same €1 at $T$, eliminating a riskless arbitrage loop.
+
+Define the conversion factor
+\[
+\boxed{C(t,T):=\frac{F_t(T)}{S_t}}.
+\]
+This is the time-$t$ scaling that turns a $T$-dated foreign unit into domestic units via the forward over spot.
+
+Example: if forward is 1.12 and spot is 1.10, then $C=1.12/1.10=1.018$, meaning forwards trade at a 1.8\% premium to spot.
+
+When CIP holds:
+\[
+C(t,T)=\frac{P_f(t,T)}{P_d(t,T)}.
+\]
+Here the forward–spot ratio equals the relative discount factors, i.e.\ forwards are exactly consistent with covered interest parity.
+
+When it fails, define the basis factor
+\[
+B(t,T):=\frac{C(t,T)}{P_f(t,T)/P_d(t,T)}.
+\]
+This measures the wedge between observed forwards and the CIP-implied level; $B=1$ means no basis.
+
+\noindent\textbf{The power of $C$.}\quad Any foreign cash flow $\{c_f(T_i)\}$ has domestic PV
+\begin{equation}
+\boxed{\mathrm{PV}_d(t)=S_t\sum_i c_f(T_i)\,P_d(t,T_i)\,C(t,T_i).}
+\end{equation}
+Each foreign payment is translated at its delivery tenor via $C$ and discounted on the domestic curve to obtain value today.
+
+\noindent Proof: $c_f(T_i)\to F_t(T_i)c_f(T_i)$ USD at $T_i\to P_d(t,T_i)F_t(T_i)c_f(T_i)=P_d(t,T_i)S_tC(t,T_i)c_f(T_i)$ today. $\square$
+
+Notice: we never needed $P_f$ explicitly—just $C$ from market forwards.
+
+\bigskip\bigskip
+
+\section*{Direct Application: CCS in One Line from $C$}
+
+We now price the CCS by translating the foreign floating leg into $d$ using $C$, then equating legs at par.
+
+\noindent Setup. Float–float CCS with domestic notional $N_d$ and foreign $N_f=N_d/S_t$.  
+Pay: domestic float $+x$. Receive: foreign float.  
+What spread $x$ makes this fair?
+
+\paragraph{Domestic leg (pay).}
+\[
+\mathrm{PV}_d^{\mathrm{pay}}
+=N_d\sum_i \Delta_i\,P_d(t,T_i)\big(L_{d,i}+x\big),
+\qquad
+L_{d,i}=\frac{P_d(t,T_{i-1})-P_d(t,T_i)}{\Delta_i\,P_d(t,T_i)}.
+\]
+This is the PV of domestic floating coupons plus spread $x$ on notional $N_d$, with $L_{d,i}$ the period forward rate.
+
+\paragraph{Foreign leg (receive).}
+Each coupon is $\delta_i L_{f,i}N_f$ in EUR. Using the theorem:
+\[
+\mathrm{PV}_d^{\mathrm{recv}}
+= S_t \sum_i (N_f\delta_i L_{f,i})P_d(t,T_i)C(t,T_i)
+= N_d\sum_i \delta_i\,P_d(t,T_i)\,C(t,T_i)\,L_{f,i}.
+\]
+This values the foreign float in $d$, using $C$ at each $T_i$ and the re-notionalisation $N_f=N_d/S_t$.
+
+\paragraph{Par condition.}
+At inception:
+\[
+\sum_i \Delta_i P_d L_{d,i} + x \sum_i \Delta_i P_d
+= \sum_i \delta_i P_d C L_{f,i}.
+\]
+At par, domestic float plus the spread annuity equals the foreign float translated into $d$.
+
+\begin{align*}
+x \sum_i \Delta_i P_d(t,T_i)
+= \sum_i \delta_i P_d(t,T_i) C(t,T_i) L_{f,i} - \sum_i \Delta_i P_d(t,T_i) L_{d,i}.
+\end{align*}
+Rearrange to isolate the spread term on the left before dividing by the domestic annuity.
+
+\paragraph{Spread formula.}
+Let $A_d(t;T)=\sum_{i=1}^n \Delta_i\,P_d(t,T_i)$. Then
+\begin{equation}
+\boxed{
+x(t;T)=
+\frac{\sum_i \delta_i\,P_d(t,T_i)\,C(t,T_i)\,L_{f,i}
+      -\sum_i \Delta_i\,P_d(t,T_i)\,L_{d,i}}
+     {A_d(t;T)}.}
+\end{equation}
+The spread is the annuity-weighted mismatch between foreign float (converted via $C$) and domestic float.
+
+\paragraph{Basis isolation.}
+With $C=(P_f/P_d)B$:
+\[
+\sum_i \delta_i P_d C L_{f,i}
+=\sum_i \delta_i P_f B L_{f,i}
+=\sum_i \delta_i P_f L_{f,i}
+ +\sum_i \delta_i P_f (B-1)L_{f,i}.
+\]
+Substituting $C=(P_f/P_d)B$ splits the translated foreign float into the CIP piece and a basis-only adjustment.
+
+Thus
+\begin{equation}
+\boxed{
+x_{\mathrm{basis}}(t;T)=
+\frac{\sum_i \delta_i P_f(t,T_i) (B(t,T_i)-1) L_{f,i}}
+     {A_d(t;T)}.}
+\end{equation}
+This gives the additional spread attributable solely to basis.
+
+For small deviations $B-1\approx\phi=\log B$:
+\[
+x_{\mathrm{basis}}(t;T)\approx
+\frac{\sum_i \delta_i P_f(t,T_i)L_{f,i}\,\phi(t,T_i)}{A_d(t;T)}.
+\]
+For small basis, $\log B\approx B-1$ makes the correction a simple PV-weighted average of $\phi$.
+
+\medskip
+
+\noindent\textbf{Final Result.}\quad We priced the CCS using only $P_d$ and observables $C=F/S$.  
+The foreign curve $P_f$ never entered. The cross-currency world is encoded entirely in forward–spot ratios.
+
+\end{document}
